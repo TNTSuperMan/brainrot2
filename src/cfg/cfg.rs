@@ -29,10 +29,14 @@ pub struct CFGIR {
 }
 impl Debug for CFGIR {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.pointer.fmt(f)?;
-        f.write_str(" ")?;
-        self.opcode.fmt(f)?;
-        Ok(())
+        match self.opcode {
+            CFGOp::Breakpoint => write!(f, "breakpoint"),
+            CFGOp::Add(val) => write!(f, "add ${}, {val}", self.pointer),
+            CFGOp::Set(val) => write!(f, "set ${}, {val}", self.pointer),
+            CFGOp::MulAdd(p2, val) => write!(f, "muladd ${}, ${p2}, {val}", self.pointer),
+            CFGOp::In => write!(f, "in ${}", self.pointer),
+            CFGOp::Out => write!(f, "out ${}", self.pointer),
+        }
     }
 }
 
