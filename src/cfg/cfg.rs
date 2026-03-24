@@ -44,6 +44,5 @@ pub enum CFGOp {
     MulAdd(isize, u8), // [pointer] = [pointer] + [opcode.0] * opcode.1
     In,
     Out,
-    Offset(isize),
     End,
 }

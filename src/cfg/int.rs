@@ -55,9 +55,6 @@ fn exec_node_ir(insts: &[CFGIR], mem: &mut Mem) {
                 let mut stdout = stdout().lock();
                 let _ = stdout.write(&[mem.get(*pointer)]);
             }
-            CFGOp::Offset(delta) => {
-                mem.offset += delta;
-            }
             CFGOp::End => {
                 return;
             }
@@ -74,6 +71,9 @@ pub fn exec_from_cfg(cfg: &CFG) {
 
     loop {
         exec_node_ir(&cfg.0[node_i].insts, &mut mem);
+        if let Some(offset) = &cfg.0[node_i].offset {
+            mem.offset += offset;
+        }
         match &cfg.0[node_i].edge {
             CFGEdge::JumpNext => {
                 node_i += 1;
