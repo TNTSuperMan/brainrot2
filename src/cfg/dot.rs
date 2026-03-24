@@ -21,7 +21,7 @@ pub fn cfg_to_dot(cfg: &CFG) -> String {
                 zero,
                 nonzero,
             } => {
-                dot.push_str(&format!("branch [{pointer}], n{nonzero}, n{zero}"));
+                dot.push_str(&format!("branch ${pointer}, n{nonzero}, n{zero}\\l"));
             }
         }
         dot.push_str("\"\n");
