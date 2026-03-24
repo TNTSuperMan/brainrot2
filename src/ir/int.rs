@@ -63,9 +63,6 @@ pub fn exec_from_ir(ir: &[IR]) {
                     continue;
                 }
             }
-            IROp::End => {
-                return;
-            }
         }
         pc += 1;
     }

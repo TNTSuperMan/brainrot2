@@ -19,7 +19,6 @@ pub fn ir_to_cfgir(ir: &IR) -> Option<CFGIR> {
             IROp::JumpZero(..) | IROp::JumpNotZero(..) | IROp::JumpNotZeroWithOffset(..) => {
                 return None;
             }
-            IROp::End => CFGOp::End,
         },
     })
 }

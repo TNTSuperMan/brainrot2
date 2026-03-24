@@ -158,12 +158,6 @@ impl IR {
             return Err(SyntaxError::UnmatchedOpeningBracket);
         }
 
-        insts.push(IR {
-            pointer,
-            opcode: IROp::End,
-            loc: code.len()..code.len(),
-        });
-
         Ok(insts)
     }
 }
