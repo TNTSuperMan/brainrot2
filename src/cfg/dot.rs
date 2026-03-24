@@ -10,6 +10,9 @@ pub fn cfg_to_dot(cfg: &CFG) -> String {
         for inst in &node.insts {
             dot.push_str(&format!("{inst:?}\\l"));
         }
+        if let Some(offset) = node.offset {
+            dot.push_str(&format!("offset {offset}\\l"));
+        }
         match &node.edge {
             CFGEdge::JumpNext => {}
             CFGEdge::End => {}
@@ -22,7 +25,7 @@ pub fn cfg_to_dot(cfg: &CFG) -> String {
             }
         }
         dot.push_str("\"\n");
-        if node.insts.len() != 0 {
+        if node.insts.len() != 0 || node.offset.is_some() {
             dot.push_str(&format!("        shape=box\n"));
         }
         dot.push_str(&format!("    ]\n"));

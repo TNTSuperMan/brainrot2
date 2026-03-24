@@ -16,8 +16,9 @@ pub fn ir_to_cfgir(ir: &IR) -> Option<CFGIR> {
             IROp::MulAdd(p, v) => CFGOp::MulAdd(p, v),
             IROp::In => CFGOp::In,
             IROp::Out => CFGOp::Out,
-            IROp::Offset(delta) => CFGOp::Offset(delta),
-            IROp::JumpZero(..) | IROp::JumpNotZero(..) => return None,
+            IROp::JumpZero(..) | IROp::JumpNotZero(..) | IROp::JumpNotZeroWithOffset(..) => {
+                return None;
+            }
             IROp::End => CFGOp::End,
         },
     })
@@ -44,11 +45,14 @@ fn split_node(nodes: &mut Vec<CFGNode>, index: usize) {
     let right = nodes[node_i].insts.split_off(i);
     let right_edge = nodes[node_i].edge.clone();
     nodes[node_i].edge = CFGEdge::JumpNext;
+    let right_offset = nodes[node_i].offset;
+    nodes[node_i].offset = None;
     nodes.insert(
         node_i + 1,
         CFGNode {
             insts: right,
             edge: right_edge,
+            offset: right_offset,
         },
     );
 }
@@ -66,6 +70,7 @@ impl CFG {
                     nodes.push(CFGNode {
                         insts: node_insts,
                         edge: CFGEdge::JumpNext,
+                        offset: None,
                     });
                     node_insts = vec![];
                 }
@@ -79,6 +84,7 @@ impl CFG {
                             zero: addr,
                             nonzero: i + 1,
                         },
+                        offset: None,
                     });
                     if addr < i {
                         split_node(&mut nodes, addr);
@@ -95,6 +101,24 @@ impl CFG {
                             zero: i + 1,
                             nonzero: addr,
                         },
+                        offset: None,
+                    });
+                    if addr < i {
+                        split_node(&mut nodes, addr);
+                    } else {
+                        points.insert(addr);
+                    }
+                    node_insts = vec![];
+                }
+                IROp::JumpNotZeroWithOffset(offset, addr) => {
+                    nodes.push(CFGNode {
+                        insts: node_insts,
+                        edge: CFGEdge::Branch {
+                            pointer: ir.pointer,
+                            zero: i + 1,
+                            nonzero: addr,
+                        },
+                        offset: Some(offset),
                     });
                     if addr < i {
                         split_node(&mut nodes, addr);
@@ -109,6 +133,7 @@ impl CFG {
         nodes.push(CFGNode {
             insts: node_insts,
             edge: CFGEdge::End,
+            offset: None,
         });
 
         let mut idx_map: HashMap<usize, usize> = HashMap::new();

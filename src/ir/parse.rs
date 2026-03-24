@@ -77,12 +77,7 @@ impl IR {
                         pointer = start_ptr;
                         insts.push(IR {
                             pointer,
-                            opcode: IROp::Offset(end_ptr - start_ptr),
-                            loc: loc.clone(),
-                        });
-                        insts.push(IR {
-                            pointer,
-                            opcode: IROp::JumpNotZero(start_at + 1),
+                            opcode: IROp::JumpNotZeroWithOffset(end_ptr - start_ptr, start_at + 1),
                             loc,
                         });
                         insts[start_at].opcode = IROp::JumpZero(insts.len());

@@ -44,9 +44,6 @@ pub fn exec_from_ir(ir: &[IR]) {
             IROp::Out => {
                 stdout.write(&[memory[p]]).unwrap();
             }
-            IROp::Offset(delta) => {
-                offset += delta;
-            }
             IROp::JumpZero(addr) => {
                 if memory[p] == 0 {
                     pc = *addr;
@@ -55,6 +52,13 @@ pub fn exec_from_ir(ir: &[IR]) {
             }
             IROp::JumpNotZero(addr) => {
                 if memory[p] != 0 {
+                    pc = *addr;
+                    continue;
+                }
+            }
+            IROp::JumpNotZeroWithOffset(step, addr) => {
+                offset += step;
+                if memory[(pointer + offset) as usize] != 0 {
                     pc = *addr;
                     continue;
                 }
