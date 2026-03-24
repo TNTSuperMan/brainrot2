@@ -20,11 +20,19 @@ pub enum CFGEdge {
     End,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct CFGIR {
     pub pointer: isize,
     pub opcode: CFGOp,
     pub loc: Range<usize>,
+}
+impl Debug for CFGIR {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.pointer.fmt(f)?;
+        f.write_str(" ")?;
+        self.opcode.fmt(f)?;
+        Ok(())
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

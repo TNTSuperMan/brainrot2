@@ -136,12 +136,12 @@ impl IR {
                                             loc: loc.clone(),
                                         });
                                     }
-                                    insts[start_at].opcode = IROp::JumpZero(insts.len());
                                     insts.push(IR {
                                         pointer,
                                         opcode: IROp::Set(0),
                                         loc: loc.clone(),
                                     });
+                                    insts[start_at].opcode = IROp::JumpZero(insts.len());
                                     continue;
                                 }
                             }
