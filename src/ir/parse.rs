@@ -16,6 +16,7 @@ impl IR {
         let mut insts = vec![];
         let mut loop_stack = vec![];
         let mut pointer = 0isize;
+        let mut split = false;
 
         for (i, c) in code.chars().enumerate() {
             let loc = i..(i + 1);
@@ -45,7 +46,7 @@ impl IR {
                         loc,
                     }) = insts.last_mut()
                     {
-                        if *last_ptr == pointer {
+                        if *last_ptr == pointer && !split {
                             *v = v.wrapping_add(dir);
                             loc.end = i + 1;
                             continue;
@@ -56,6 +57,7 @@ impl IR {
                         opcode: IROp::Add(dir),
                         loc,
                     });
+                    split = false;
                 }
                 '[' => {
                     loop_stack.push(insts.len());
@@ -137,6 +139,7 @@ impl IR {
                                         loc: loc.clone(),
                                     });
                                     insts[start_at].opcode = IROp::JumpZero(insts.len());
+                                    split = true;
                                     continue;
                                 }
                             }
