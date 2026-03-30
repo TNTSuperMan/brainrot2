@@ -25,7 +25,9 @@ pub fn cfg_to_dot(cfg: &CFG) -> String {
             }
         }
         dot.push_str("\"\n");
-        if node.insts.len() != 0 || node.offset.is_some() {
+        if node.offset.is_some() {
+            dot.push_str(&format!("        shape=octagon\n"));
+        } else if node.insts.len() != 0 || node.offset.is_some() {
             dot.push_str(&format!("        shape=box\n"));
         }
         dot.push_str(&format!("    ]\n"));
