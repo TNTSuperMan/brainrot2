@@ -72,8 +72,8 @@ pub fn exec_from_cfg(cfg: &CFG) {
             mem.offset += offset;
         }
         match &cfg.0[node_i].edge {
-            CFGEdge::JumpNext => {
-                node_i += 1;
+            CFGEdge::Jump(addr) => {
+                node_i = *addr;
             }
             CFGEdge::Branch {
                 pointer,

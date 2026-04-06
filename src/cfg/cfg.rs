@@ -13,7 +13,7 @@ pub struct CFGNode {
 
 #[derive(Clone, Debug)]
 pub enum CFGEdge {
-    JumpNext,
+    Jump(usize),
     Branch {
         pointer: isize,
         zero: usize,

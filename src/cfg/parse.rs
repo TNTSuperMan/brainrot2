@@ -43,7 +43,7 @@ fn split_node(nodes: &mut Vec<CFGNode>, index: usize) {
     }
     let right = nodes[node_i].insts.split_off(i);
     let right_edge = nodes[node_i].edge.clone();
-    nodes[node_i].edge = CFGEdge::JumpNext;
+    nodes[node_i].edge = CFGEdge::Jump(usize::MAX);
     let right_offset = nodes[node_i].offset;
     nodes[node_i].offset = None;
     nodes.insert(
@@ -69,7 +69,7 @@ impl CFG {
                 if node_insts.len() != 0 {
                     nodes.push(CFGNode {
                         insts: node_insts,
-                        edge: CFGEdge::JumpNext,
+                        edge: CFGEdge::Jump(usize::MAX),
                         predecessor: vec![],
                         offset: None,
                     });
@@ -161,8 +161,12 @@ impl CFG {
                 *nonzero = *idx_map.get(nonzero).unwrap();
             }
             match nodes[i].edge {
-                CFGEdge::JumpNext => {
+                CFGEdge::Jump(usize::MAX) => {
+                    nodes[i].edge = CFGEdge::Jump(i + 1);
                     nodes[i + 1].predecessor.push(i);
+                }
+                CFGEdge::Jump(addr) => {
+                    nodes[addr].predecessor.push(i);
                 }
                 CFGEdge::Branch { pointer: _, zero, nonzero } => {
                     nodes[zero].predecessor.push(i);

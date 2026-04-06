@@ -14,7 +14,9 @@ pub fn cfg_to_dot(cfg: &CFG) -> String {
             dot.push_str(&format!("offset {offset}\\l"));
         }
         match &node.edge {
-            CFGEdge::JumpNext => {}
+            CFGEdge::Jump(addr) => {
+                dot.push_str(&format!("jump n{addr}\\l"));
+            }
             CFGEdge::End => {}
             CFGEdge::Branch {
                 pointer,
@@ -42,8 +44,8 @@ pub fn cfg_to_dot(cfg: &CFG) -> String {
             } => {
                 dot.push_str(&format!("    n{i} -> n{zero}\n    n{i} -> n{nonzero}\n"));
             }
-            CFGEdge::JumpNext => {
-                dot.push_str(&format!("    n{i} -> n{}\n", i + 1));
+            CFGEdge::Jump(addr) => {
+                dot.push_str(&format!("    n{i} -> n{addr}\n"));
             }
             CFGEdge::End => {}
         }
