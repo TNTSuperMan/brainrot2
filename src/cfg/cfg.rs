@@ -5,6 +5,7 @@ pub struct CFG(pub Vec<CFGNode>);
 
 #[derive(Clone, Debug)]
 pub struct CFGNode {
+    pub predecessor: Vec<usize>,
     pub edge: CFGEdge,
     pub insts: Vec<CFGIR>,
     pub offset: Option<isize>,

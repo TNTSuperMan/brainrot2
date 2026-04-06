@@ -51,6 +51,7 @@ fn split_node(nodes: &mut Vec<CFGNode>, index: usize) {
         CFGNode {
             insts: right,
             edge: right_edge,
+            predecessor: vec![],
             offset: right_offset,
         },
     );
@@ -69,6 +70,7 @@ impl CFG {
                     nodes.push(CFGNode {
                         insts: node_insts,
                         edge: CFGEdge::JumpNext,
+                        predecessor: vec![],
                         offset: None,
                     });
                     node_insts = vec![];
@@ -83,6 +85,7 @@ impl CFG {
                             zero: addr,
                             nonzero: i + 1,
                         },
+                        predecessor: vec![],
                         offset: None,
                     });
                     if addr < i {
@@ -100,6 +103,7 @@ impl CFG {
                             zero: i + 1,
                             nonzero: addr,
                         },
+                        predecessor: vec![],
                         offset: None,
                     });
                     if addr < i {
@@ -117,6 +121,7 @@ impl CFG {
                             zero: i + 1,
                             nonzero: addr,
                         },
+                        predecessor: vec![],
                         offset: Some(offset),
                     });
                     if addr < i {
@@ -130,6 +135,7 @@ impl CFG {
             }
         }
         nodes.push(CFGNode {
+            predecessor: vec![],
             insts: node_insts,
             edge: CFGEdge::End,
             offset: None,
@@ -144,15 +150,25 @@ impl CFG {
                 idx_pc += 1;
             }
         }
-        for node in nodes.iter_mut() {
+        for i in 0..nodes.len() {
             if let CFGEdge::Branch {
                 pointer: _,
                 zero,
                 nonzero,
-            } = &mut node.edge
+            } = &mut nodes[i].edge
             {
                 *zero = *idx_map.get(zero).unwrap();
                 *nonzero = *idx_map.get(nonzero).unwrap();
+            }
+            match nodes[i].edge {
+                CFGEdge::JumpNext => {
+                    nodes[i + 1].predecessor.push(i);
+                }
+                CFGEdge::Branch { pointer: _, zero, nonzero } => {
+                    nodes[zero].predecessor.push(i);
+                    nodes[nonzero].predecessor.push(i);
+                }
+                CFGEdge::End => {}
             }
         }
 
