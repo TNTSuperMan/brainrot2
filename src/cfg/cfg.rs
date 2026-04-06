@@ -47,7 +47,7 @@ impl Debug for CFGEdge {
         match self {
             CFGEdge::Jump(addr) => write!(f, "jump n{addr}"),
             CFGEdge::End => write!(f, "end"),
-            CFGEdge::Branch { pointer, zero, nonzero } => write!(f, "branch ${pointer} n{nonzero}, n{zero}"),
+            CFGEdge::Branch { pointer, zero, nonzero } => write!(f, "branch_zero ${pointer}, n{zero}, n{nonzero}"),
         }
     }
 }

@@ -14,8 +14,8 @@ fn main() {
     let ir = IR::parse(&code).unwrap();
     //exec_from_ir(&ir);
     let cfg = CFG::new(&ir);
-    println!("{}", cfg_to_dot(&cfg));
+    //println!("{}", cfg_to_dot(&cfg));
     //println!("{ir:?}");
-    //println!("{cfg:?}");
+    println!("{cfg:?}");
     //exec_from_cfg(&cfg);
 }
