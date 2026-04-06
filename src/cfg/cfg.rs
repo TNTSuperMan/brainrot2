@@ -1,14 +1,35 @@
 use std::{fmt::Debug, ops::Range};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct CFG(pub Vec<CFGNode>);
+impl Debug for CFG {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "CFG len: {} [", self.0.len())?;
+        for (i, node) in self.0.iter().enumerate() {
+            write!(f, "n{i}: {node:?}\n")?;
+        }
+        write!(f, "]")
+    }
+}
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct CFGNode {
     pub predecessor: Vec<usize>,
     pub edge: CFGEdge,
     pub insts: Vec<CFGIR>,
     pub offset: Option<isize>,
+}
+impl Debug for CFGNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "CFGNode pred: {:?} {{\n", self.predecessor)?;
+        for inst in &self.insts {
+            write!(f, "    {inst:?}\n")?;
+        }
+        if let Some(offset) = self.offset {
+            write!(f, "    offset {offset}\n")?;
+        }
+        write!(f, "    {:?}\n}}", self.edge)
+    }
 }
 
 #[derive(Clone)]
