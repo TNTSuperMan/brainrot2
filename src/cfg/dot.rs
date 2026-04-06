@@ -13,19 +13,7 @@ pub fn cfg_to_dot(cfg: &CFG) -> String {
         if let Some(offset) = node.offset {
             dot.push_str(&format!("offset {offset}\\l"));
         }
-        match &node.edge {
-            CFGEdge::Jump(addr) => {
-                dot.push_str(&format!("jump n{addr}\\l"));
-            }
-            CFGEdge::End => {}
-            CFGEdge::Branch {
-                pointer,
-                zero,
-                nonzero,
-            } => {
-                dot.push_str(&format!("branch ${pointer}, n{nonzero}, n{zero}\\l"));
-            }
-        }
+        dot.push_str(&format!("{:?}\\l", node.edge));
         dot.push_str("\"\n");
         if node.offset.is_some() {
             dot.push_str(&format!("        shape=octagon\n"));

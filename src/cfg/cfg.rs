@@ -11,7 +11,7 @@ pub struct CFGNode {
     pub offset: Option<isize>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum CFGEdge {
     Jump(usize),
     Branch {
@@ -20,6 +20,15 @@ pub enum CFGEdge {
         nonzero: usize,
     },
     End,
+}
+impl Debug for CFGEdge {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CFGEdge::Jump(addr) => write!(f, "jump n{addr}"),
+            CFGEdge::End => write!(f, "end"),
+            CFGEdge::Branch { pointer, zero, nonzero } => write!(f, "branch ${pointer} n{nonzero}, n{zero}"),
+        }
+    }
 }
 
 #[derive(Clone)]
