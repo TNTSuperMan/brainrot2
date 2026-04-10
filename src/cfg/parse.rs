@@ -168,7 +168,11 @@ impl CFG {
                 CFGEdge::Jump(addr) => {
                     nodes[addr].predecessor.push(i);
                 }
-                CFGEdge::Branch { pointer: _, zero, nonzero } => {
+                CFGEdge::Branch {
+                    pointer: _,
+                    zero,
+                    nonzero,
+                } => {
                     nodes[zero].predecessor.push(i);
                     nodes[nonzero].predecessor.push(i);
                 }
