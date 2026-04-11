@@ -1,6 +1,6 @@
 use std::io::{Read, Write, stdin, stdout};
 
-use crate::cfg::cfg::{CFG, CFGEdge, CFGIR, CFGOp};
+use crate::cfg::cfg::{CFG, CFGEdge, CFGOp, CFGOpKind};
 
 struct Mem {
     offset: isize,
@@ -15,31 +15,31 @@ impl Mem {
     }
 }
 
-fn exec_node_ir(insts: &[CFGIR], mem: &mut Mem) {
-    for CFGIR {
+fn exec_node_ir(insts: &[CFGOp], mem: &mut Mem) {
+    for CFGOp {
         pointer,
         opcode,
         loc: _,
     } in insts
     {
         match opcode {
-            CFGOp::Breakpoint => {
+            CFGOpKind::Breakpoint => {
                 println!("break; {}", mem.offset);
             }
-            CFGOp::Add(val) => {
+            CFGOpKind::Add(val) => {
                 mem.set(*pointer, mem.get(*pointer).wrapping_add(*val));
             }
-            CFGOp::Set(val) => {
+            CFGOpKind::Set(val) => {
                 mem.set(*pointer, *val);
             }
-            CFGOp::MulAdd(ptr2, val) => {
+            CFGOpKind::MulAdd(ptr2, val) => {
                 mem.set(
                     *pointer,
                     mem.get(*pointer)
                         .wrapping_add(mem.get(*ptr2).wrapping_mul(*val)),
                 );
             }
-            CFGOp::In => {
+            CFGOpKind::In => {
                 let mut stdin = stdin().lock();
                 let mut buf = [0u8; 1];
                 mem.set(
@@ -51,7 +51,7 @@ fn exec_node_ir(insts: &[CFGIR], mem: &mut Mem) {
                     },
                 );
             }
-            CFGOp::Out => {
+            CFGOpKind::Out => {
                 let mut stdout = stdout().lock();
                 let _ = stdout.write(&[mem.get(*pointer)]);
             }

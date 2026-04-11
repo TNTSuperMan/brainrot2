@@ -1,7 +1,7 @@
 use std::{fmt::Debug, ops::Range};
 
 #[derive(Clone)]
-pub struct CFG(pub Vec<CFGNode>);
+pub struct CFG(pub Vec<CFGBlock>);
 impl Debug for CFG {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "CFG len: {} [", self.0.len())?;
@@ -13,13 +13,13 @@ impl Debug for CFG {
 }
 
 #[derive(Clone)]
-pub struct CFGNode {
+pub struct CFGBlock {
     pub predecessor: Vec<usize>,
     pub edge: CFGEdge,
-    pub insts: Vec<CFGIR>,
+    pub insts: Vec<CFGOp>,
     pub offset: Option<isize>,
 }
-impl Debug for CFGNode {
+impl Debug for CFGBlock {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "CFGNode pred: {:?} {{\n", self.predecessor)?;
         for inst in &self.insts {
@@ -57,28 +57,28 @@ impl Debug for CFGEdge {
 }
 
 #[derive(Clone)]
-pub struct CFGIR {
+pub struct CFGOp {
     pub pointer: isize,
-    pub opcode: CFGOp,
+    pub opcode: CFGOpKind,
     pub loc: Range<usize>,
 }
-impl Debug for CFGIR {
+impl Debug for CFGOp {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.opcode {
-            CFGOp::Breakpoint => write!(f, "breakpoint"),
-            CFGOp::Add(val) => write!(f, "${} = ${} + {val}", self.pointer, self.pointer),
-            CFGOp::Set(val) => write!(f, "${} = {val}", self.pointer),
-            CFGOp::MulAdd(p2, val) => {
+            CFGOpKind::Breakpoint => write!(f, "breakpoint"),
+            CFGOpKind::Add(val) => write!(f, "${} = ${} + {val}", self.pointer, self.pointer),
+            CFGOpKind::Set(val) => write!(f, "${} = {val}", self.pointer),
+            CFGOpKind::MulAdd(p2, val) => {
                 write!(f, "${} = ${} + (${p2} * {val})", self.pointer, self.pointer)
             }
-            CFGOp::In => write!(f, "${} = stdin", self.pointer),
-            CFGOp::Out => write!(f, "stdout = ${}", self.pointer),
+            CFGOpKind::In => write!(f, "${} = stdin", self.pointer),
+            CFGOpKind::Out => write!(f, "stdout = ${}", self.pointer),
         }
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum CFGOp {
+pub enum CFGOpKind {
     Breakpoint,
     Add(u8),
     Set(u8),

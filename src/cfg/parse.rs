@@ -1,21 +1,21 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::{
-    cfg::cfg::{CFG, CFGEdge, CFGIR, CFGNode, CFGOp},
+    cfg::cfg::{CFG, CFGBlock, CFGEdge, CFGOp, CFGOpKind},
     ir::ir::{IR, IROp},
 };
 
-pub fn ir_to_cfgir(ir: &IR) -> Option<CFGIR> {
-    Some(CFGIR {
+pub fn ir_to_cfgir(ir: &IR) -> Option<CFGOp> {
+    Some(CFGOp {
         pointer: ir.pointer,
         loc: ir.loc.clone(),
         opcode: match ir.opcode {
-            IROp::Breakpoint => CFGOp::Breakpoint,
-            IROp::Add(val) => CFGOp::Add(val),
-            IROp::Set(val) => CFGOp::Set(val),
-            IROp::MulAdd(p, v) => CFGOp::MulAdd(p, v),
-            IROp::In => CFGOp::In,
-            IROp::Out => CFGOp::Out,
+            IROp::Breakpoint => CFGOpKind::Breakpoint,
+            IROp::Add(val) => CFGOpKind::Add(val),
+            IROp::Set(val) => CFGOpKind::Set(val),
+            IROp::MulAdd(p, v) => CFGOpKind::MulAdd(p, v),
+            IROp::In => CFGOpKind::In,
+            IROp::Out => CFGOpKind::Out,
             IROp::JumpZero(..) | IROp::JumpNotZero(..) | IROp::JumpNotZeroWithOffset(..) => {
                 return None;
             }
@@ -23,7 +23,7 @@ pub fn ir_to_cfgir(ir: &IR) -> Option<CFGIR> {
     })
 }
 
-fn split_node(nodes: &mut Vec<CFGNode>, index: usize) {
+fn split_node(nodes: &mut Vec<CFGBlock>, index: usize) {
     let mut node_i = 0usize;
     let mut i = 0usize;
     for _ in 0..index {
@@ -48,7 +48,7 @@ fn split_node(nodes: &mut Vec<CFGNode>, index: usize) {
     nodes[node_i].offset = None;
     nodes.insert(
         node_i + 1,
-        CFGNode {
+        CFGBlock {
             insts: right,
             edge: right_edge,
             predecessor: vec![],
@@ -67,7 +67,7 @@ impl CFG {
             if points.contains(&i) {
                 points.remove(&i);
                 if node_insts.len() != 0 {
-                    nodes.push(CFGNode {
+                    nodes.push(CFGBlock {
                         insts: node_insts,
                         edge: CFGEdge::Jump(usize::MAX),
                         predecessor: vec![],
@@ -78,7 +78,7 @@ impl CFG {
             }
             match ir.opcode {
                 IROp::JumpZero(addr) => {
-                    nodes.push(CFGNode {
+                    nodes.push(CFGBlock {
                         insts: node_insts,
                         edge: CFGEdge::Branch {
                             pointer: ir.pointer,
@@ -96,7 +96,7 @@ impl CFG {
                     node_insts = vec![];
                 }
                 IROp::JumpNotZero(addr) => {
-                    nodes.push(CFGNode {
+                    nodes.push(CFGBlock {
                         insts: node_insts,
                         edge: CFGEdge::Branch {
                             pointer: ir.pointer,
@@ -114,7 +114,7 @@ impl CFG {
                     node_insts = vec![];
                 }
                 IROp::JumpNotZeroWithOffset(offset, addr) => {
-                    nodes.push(CFGNode {
+                    nodes.push(CFGBlock {
                         insts: node_insts,
                         edge: CFGEdge::Branch {
                             pointer: ir.pointer,
@@ -134,7 +134,7 @@ impl CFG {
                 _ => node_insts.push(ir_to_cfgir(ir).unwrap()),
             }
         }
-        nodes.push(CFGNode {
+        nodes.push(CFGBlock {
             predecessor: vec![],
             insts: node_insts,
             edge: CFGEdge::End,
