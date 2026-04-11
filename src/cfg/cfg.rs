@@ -51,7 +51,7 @@ impl Debug for CFGEdge {
                 pointer,
                 zero,
                 nonzero,
-            } => write!(f, "branch_zero ${pointer}, n{zero}, n{nonzero}"),
+            } => write!(f, "jump ${pointer} ? n{nonzero} : n{zero}"),
         }
     }
 }
@@ -66,11 +66,13 @@ impl Debug for CFGIR {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.opcode {
             CFGOp::Breakpoint => write!(f, "breakpoint"),
-            CFGOp::Add(val) => write!(f, "add ${}, {val}", self.pointer),
-            CFGOp::Set(val) => write!(f, "set ${}, {val}", self.pointer),
-            CFGOp::MulAdd(p2, val) => write!(f, "muladd ${}, ${p2}, {val}", self.pointer),
-            CFGOp::In => write!(f, "in ${}", self.pointer),
-            CFGOp::Out => write!(f, "out ${}", self.pointer),
+            CFGOp::Add(val) => write!(f, "${} = ${} + {val}", self.pointer, self.pointer),
+            CFGOp::Set(val) => write!(f, "${} = {val}", self.pointer),
+            CFGOp::MulAdd(p2, val) => {
+                write!(f, "${} = ${} + (${p2} * {val})", self.pointer, self.pointer)
+            }
+            CFGOp::In => write!(f, "${} = stdin", self.pointer),
+            CFGOp::Out => write!(f, "stdout = ${}", self.pointer),
         }
     }
 }
