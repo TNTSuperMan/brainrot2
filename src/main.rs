@@ -8,6 +8,7 @@ use crate::{
 mod cfg;
 mod error;
 mod ir;
+mod ssa;
 
 fn main() {
     let code = fs::read_to_string("box/mandel.bf").unwrap();
