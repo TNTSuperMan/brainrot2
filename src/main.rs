@@ -12,7 +12,7 @@ mod ssa;
 
 fn main() -> ExitCode {
     let args = args();
-    if let [_, _, kind, file] = args.collect::<Vec<String>>().as_slice() {
+    if let [_, kind, file] = args.collect::<Vec<String>>().as_slice() {
         let code = fs::read_to_string(&file).unwrap();
         let ir = IR::parse(&code).unwrap();
         let cfg = CFG::new(&ir);
@@ -37,6 +37,8 @@ fn main() -> ExitCode {
                 return ExitCode::FAILURE;
             }
         }
+    } else {
+        eprintln!("usage: brainrot2 [kind] [file]");
     }
     return ExitCode::FAILURE;
 }
