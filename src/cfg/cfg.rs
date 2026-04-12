@@ -21,7 +21,7 @@ pub struct CFGBlock {
 }
 impl Debug for CFGBlock {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "CFGNode pred: {:?} {{\n", self.predecessor)?;
+        write!(f, "CFGBlock pred: {:?} {{\n", self.predecessor)?;
         for inst in &self.insts {
             write!(f, "    {inst:?}\n")?;
         }
@@ -72,7 +72,7 @@ impl Debug for CFGOp {
                 write!(f, "${} = ${} + (${p2} * {val})", self.pointer, self.pointer)
             }
             CFGOpKind::In => write!(f, "${} = stdin", self.pointer),
-            CFGOpKind::Out => write!(f, "stdout = ${}", self.pointer),
+            CFGOpKind::Out => write!(f, "stdout < ${}", self.pointer),
         }
     }
 }

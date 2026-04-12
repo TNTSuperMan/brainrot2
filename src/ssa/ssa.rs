@@ -2,6 +2,15 @@ use std::fmt::Debug;
 
 #[derive(Clone)]
 pub struct SSAProgram(pub Vec<SSABlock>);
+impl Debug for SSAProgram {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SSAProgram len: {} [", self.0.len())?;
+        for (i, node) in self.0.iter().enumerate() {
+            write!(f, "n{i}: {node:?}\n")?;
+        }
+        write!(f, "]")
+    }
+}
 
 #[derive(Clone)]
 pub struct SSABlock {
@@ -10,6 +19,21 @@ pub struct SSABlock {
     pub edge: SSAEdge,
     pub insts: Vec<SSAOp>,
     pub offset: Option<isize>,
+}
+impl Debug for SSABlock {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SSABlock pred: {:?} {{\n", self.predecessor)?;
+        for phi in &self.phis {
+            write!(f, "    {phi:?}\n")?;
+        }
+        for inst in &self.insts {
+            write!(f, "    {inst:?}\n")?;
+        }
+        if let Some(offset) = self.offset {
+            write!(f, "    offset {offset}\n")?;
+        }
+        write!(f, "    {:?}\n}}", self.edge)
+    }
 }
 
 #[derive(Clone)]
@@ -21,6 +45,19 @@ pub enum SSAEdge {
         nonzero: usize,
     },
     End,
+}
+impl Debug for SSAEdge {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Jump(addr) => write!(f, "jump n{addr}"),
+            Self::Branch {
+                version,
+                zero,
+                nonzero,
+            } => write!(f, "jump {version:?} ? n{nonzero} : n{nonzero}"),
+            Self::End => write!(f, "end"),
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -40,6 +77,16 @@ pub enum SSAOp {
     Define(SSAVersion, SSAExpr),
     AssignToCell(SSAVersion),
     Out(SSAVersion),
+}
+impl Debug for SSAOp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Breakpoint => write!(f, "breakpoint"),
+            Self::Define(ver, expr) => write!(f, "{ver:?} = {expr:?}"),
+            Self::AssignToCell(ver) => write!(f, "tape[{}] = {ver:?}", ver.pointer),
+            Self::Out(ver) => write!(f, "stdout < {ver:?}"),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -77,4 +124,15 @@ pub enum SSAExpr {
     AddVC(SSAVersion, u8),
     MulAdd(SSAVersion, SSAVersion, u8), // 0 + 1 * 2
     In,
+}
+impl Debug for SSAExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Const(val) => write!(f, "{val}"),
+            Self::AddVV(v1, v2) => write!(f, "{v1:?} + {v2:?}"),
+            Self::AddVC(v1, v2) => write!(f, "{v1:?} + {v2}"),
+            Self::MulAdd(v1, v2, v3) => write!(f, "{v1:?} + ({v2:?} * {v3})"),
+            Self::In => write!(f, "stdin"),
+        }
+    }
 }
