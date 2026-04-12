@@ -6,6 +6,7 @@ pub struct SSAProgram(pub Vec<SSABlock>);
 #[derive(Clone)]
 pub struct SSABlock {
     pub predecessor: Vec<usize>,
+    pub phis: Vec<Phi>,
     pub edge: SSAEdge,
     pub insts: Vec<SSAOp>,
     pub offset: Option<isize>,
@@ -49,17 +50,31 @@ pub enum PhiArg {
 
 #[derive(Clone)]
 pub struct Phi {
-    pred_block_id: usize,
-    arg: PhiArg,
+    pointer: isize,
+    define_version: usize,
+    args: [PhiArg; 2],
+}
+impl Debug for Phi {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "${}#{} = φ(", self.pointer, self.define_version)?;
+        for (i, arg) in self.args.iter().enumerate() {
+            if i != 0 {
+                write!(f, ", ")?;
+            }
+            match arg {
+                PhiArg::Version(ver) => write!(f, "${}#{ver}", self.pointer),
+                PhiArg::Load => write!(f, "${}", self.pointer),
+            }?;
+        }
+        write!(f, ")")
+    }
 }
 
 #[derive(Clone)]
 pub enum SSAExpr {
-    Phi([Phi; 2]),
     Const(u8),
     AddVV(SSAVersion, SSAVersion),
     AddVC(SSAVersion, u8),
     MulAdd(SSAVersion, SSAVersion, u8), // 0 + 1 * 2
-    FromCell(isize),
     In,
 }
