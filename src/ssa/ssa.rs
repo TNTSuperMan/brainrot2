@@ -54,16 +54,16 @@ impl Debug for SSAEdge {
                 version,
                 zero,
                 nonzero,
-            } => write!(f, "jump {version:?} ? n{nonzero} : n{nonzero}"),
+            } => write!(f, "jump {version:?} ? n{nonzero} : n{zero}"),
             Self::End => write!(f, "end"),
         }
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SSAVersion {
-    pointer: isize,
-    version: usize,
+    pub pointer: isize,
+    pub version: usize,
 }
 impl Debug for SSAVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -97,9 +97,9 @@ pub enum PhiArg {
 
 #[derive(Clone)]
 pub struct Phi {
-    pointer: isize,
-    define_version: usize,
-    args: [PhiArg; 2],
+    pub pointer: isize,
+    pub define_version: usize,
+    pub args: [PhiArg; 2],
 }
 impl Debug for Phi {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -120,7 +120,6 @@ impl Debug for Phi {
 #[derive(Clone)]
 pub enum SSAExpr {
     Const(u8),
-    AddVV(SSAVersion, SSAVersion),
     AddVC(SSAVersion, u8),
     MulAdd(SSAVersion, SSAVersion, u8), // 0 + 1 * 2
     In,
@@ -129,7 +128,6 @@ impl Debug for SSAExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Const(val) => write!(f, "{val}"),
-            Self::AddVV(v1, v2) => write!(f, "{v1:?} + {v2:?}"),
             Self::AddVC(v1, v2) => write!(f, "{v1:?} + {v2}"),
             Self::MulAdd(v1, v2, v3) => write!(f, "{v1:?} + ({v2:?} * {v3})"),
             Self::In => write!(f, "stdin"),

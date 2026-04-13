@@ -1,7 +1,4 @@
-use crate::{
-    cfg::cfg::{CFG, CFGOpKind},
-    ssa::ssa::SSAProgram,
-};
+use crate::cfg::cfg::{CFG, CFGOpKind};
 
 struct LatestVersionsMap(Vec<usize>);
 impl LatestVersionsMap {
@@ -12,9 +9,10 @@ impl LatestVersionsMap {
             pointer * 2
         }) as usize
     }
+
     fn alloc(&mut self, pointer: isize) -> usize {
         let addr = self.pointer_to_map_address(pointer);
-        if self.0.len() >= addr {
+        if self.0.len() <= addr {
             self.0.resize(addr + 1, 0);
         }
         let ver = self.0[addr];
@@ -23,7 +21,9 @@ impl LatestVersionsMap {
     }
 }
 
-fn compute_version_map(cfg: &CFG) -> Vec<Vec<usize>> {
+type VersionMap = Vec<Vec<usize>>; // vec[block_id][inst_index]
+
+pub fn compute_version_map(cfg: &CFG) -> VersionMap {
     let mut latest_version_map = LatestVersionsMap(vec![]);
 
     cfg.0
@@ -42,17 +42,4 @@ fn compute_version_map(cfg: &CFG) -> Vec<Vec<usize>> {
                 .collect()
         })
         .collect()
-}
-
-impl SSAProgram {
-    pub fn new(cfg: &CFG) -> SSAProgram {
-        let mut blocks = vec![];
-        let version_map = compute_version_map(cfg);
-
-        for block in &cfg.0 {
-            // todo
-        }
-
-        SSAProgram(blocks)
-    }
 }

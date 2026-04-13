@@ -3,6 +3,7 @@ use std::{env::args, fs, process::ExitCode};
 use crate::{
     cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg},
     ir::{int::exec_from_ir, ir::IR},
+    ssa::ssa::SSAProgram,
 };
 
 mod cfg;
@@ -30,6 +31,10 @@ fn main() -> ExitCode {
             }
             "print_cfg_dot" => {
                 println!("{}", cfg_to_dot(&cfg));
+            }
+            "dump_ssa" => {
+                let ssa = SSAProgram::new(&cfg);
+                println!("{ssa:?}");
             }
             _ => {
                 eprintln!("unknown kind");
