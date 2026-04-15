@@ -120,16 +120,20 @@ impl Debug for Phi {
 #[derive(Clone)]
 pub enum SSAExpr {
     Const(u8),
+    Ref(SSAVersion),
     AddVC(SSAVersion, u8),
     MulAdd(SSAVersion, SSAVersion, u8), // 0 + 1 * 2
+    Mul(SSAVersion, u8),
     In,
 }
 impl Debug for SSAExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Const(val) => write!(f, "{val}"),
+            Self::Ref(ver) => write!(f, "{ver:?}"),
             Self::AddVC(v1, v2) => write!(f, "{v1:?} + {v2}"),
             Self::MulAdd(v1, v2, v3) => write!(f, "{v1:?} + ({v2:?} * {v3})"),
+            Self::Mul(v1, v2) => write!(f, "{v1:?} * {v2}"),
             Self::In => write!(f, "stdin"),
         }
     }

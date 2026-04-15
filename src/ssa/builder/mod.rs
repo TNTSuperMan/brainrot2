@@ -78,14 +78,8 @@ impl<'a> SSABuilder<'a> {
                 CFGOpKind::MulAdd(p, val) => {
                     def!(match (self.find(i, pointer), self.find(i, *p)) {
                         (FindResult::Zero, FindResult::Zero) => SSAExpr::Const(0),
-                        (FindResult::Version(v1), FindResult::Zero) => SSAExpr::AddVC(v1, 0), // TODO: 直接バージョンを参照するSSAExprを追加
-                        (FindResult::Zero, FindResult::Version(v2)) => {
-                            let zero_p = self.alloc_ver(pointer);
-                            self.program.0[i]
-                                .insts
-                                .push(SSAOp::Define(zero_p, SSAExpr::Const(0)));
-                            SSAExpr::MulAdd(zero_p, v2, *val)
-                        }
+                        (FindResult::Version(v1), FindResult::Zero) => SSAExpr::Ref(v1),
+                        (FindResult::Zero, FindResult::Version(v2)) => SSAExpr::Mul(v2, *val),
                         (FindResult::Version(v1), FindResult::Version(v2)) =>
                             SSAExpr::MulAdd(v1, v2, *val),
                     })
@@ -111,19 +105,13 @@ impl<'a> SSABuilder<'a> {
                 pointer,
                 zero,
                 nonzero,
-            } => SSAEdge::Branch {
-                version: match self.find(i, pointer) {
-                    FindResult::Version(version) => version,
-                    FindResult::Zero => {
-                        let zero_p = self.alloc_ver(pointer);
-                        self.program.0[i]
-                            .insts
-                            .push(SSAOp::Define(zero_p, SSAExpr::Const(0)));
-                        zero_p
-                    }
+            } => match self.find(i, pointer) {
+                FindResult::Version(version) => SSAEdge::Branch {
+                    version,
+                    zero,
+                    nonzero,
                 },
-                zero,
-                nonzero,
+                FindResult::Zero => SSAEdge::Jump(zero),
             },
             CFGEdge::Jump(addr) => SSAEdge::Jump(addr),
             CFGEdge::End => SSAEdge::End,
