@@ -6,7 +6,7 @@ mod version_map;
 use crate::{
     cfg::cfg::{CFG, CFGEdge, CFGOp, CFGOpKind},
     ssa::{
-        builder::version_map::UniqueVersionMap,
+        builder::{find::FindResult, version_map::UniqueVersionMap},
         ssa::{Phi, SSABlock, SSAEdge, SSAExpr, SSAOp, SSAProgram, SSAVersion},
     },
 };
@@ -68,15 +68,40 @@ impl<'a> SSABuilder<'a> {
             }
             let ssaop = match opcode {
                 CFGOpKind::Breakpoint => SSAOp::Breakpoint,
-                CFGOpKind::Add(val) => def!(SSAExpr::AddVC(self.find(i, pointer), *val)),
+                CFGOpKind::Add(val) => {
+                    def!(match self.find(i, pointer) {
+                        FindResult::Version(version) => SSAExpr::AddVC(version, *val),
+                        FindResult::Zero => SSAExpr::Const(*val),
+                    })
+                }
                 CFGOpKind::Set(val) => def!(SSAExpr::Const(*val)),
-                CFGOpKind::MulAdd(p, val) => def!(SSAExpr::MulAdd(
-                    self.find(i, pointer),
-                    self.find(i, *p),
-                    *val
-                )),
+                CFGOpKind::MulAdd(p, val) => {
+                    def!(match (self.find(i, pointer), self.find(i, *p)) {
+                        (FindResult::Zero, FindResult::Zero) => SSAExpr::Const(0),
+                        (FindResult::Version(v1), FindResult::Zero) => SSAExpr::AddVC(v1, 0), // TODO: 直接バージョンを参照するSSAExprを追加
+                        (FindResult::Zero, FindResult::Version(v2)) => {
+                            let zero_p = self.alloc_ver(pointer);
+                            self.program.0[i]
+                                .insts
+                                .push(SSAOp::Define(zero_p, SSAExpr::Const(0)));
+                            SSAExpr::MulAdd(zero_p, v2, *val)
+                        }
+                        (FindResult::Version(v1), FindResult::Version(v2)) =>
+                            SSAExpr::MulAdd(v1, v2, *val),
+                    })
+                }
                 CFGOpKind::In => def!(SSAExpr::In),
-                CFGOpKind::Out => SSAOp::Out(self.find(i, pointer)),
+                CFGOpKind::Out => SSAOp::Out(match self.find(i, pointer) {
+                    FindResult::Version(version) => version,
+                    FindResult::Zero => {
+                        // コード初頭で初期値セルの0を出力するのはレアケースと考えたためパフォーマンスの問題は無視する
+                        let zero_p = self.alloc_ver(pointer);
+                        self.program.0[i]
+                            .insts
+                            .push(SSAOp::Define(zero_p, SSAExpr::Const(0)));
+                        zero_p
+                    }
+                }),
             };
             self.program.0[i].insts.push(ssaop);
         }
@@ -87,7 +112,16 @@ impl<'a> SSABuilder<'a> {
                 zero,
                 nonzero,
             } => SSAEdge::Branch {
-                version: self.find(i, pointer),
+                version: match self.find(i, pointer) {
+                    FindResult::Version(version) => version,
+                    FindResult::Zero => {
+                        let zero_p = self.alloc_ver(pointer);
+                        self.program.0[i]
+                            .insts
+                            .push(SSAOp::Define(zero_p, SSAExpr::Const(0)));
+                        zero_p
+                    }
+                },
                 zero,
                 nonzero,
             },
