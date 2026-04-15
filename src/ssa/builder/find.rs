@@ -40,14 +40,23 @@ impl<'a> SSABuilder<'a> {
                         i = *pred1;
                         continue;
                     }
-                    [pred1, pred2] => {
+                    [pred1r, pred2r] => {
+                        let pred1 = *pred1r;
+                        let pred2 = *pred2r;
                         for phi in &block.phis {
                             if phi.pointer == pointer {
                                 return InternalFindResult::Version(phi.define_version);
                             }
                         }
                         let ver = self.unique_ver_map.get_unique_version(pointer);
-                        let args = [*pred1, *pred2]
+                        let phi = Phi {
+                            pointer,
+                            define_version: ver,
+                            args: [PhiArg::Load, PhiArg::Load],
+                        };
+                        self.program.0[i].phis.push(phi);
+
+                        let args_vec = [pred1, pred2]
                             .iter()
                             .map(|pred| match self.internal_find(*pred, pointer) {
                                 InternalFindResult::Version(ver) => PhiArg::Version(ver),
@@ -59,18 +68,12 @@ impl<'a> SSABuilder<'a> {
                                         .push(SSAOp::Define(zero_v, SSAExpr::Const(0)));
                                     PhiArg::Version(zero_v.version)
                                 }
-                                _ => todo!(),
+                                InternalFindResult::None => PhiArg::Version(usize::MAX), // 後に正しい値にする
                             })
                             .collect::<Vec<PhiArg>>();
-                        let phi = Phi {
-                            pointer,
-                            define_version: ver,
-                            args: match args.try_into() {
-                                Ok(args) => args,
-                                Err(_) => unreachable!(),
-                            },
-                        };
-                        self.program.0[i].phis.push(phi);
+                        self.program.0[i].phis.last_mut().unwrap().args =
+                            args_vec.try_into().ok().unwrap();
+
                         return InternalFindResult::Version(ver);
                     }
                     _ => unreachable!(),
