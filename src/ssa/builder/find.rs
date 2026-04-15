@@ -17,14 +17,14 @@ pub enum FindResult {
 
 impl<'a> SSABuilder<'a> {
     // blockはまだ読み込んでないとこも可能
-    fn internal_find(&mut self, block: usize, pointer: isize) -> InternalFindResult {
-        if self.program.0.len() <= block {
+    fn internal_find(&mut self, block_i: usize, pointer: isize) -> InternalFindResult {
+        if self.program.0.len() <= block_i {
             InternalFindResult::None
         } else {
-            let mut i = block;
+            let mut i = block_i;
             loop {
                 let block = &self.program.0[i];
-                if block.offset.is_some() {
+                if i != block_i && block.offset.is_some() {
                     return InternalFindResult::FromCell;
                 }
                 for inst in block.insts.iter().rev() {
