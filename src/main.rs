@@ -3,7 +3,7 @@ use std::{env::args, fs, process::ExitCode};
 use crate::{
     cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg},
     ir::{int::exec_from_ir, ir::IR},
-    ssa::ssa::SSAProgram,
+    ssa::{parse::SSAParser, ssa::SSAProgram},
 };
 
 mod cfg;
@@ -33,8 +33,9 @@ fn main() -> ExitCode {
                 println!("{}", cfg_to_dot(&cfg));
             }
             "dump_ssa" => {
-                let ssa = SSAProgram::new(&cfg);
-                println!("{ssa:?}");
+                let mut ssa_builder = SSAParser::new(&cfg);
+                ssa_builder.parse_all();
+                println!("{:?}", ssa_builder.program);
             }
             _ => {
                 eprintln!("unknown kind");
