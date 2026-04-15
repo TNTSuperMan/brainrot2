@@ -5,7 +5,7 @@ mod version_map;
 use crate::{
     cfg::cfg::{CFG, CFGEdge, CFGOp, CFGOpKind},
     ssa::{
-        parse::version_map::UniqueVersionMap,
+        builder::version_map::UniqueVersionMap,
         ssa::{Phi, SSABlock, SSAEdge, SSAExpr, SSAOp, SSAProgram, SSAVersion},
     },
 };
@@ -23,16 +23,16 @@ enum FindResult {
     NeedPhi(usize),
 }
 
-pub struct SSAParser<'a> {
+pub struct SSABuilder<'a> {
     cfg: &'a CFG,
     phi_schedules: HashMap<usize, PhiSchedule>,
     pub program: SSAProgram,
     unique_ver_map: UniqueVersionMap,
 }
 
-impl<'a> SSAParser<'a> {
-    pub fn new(cfg: &'a CFG) -> SSAParser<'a> {
-        SSAParser {
+impl<'a> SSABuilder<'a> {
+    pub fn new(cfg: &'a CFG) -> SSABuilder<'a> {
+        SSABuilder {
             cfg,
             phi_schedules: HashMap::new(),
             program: SSAProgram(vec![]),
