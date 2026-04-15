@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+mod find;
 mod version_map;
 
 use crate::{
@@ -13,14 +14,6 @@ use crate::{
 struct PhiSchedule {
     phi_block: usize,
     pointer: isize,
-}
-
-enum FindResult {
-    None,
-    Version(usize),
-    Zero,
-    FromCell,
-    NeedPhi(usize),
 }
 
 pub struct SSABuilder<'a> {
@@ -48,51 +41,6 @@ impl<'a> SSABuilder<'a> {
         SSAVersion {
             pointer,
             version: self.unique_ver_map.get_unique_version(pointer),
-        }
-    }
-    // blockはまだ読み込んでないとこも可能
-    fn internal_find(&mut self, block: usize, pointer: isize) -> FindResult {
-        if self.program.0.len() <= block {
-            FindResult::None
-        } else {
-            let mut i = block;
-            loop {
-                let block = &self.program.0[i];
-                if block.offset.is_some() {
-                    return FindResult::FromCell;
-                }
-                for inst in block.insts.iter().rev() {
-                    if let SSAOp::Define(ver, _) = inst {
-                        if ver.pointer == pointer {
-                            return FindResult::Version(ver.version);
-                        }
-                    }
-                }
-                match block.predecessor.as_slice() {
-                    [] => return FindResult::Zero,
-                    [pred1] => {
-                        i = *pred1;
-                        continue;
-                    }
-                    [pred1, pred2] => {
-                        for phi in &block.phis {
-                            if phi.pointer == pointer {
-                                return FindResult::Version(phi.define_version);
-                            }
-                        }
-                        return FindResult::NeedPhi(i);
-                    }
-                    _ => unreachable!(),
-                }
-            }
-        }
-    }
-    fn find(&mut self, block: usize, pointer: isize) -> SSAVersion {
-        match self.internal_find(block, pointer) {
-            FindResult::Version(version) => SSAVersion { pointer, version },
-            _ => {
-                todo!()
-            }
         }
     }
     fn step(&mut self) {
