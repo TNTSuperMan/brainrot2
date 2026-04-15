@@ -1,6 +1,6 @@
 use crate::ssa::{
     builder::SSABuilder,
-    ssa::{SSAOp, SSAVersion},
+    ssa::{Phi, PhiArg, SSAExpr, SSAOp, SSAVersion},
 };
 
 enum InternalFindResult {
@@ -8,7 +8,6 @@ enum InternalFindResult {
     Version(usize),
     Zero,
     FromCell,
-    NeedPhi(usize),
 }
 
 pub enum FindResult {
@@ -47,7 +46,32 @@ impl<'a> SSABuilder<'a> {
                                 return InternalFindResult::Version(phi.define_version);
                             }
                         }
-                        return InternalFindResult::NeedPhi(i);
+                        let ver = self.unique_ver_map.get_unique_version(pointer);
+                        let args = [*pred1, *pred2]
+                            .iter()
+                            .map(|pred| match self.internal_find(*pred, pointer) {
+                                InternalFindResult::Version(ver) => PhiArg::Version(ver),
+                                InternalFindResult::FromCell => PhiArg::Load,
+                                InternalFindResult::Zero => {
+                                    let zero_v = self.alloc_ver(pointer);
+                                    self.program.0[*pred]
+                                        .insts
+                                        .push(SSAOp::Define(zero_v, SSAExpr::Const(0)));
+                                    PhiArg::Version(zero_v.version)
+                                }
+                                _ => todo!(),
+                            })
+                            .collect::<Vec<PhiArg>>();
+                        let phi = Phi {
+                            pointer,
+                            define_version: ver,
+                            args: match args.try_into() {
+                                Ok(args) => args,
+                                Err(_) => unreachable!(),
+                            },
+                        };
+                        self.program.0[i].phis.push(phi);
+                        return InternalFindResult::Version(ver);
                     }
                     _ => unreachable!(),
                 }
