@@ -134,6 +134,19 @@ impl CFG {
                 _ => node_insts.push(ir_to_cfgir(ir).unwrap()),
             }
         }
+        let last_i = insts.len();
+        if points.contains(&last_i) {
+            points.remove(&last_i);
+            if node_insts.len() != 0 {
+                nodes.push(CFGBlock {
+                    insts: node_insts,
+                    edge: CFGEdge::Jump(usize::MAX),
+                    predecessor: vec![],
+                    offset: None,
+                });
+                node_insts = vec![];
+            }
+        }
         nodes.push(CFGBlock {
             predecessor: vec![],
             insts: node_insts,
