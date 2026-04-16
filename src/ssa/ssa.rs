@@ -89,7 +89,7 @@ impl Debug for SSAOp {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum PhiArg {
     Version(usize),
     Load,

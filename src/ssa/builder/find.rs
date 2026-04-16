@@ -54,9 +54,10 @@ impl<'a> SSABuilder<'a> {
                             define_version: ver,
                             args: [PhiArg::Load, PhiArg::Load],
                         };
+                        let phi_i = self.program.0[i].phis.len();
                         self.program.0[i].phis.push(phi);
 
-                        let args_vec = [pred1, pred2]
+                        let args: [PhiArg; 2] = [pred1, pred2]
                             .iter()
                             .map(|pred| match self.internal_find(*pred, pointer) {
                                 InternalFindResult::Version(ver) => PhiArg::Version(ver),
@@ -70,9 +71,30 @@ impl<'a> SSABuilder<'a> {
                                 }
                                 InternalFindResult::None => PhiArg::Version(usize::MAX), // 後に正しい値にする
                             })
-                            .collect::<Vec<PhiArg>>();
-                        self.program.0[i].phis.last_mut().unwrap().args =
-                            args_vec.try_into().ok().unwrap();
+                            .collect::<Vec<PhiArg>>()
+                            .try_into()
+                            .ok()
+                            .unwrap();
+                        if args[0] == args[1] {
+                            if let PhiArg::Version(v) = args[0] {
+                                self.program.0[i].phis.remove(phi_i);
+                                self.program.0[i].insts.insert(
+                                    0,
+                                    SSAOp::Define(
+                                        SSAVersion {
+                                            pointer,
+                                            version: ver,
+                                        },
+                                        SSAExpr::Ref(SSAVersion {
+                                            pointer,
+                                            version: v,
+                                        }),
+                                    ),
+                                );
+                                return InternalFindResult::Version(ver);
+                            }
+                        }
+                        self.program.0[i].phis[phi_i].args = args;
 
                         return InternalFindResult::Version(ver);
                     }
