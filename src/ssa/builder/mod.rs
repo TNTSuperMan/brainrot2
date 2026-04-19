@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 mod find;
 mod version_map;
 
@@ -7,18 +5,12 @@ use crate::{
     cfg::cfg::{CFG, CFGEdge, CFGOp, CFGOpKind},
     ssa::{
         builder::{find::FindResult, version_map::UniqueVersionMap},
-        ssa::{Phi, SSABlock, SSAEdge, SSAExpr, SSAOp, SSAProgram, SSAVersion},
+        ssa::{SSABlock, SSAEdge, SSAExpr, SSAOp, SSAProgram, SSAVersion},
     },
 };
 
-struct PhiSchedule {
-    phi_block: usize,
-    pointer: isize,
-}
-
 pub struct SSABuilder<'a> {
     cfg: &'a CFG,
-    phi_schedules: HashMap<usize, PhiSchedule>,
     pub program: SSAProgram,
     unique_ver_map: UniqueVersionMap,
 }
@@ -27,7 +19,6 @@ impl<'a> SSABuilder<'a> {
     pub fn new(cfg: &'a CFG) -> SSABuilder<'a> {
         SSABuilder {
             cfg,
-            phi_schedules: HashMap::new(),
             program: SSAProgram(vec![]),
             unique_ver_map: UniqueVersionMap::new(),
         }
