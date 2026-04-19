@@ -5,12 +5,13 @@ use crate::{
     cfg::cfg::{CFG, CFGEdge, CFGOp, CFGOpKind},
     ssa::{
         builder::{find::FindResult, version_map::UniqueVersionMap},
-        ssa::{SSABlock, SSAEdge, SSAExpr, SSAOp, SSAProgram, SSAVersion},
+        ssa::{PhiArg, SSABlock, SSAEdge, SSAExpr, SSAOp, SSAProgram, SSAVersion},
     },
 };
 
 pub struct SSABuilder<'a> {
     cfg: &'a CFG,
+    pub skipped_phis: Vec<(usize, usize, usize)>, // block index, phi index, pred index
     pub program: SSAProgram,
     unique_ver_map: UniqueVersionMap,
 }
@@ -19,6 +20,7 @@ impl<'a> SSABuilder<'a> {
     pub fn new(cfg: &'a CFG) -> SSABuilder<'a> {
         SSABuilder {
             cfg,
+            skipped_phis: vec![],
             program: SSAProgram(vec![]),
             unique_ver_map: UniqueVersionMap::new(),
         }
@@ -27,6 +29,7 @@ impl<'a> SSABuilder<'a> {
         while self.program.0.len() != self.cfg.0.len() {
             self.step();
         }
+        self.resolve_skipped_phi();
     }
     fn alloc_ver(&mut self, pointer: isize) -> SSAVersion {
         SSAVersion {
@@ -106,6 +109,14 @@ impl<'a> SSABuilder<'a> {
             },
             CFGEdge::Jump(addr) => SSAEdge::Jump(addr),
             CFGEdge::End => SSAEdge::End,
+        }
+    }
+    fn resolve_skipped_phi(&mut self) {
+        for (block_i, phi_i, pred_i) in self.skipped_phis.clone() {
+            match self.find(self.program.0[block_i].predecessor[pred_i], self.program.0[block_i].phis[phi_i].pointer) {
+                FindResult::Version(ver) => self.program.0[block_i].phis[phi_i].args[pred_i] = PhiArg::Version(ver.version),
+                FindResult::Zero => todo!(),
+            };
         }
     }
 }

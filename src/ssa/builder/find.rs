@@ -58,8 +58,8 @@ impl<'a> SSABuilder<'a> {
                         self.program.0[i].phis.push(phi);
 
                         let args: [PhiArg; 2] = [pred1, pred2]
-                            .iter()
-                            .map(|pred| match self.internal_find(*pred, pointer) {
+                            .iter().enumerate()
+                            .map(|(pi, pred)| match self.internal_find(*pred, pointer) {
                                 InternalFindResult::Version(ver) => PhiArg::Version(ver),
                                 InternalFindResult::FromCell => PhiArg::Load,
                                 InternalFindResult::Zero => {
@@ -69,7 +69,10 @@ impl<'a> SSABuilder<'a> {
                                         .push(SSAOp::Define(zero_v, SSAExpr::Const(0)));
                                     PhiArg::Version(zero_v.version)
                                 }
-                                InternalFindResult::None => PhiArg::Version(usize::MAX), // 後に正しい値にする
+                                InternalFindResult::None => {
+                                    self.skipped_phis.push((i, phi_i, pi));
+                                    PhiArg::Version(usize::MAX) // 後に正しい値にする
+                                },
                             })
                             .collect::<Vec<PhiArg>>()
                             .try_into()
