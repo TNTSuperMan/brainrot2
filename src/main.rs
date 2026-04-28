@@ -34,6 +34,7 @@ fn main() -> ExitCode {
                 for _ in 0..3 {
                     cfg.inline_branch();
                     cfg.inline_flow();
+                    cfg.fold_jump();
                     cfg.eliminate_dead_code();
                 }
                 println!("{}", cfg_to_dot(&cfg));
