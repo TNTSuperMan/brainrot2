@@ -18,8 +18,8 @@ impl CFG {
                 } else {
                     nonzero
                 });
-                return;
             }
+            return;
         }
         if self.is_zero_cell(block_i, pointer) {
             self.0[block_i].edge = CFGEdge::Jump(zero);
