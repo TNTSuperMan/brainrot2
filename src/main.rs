@@ -16,6 +16,7 @@ fn main() -> ExitCode {
         let mut cfg = CFG::new(&ir);
         cfg.inline_flow();
         cfg.inline_flow();
+        cfg.eliminate_dead_code();
         match kind.as_str() {
             "exec_ir" => {
                 exec_from_ir(&ir);

@@ -18,6 +18,7 @@ pub struct CFGBlock {
     pub edge: CFGEdge,
     pub insts: Vec<CFGOp>,
     pub offset: Option<isize>,
+    pub alive: bool,
 }
 impl Debug for CFGBlock {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

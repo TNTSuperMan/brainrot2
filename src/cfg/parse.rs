@@ -53,6 +53,7 @@ fn split_node(nodes: &mut Vec<CFGBlock>, index: usize) {
             edge: right_edge,
             predecessor: vec![],
             offset: right_offset,
+            alive: true,
         },
     );
 }
@@ -72,6 +73,7 @@ impl CFG {
                         edge: CFGEdge::Jump(usize::MAX),
                         predecessor: vec![],
                         offset: None,
+                        alive: true,
                     });
                     node_insts = vec![];
                 }
@@ -87,6 +89,7 @@ impl CFG {
                         },
                         predecessor: vec![],
                         offset: None,
+                        alive: true,
                     });
                     if addr < i {
                         split_node(&mut nodes, addr);
@@ -105,6 +108,7 @@ impl CFG {
                         },
                         predecessor: vec![],
                         offset: None,
+                        alive: true,
                     });
                     if addr < i {
                         split_node(&mut nodes, addr);
@@ -123,6 +127,7 @@ impl CFG {
                         },
                         predecessor: vec![],
                         offset: Some(offset),
+                        alive: true,
                     });
                     if addr < i {
                         split_node(&mut nodes, addr);
@@ -143,6 +148,7 @@ impl CFG {
                     edge: CFGEdge::Jump(usize::MAX),
                     predecessor: vec![],
                     offset: None,
+                    alive: true,
                 });
                 node_insts = vec![];
             }
@@ -152,6 +158,7 @@ impl CFG {
             insts: node_insts,
             edge: CFGEdge::End,
             offset: None,
+            alive: true,
         });
 
         let mut idx_map: HashMap<usize, usize> = HashMap::new();
