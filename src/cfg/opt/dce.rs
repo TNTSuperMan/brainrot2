@@ -4,7 +4,7 @@ use crate::cfg::cfg::{CFG, CFGEdge};
 
 impl CFG {
     pub fn eliminate_dead_code(&mut self) {
-        let mut dead_codes: HashSet<usize> = (0..(self.0.len())).collect();
+        let mut dead_codes: HashSet<usize> = (1..(self.0.len())).collect();
 
         for block in &self.0 {
             if block.alive {
