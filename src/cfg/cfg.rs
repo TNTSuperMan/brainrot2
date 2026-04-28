@@ -56,6 +56,15 @@ impl Debug for CFGEdge {
         }
     }
 }
+impl CFGEdge {
+    pub fn successor(&self) -> Vec<usize> {
+        match self {
+            Self::Jump(to) => vec![*to],
+            Self::Branch { pointer: _, zero, nonzero } => vec![*zero, *nonzero],
+            Self::End => vec![],
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct CFGOp {

@@ -25,6 +25,11 @@ impl CFG {
             self.0[dead_i].alive = false;
             self.0[dead_i].predecessor = vec![];
             self.0[dead_i].insts = vec![];
+            for suc in self.0[dead_i].edge.successor() {
+                if let Some(idx) = self.0[suc].predecessor.iter().position(|&e| e == dead_i) {
+                    self.0[suc].predecessor.remove(idx);
+                }
+            }
         }
     }
 }
