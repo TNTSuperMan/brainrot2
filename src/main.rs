@@ -14,10 +14,6 @@ fn main() -> ExitCode {
         let code = fs::read_to_string(&file).unwrap();
         let ir = IR::parse(&code).unwrap();
         let mut cfg = CFG::new(&ir);
-        cfg.inline_flow();
-        cfg.inline_branch();
-        cfg.inline_flow();
-        cfg.eliminate_dead_code();
         match kind.as_str() {
             "exec_ir" => {
                 exec_from_ir(&ir);
@@ -32,6 +28,15 @@ fn main() -> ExitCode {
                 println!("{cfg:?}");
             }
             "print_cfg_dot" => {
+                println!("{}", cfg_to_dot(&cfg));
+            }
+            "print_opt_cfg_dot" => {
+                cfg.inline_branch();
+                cfg.inline_flow();
+                cfg.inline_flow();
+                cfg.inline_flow();
+                cfg.eliminate_dead_code();
+                cfg.eliminate_dead_code();
                 println!("{}", cfg_to_dot(&cfg));
             }
             _ => {
