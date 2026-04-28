@@ -13,7 +13,9 @@ fn main() -> ExitCode {
     if let [_, kind, file] = args().collect::<Vec<String>>().as_slice() {
         let code = fs::read_to_string(&file).unwrap();
         let ir = IR::parse(&code).unwrap();
-        let cfg = CFG::new(&ir);
+        let mut cfg = CFG::new(&ir);
+        cfg.inline_flow();
+        cfg.inline_flow();
         match kind.as_str() {
             "exec_ir" => {
                 exec_from_ir(&ir);
