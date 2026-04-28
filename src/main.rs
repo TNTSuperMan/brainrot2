@@ -3,13 +3,11 @@ use std::{env::args, fs, process::ExitCode};
 use crate::{
     cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg},
     ir::{int::exec_from_ir, ir::IR},
-    ssa::{builder::SSABuilder, dot::ssa_to_dot, ssa::SSAProgram},
 };
 
 mod cfg;
 mod error;
 mod ir;
-mod ssa;
 
 fn main() -> ExitCode {
     if let [_, kind, file] = args().collect::<Vec<String>>().as_slice() {
@@ -31,16 +29,6 @@ fn main() -> ExitCode {
             }
             "print_cfg_dot" => {
                 println!("{}", cfg_to_dot(&cfg));
-            }
-            "dump_ssa" => {
-                let mut ssa_builder = SSABuilder::new(&cfg);
-                ssa_builder.parse_all();
-                println!("{:?}", ssa_builder.program);
-            }
-            "print_ssa_dot" => {
-                let mut ssa_builder = SSABuilder::new(&cfg);
-                ssa_builder.parse_all();
-                println!("{}", ssa_to_dot(&ssa_builder.program))
             }
             _ => {
                 eprintln!("unknown kind");
