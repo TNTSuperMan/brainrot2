@@ -12,12 +12,16 @@ impl CFG {
 
         let last_assign = self.0[block_i].insts.iter().rev().find(|&inst| inst.pointer == pointer);
         if let Some(last_assign) = last_assign {
-            if last_assign.opcode == CFGOpKind::Set(0) {
-                self.0[block_i].edge = CFGEdge::Jump(zero);
-            } else {
-                self.0[block_i].edge = CFGEdge::Jump(nonzero);
+            if let CFGOpKind::Set(val) = last_assign.opcode {
+                self.0[block_i].edge = CFGEdge::Jump(if val == 0 {
+                    zero
+                } else {
+                    nonzero
+                });
+                return;
             }
-        } else if self.is_zero_cell(block_i, pointer) {
+        }
+        if self.is_zero_cell(block_i, pointer) {
             self.0[block_i].edge = CFGEdge::Jump(zero);
         }
     }

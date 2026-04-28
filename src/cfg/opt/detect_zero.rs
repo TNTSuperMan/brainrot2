@@ -16,10 +16,8 @@ impl CFG {
 
         let last_assign = block.insts.iter().rev().find(|&inst| inst.pointer == pointer);
         if let Some(last_assign) = last_assign {
-            if last_assign.opcode == CFGOpKind::Set(0) {
-                return true;
-            } else {
-                return false;
+            if let CFGOpKind::Set(val) = last_assign.opcode {
+                return val == 0;
             }
         }
 
