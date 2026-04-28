@@ -9,8 +9,8 @@ impl CFG {
         let block = &self.0[block_i];
 
         if let CFGEdge::Branch { pointer: b_pointer, zero, nonzero } = &block.edge {
-            if *b_pointer == pointer && *zero == from {
-                return true;
+            if *b_pointer == pointer {
+                return *zero == from
             }
         }
 
