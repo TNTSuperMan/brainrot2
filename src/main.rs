@@ -31,12 +31,11 @@ fn main() -> ExitCode {
                 println!("{}", cfg_to_dot(&cfg));
             }
             "print_opt_cfg_dot" => {
-                cfg.inline_branch();
-                cfg.inline_flow();
-                cfg.inline_flow();
-                cfg.inline_flow();
-                cfg.eliminate_dead_code();
-                cfg.eliminate_dead_code();
+                for _ in 0..3 {
+                    cfg.inline_branch();
+                    cfg.inline_flow();
+                    cfg.eliminate_dead_code();
+                }
                 println!("{}", cfg_to_dot(&cfg));
             }
             _ => {
