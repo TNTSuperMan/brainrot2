@@ -6,7 +6,6 @@ use crate::{
 };
 
 mod cfg;
-mod error;
 mod ir;
 
 fn main() -> ExitCode {

@@ -1,9 +1,6 @@
 use std::ops::Range;
 
-use crate::{
-    error::SyntaxError,
-    ir::ir::{IR, IROp},
-};
+use crate::ir::{error::SyntaxError, ir::{IR, IROp}};
 
 #[derive(PartialEq, Eq)]
 enum SimpleOp {
