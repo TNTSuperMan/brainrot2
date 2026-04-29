@@ -1,28 +1,43 @@
 use crate::cfg::cfg::{CFG, CFGEdge};
 
 impl CFG {
-    fn internal_try_fold_info(&self, target: usize) -> Option<usize> {
+    fn internal_try_fold_info(&self, target: usize) -> Option<CFGEdge> {
         if self.0[target].insts.is_empty() && self.0[target].offset.is_none() {
-            if let CFGEdge::Jump(to) = self.0[target].edge {
-                return Some(to);
-            }
+            Some(self.0[target].edge.clone())
+        } else {
+            None
         }
-        None
     }
     fn internal_fold_jump(&mut self, block_i: usize) {
         if !self.0[block_i].alive { return }
         match self.0[block_i].edge {
             CFGEdge::Jump(block_to) => {
-                if let Some(to) = self.internal_try_fold_info(block_to) {
+                if let Some(CFGEdge::Jump(to)) = self.internal_try_fold_info(block_to) {
                     self.update_edge(block_i, CFGEdge::Jump(to));
                 }
             }
             CFGEdge::Branch { pointer, zero, nonzero } => {
-                if let Some(zero) = self.internal_try_fold_info(zero) {
-                    self.update_edge(block_i, CFGEdge::Branch { pointer, zero, nonzero });
+                if let Some(edge) = self.internal_try_fold_info(zero) {
+                    match edge {
+                        CFGEdge::Jump(zero) => self.update_edge(block_i, CFGEdge::Branch { pointer, zero, nonzero }),
+                        CFGEdge::Branch { pointer: edge_p, zero, nonzero: _ } => {
+                            if edge_p == pointer {
+                                self.update_edge(block_i, CFGEdge::Branch { pointer, zero, nonzero })
+                            }
+                        }
+                        CFGEdge::End => {}
+                    }
                 }
-                if let Some(nonzero) = self.internal_try_fold_info(nonzero) {
-                    self.update_edge(block_i, CFGEdge::Branch { pointer, zero, nonzero });
+                if let Some(edge) = self.internal_try_fold_info(nonzero) {
+                    match edge {
+                        CFGEdge::Jump(nonzero) => self.update_edge(block_i, CFGEdge::Branch { pointer, zero, nonzero }),
+                        CFGEdge::Branch { pointer: edge_p, zero: _, nonzero } => {
+                            if edge_p == pointer {
+                                self.update_edge(block_i, CFGEdge::Branch { pointer, zero, nonzero })
+                            }
+                    }
+                        CFGEdge::End => {}
+                    }
                 }
             }
             CFGEdge::End => {}
