@@ -30,6 +30,15 @@ fn main() -> ExitCode {
             "print_cfg_dot" => {
                 println!("{}", cfg_to_dot(&cfg));
             }
+            "exec_opt_cfg" => {
+                for _ in 0..3 {
+                    cfg.inline_branch();
+                    cfg.inline_flow();
+                    cfg.fold_jump();
+                    cfg.eliminate_dead_code();
+                }
+                exec_from_cfg(&cfg);
+            }
             "print_opt_cfg_dot" => {
                 for _ in 0..3 {
                     cfg.inline_branch();
