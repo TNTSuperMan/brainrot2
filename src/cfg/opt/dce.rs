@@ -4,21 +4,15 @@ use crate::cfg::cfg::{CFG, CFGEdge};
 
 impl CFG {
     pub fn eliminate_dead_code(&mut self) {
-        let mut dead_codes: HashSet<usize> = (1..(self.0.len())).collect();
+        let mut dead_codes: HashSet<usize> = (0..(self.0.len())).collect();
+        let mut stack = vec![0];
 
-        for block in &self.0 {
-            if block.alive {
-                match block.edge {
-                    CFGEdge::Jump(to) => {
-                        dead_codes.remove(&to);
-                    },
-                    CFGEdge::Branch { pointer: _, zero, nonzero } => {
-                        dead_codes.remove(&zero);
-                        dead_codes.remove(&nonzero);
-                    }
-                    CFGEdge::End => {}
-                }
+        while let Some(b) = stack.pop() {
+            if !dead_codes.contains(&b) {
+                break;
             }
+            dead_codes.remove(&b);
+            stack.append(&mut self.0[b].edge.successor());
         }
 
         for dead_i in dead_codes {
