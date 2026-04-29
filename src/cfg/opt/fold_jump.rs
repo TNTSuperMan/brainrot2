@@ -14,15 +14,15 @@ impl CFG {
         match self.0[block_i].edge {
             CFGEdge::Jump(block_to) => {
                 if let Some(to) = self.internal_try_fold_info(block_to) {
-                    self.0[block_i].edge = CFGEdge::Jump(to);
+                    self.update_edge(block_i, CFGEdge::Jump(to));
                 }
             }
             CFGEdge::Branch { pointer, zero, nonzero } => {
                 if let Some(zero) = self.internal_try_fold_info(zero) {
-                    self.0[block_i].edge = CFGEdge::Branch { pointer, zero, nonzero }
+                    self.update_edge(block_i, CFGEdge::Branch { pointer, zero, nonzero });
                 }
                 if let Some(nonzero) = self.internal_try_fold_info(nonzero) {
-                    self.0[block_i].edge = CFGEdge::Branch { pointer, zero, nonzero }
+                    self.update_edge(block_i, CFGEdge::Branch { pointer, zero, nonzero });
                 }
             }
             CFGEdge::End => {}

@@ -15,7 +15,7 @@ impl CFG {
             }
             let mut target_insts = self.0[jump_to].insts.clone();
             self.0[block_i].insts.append(&mut target_insts);
-            self.0[block_i].edge = self.0[jump_to].edge.clone();
+            self.update_edge(block_i, self.0[jump_to].edge.clone());
         }
     }
     pub fn inline_flow(&mut self) {

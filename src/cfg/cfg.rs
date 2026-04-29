@@ -11,6 +11,19 @@ impl Debug for CFG {
         write!(f, "]")
     }
 }
+impl CFG {
+    pub fn update_edge(&mut self, block_i: usize, edge: CFGEdge) {
+        for suc in self.0[block_i].edge.successor() {
+            if let Some(idx) = self.0[suc].predecessor.iter().position(|&e| e == block_i) {
+                self.0[suc].predecessor.remove(idx);
+            }
+        }
+        for suc in edge.successor() {
+            self.0[suc].predecessor.push(block_i);
+        }
+        self.0[block_i].edge = edge;
+    }
+}
 
 #[derive(Clone)]
 pub struct CFGBlock {
