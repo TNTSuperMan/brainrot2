@@ -8,11 +8,10 @@ impl CFG {
         let mut stack = vec![0];
 
         while let Some(b) = stack.pop() {
-            if !dead_codes.contains(&b) {
-                break;
+            if dead_codes.contains(&b) {
+                dead_codes.remove(&b);
+                stack.append(&mut self.0[b].edge.successor());
             }
-            dead_codes.remove(&b);
-            stack.append(&mut self.0[b].edge.successor());
         }
 
         for dead_i in dead_codes {
