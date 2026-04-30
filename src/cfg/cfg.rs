@@ -90,7 +90,9 @@ impl Debug for CFGOp {
         match self.opcode {
             CFGOpKind::Breakpoint => write!(f, "breakpoint"),
             CFGOpKind::Add(val) => write!(f, "${} = ${} + {val}", self.pointer, self.pointer),
+            CFGOpKind::AddLoad(ptr) => write!(f, "${} = ${} + ${ptr}", self.pointer, self.pointer),
             CFGOpKind::Set(val) => write!(f, "${} = {val}", self.pointer),
+            CFGOpKind::SetLoad(ptr) => write!(f, "${} = ${ptr}", self.pointer),
             CFGOpKind::MulAdd(p2, val) => {
                 write!(f, "${} = ${} + (${p2} * {val})", self.pointer, self.pointer)
             }
@@ -110,7 +112,9 @@ impl Debug for CFGOp {
 pub enum CFGOpKind {
     Breakpoint,
     Add(u8),
+    AddLoad(isize),
     Set(u8),
+    SetLoad(isize),
     MulAdd(isize, u8), // [pointer] = [pointer] + [opcode.0] * opcode.1
     MulAddConst(u8, isize, u8), // [pointer] = opcode.0 + [opcode.1] * opcode.2
     Mul(isize, u8), // [pointer] = [opcode.0] * opcode.1

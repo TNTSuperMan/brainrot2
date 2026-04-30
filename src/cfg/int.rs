@@ -29,8 +29,14 @@ fn exec_node_ir(insts: &[CFGOp], mem: &mut Mem) {
             CFGOpKind::Add(val) => {
                 mem.set(*pointer, mem.get(*pointer).wrapping_add(*val));
             }
+            CFGOpKind::AddLoad(ptr) => {
+                mem.set(*pointer, mem.get(*pointer).wrapping_add(mem.get(*ptr)));
+            }
             CFGOpKind::Set(val) => {
                 mem.set(*pointer, *val);
+            }
+            CFGOpKind::SetLoad(ptr) => {
+                mem.set(*pointer, mem.get(*ptr));
             }
             CFGOpKind::MulAdd(ptr2, val) => {
                 mem.set(

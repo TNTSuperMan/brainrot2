@@ -26,8 +26,22 @@ impl CFG {
                         change_schedules.push((i, Some(CFGOpKind::Set(val.wrapping_add(v)))));
                     }
                 }
+                CFGOpKind::AddLoad(ptr) => {
+                    if let CellState::Const(v) = self.internal_get_cellstate_inblock(block_i, i, ptr) {
+                        change_schedules.push((i, Some(CFGOpKind::Add(v))));
+                    }
+                }
                 CFGOpKind::Set(..) => {},
+                CFGOpKind::SetLoad(ptr) => {
+                    if let CellState::Const(v) = self.internal_get_cellstate_inblock(block_i, i, ptr) {
+                        change_schedules.push((i, Some(CFGOpKind::Set(v))));
+                    }
+                }
                 CFGOpKind::MulAdd(p2, v3) => {
+                    if v3 == 1 {
+                        change_schedules.push((i, Some(CFGOpKind::AddLoad(p2))));
+                        continue;
+                    }
                     match (
                         self.internal_get_cellstate_inblock(block_i, i, inst.pointer),
                         self.internal_get_cellstate_inblock(block_i, i, p2),
@@ -51,11 +65,19 @@ impl CFG {
                     }
                 }
                 CFGOpKind::MulAddConst(v1, p2, v3) => {
+                    if v3 == 1 {
+                        change_schedules.push((i, Some(CFGOpKind::Set(v1))));
+                        continue;
+                    }
                     if let CellState::Const(v2) = self.internal_get_cellstate_inblock(block_i, i, p2) {
                         change_schedules.push((i, Some(CFGOpKind::Set(v1.wrapping_add(v2.wrapping_mul(v3))))));
                     }
                 }
                 CFGOpKind::Mul(p2, v3) => {
+                    if v3 == 1 {
+                        change_schedules.push((i, Some(CFGOpKind::SetLoad(p2))));
+                        continue;
+                    }
                     if let CellState::Const(v2) = self.internal_get_cellstate_inblock(block_i, i, p2) {
                         change_schedules.push((i, Some(CFGOpKind::Set(v2.wrapping_mul(v3)))));
                     }
