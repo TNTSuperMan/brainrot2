@@ -61,6 +61,9 @@ impl CFG {
                     if let CellState::Const(v) = self.internal_get_cellstate_inblock(block_i, i, ptr) {
                         self.0[block_i].insts[i].opcode = CFGOpKind::Set(v);
                     }
+                    if pointer == ptr {
+                        delete_schedules.push(i);
+                    }
                 }
                 CFGOpKind::MulAdd(p2, v3) => {
                     if v3 == 1 {
