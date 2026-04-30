@@ -65,7 +65,8 @@ pub fn build_bytecode(cfg: &CFG) -> Result<Vec<Bytecode>, TryFromIntError> {
     for code in bytecodes.iter_mut() {
         match code {
             Bytecode::Jump(addr) |
-            Bytecode::JumpIfZero(_, addr) => {
+            Bytecode::JumpIfZero(_, addr) |
+            Bytecode::JumpIfNotZero(_, addr) => {
                 *addr = jumptable[*addr as usize];
             }
             Bytecode::Branch { ptr: _, zero, nonzero } => {
