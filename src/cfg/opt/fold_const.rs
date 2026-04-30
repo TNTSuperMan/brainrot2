@@ -30,6 +30,28 @@ impl CFG {
                     if let CellState::Const(v) = self.internal_get_cellstate_inblock(block_i, i, ptr) {
                         change_schedules.push((i, Some(CFGOpKind::Add(v))));
                     }
+                    match (
+                        self.internal_get_cellstate_inblock(block_i, i, inst.pointer),
+                        self.internal_get_cellstate_inblock(block_i, i, ptr),
+                    ) {
+                        (CellState::Const(v1), CellState::Const(v2)) => { // $p1 = v1 + v2
+                            change_schedules.push((i, Some(CFGOpKind::Set(v1.wrapping_add(v2)))));
+                        }
+                        (CellState::Const(0), _) => { // $p1 = 0 + $p2
+                            change_schedules.push((i, Some(CFGOpKind::SetLoad(ptr))));
+                        }
+                        (CellState::Const(v1), _) => { // $p1 = v1 + $p2
+                            // todo
+                            //change_schedules.push((i, Some(CFGOpKind::MulAddConst(v1, p2, v3))));
+                        }
+                        (_, CellState::Const(0)) => { // $p1 = $p1 + 0
+                            change_schedules.push((i, None));
+                        }
+                        (_, CellState::Const(v2)) => { // $p1 = $p1 + v2
+                            change_schedules.push((i, Some(CFGOpKind::Add(v2))));
+                        }
+                        _ => {}
+                    }
                 }
                 CFGOpKind::Set(..) => {},
                 CFGOpKind::SetLoad(ptr) => {
