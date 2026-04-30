@@ -39,6 +39,18 @@ fn exec_node_ir(insts: &[CFGOp], mem: &mut Mem) {
                         .wrapping_add(mem.get(*ptr2).wrapping_mul(*val)),
                 );
             }
+            CFGOpKind::MulAddConst(v1, p2, v3) => {
+                mem.set(
+                    *pointer,
+                    v1.wrapping_add(mem.get(*p2).wrapping_mul(*v3)),
+                );
+            }
+            CFGOpKind::Mul(p2, v3) => {
+                mem.set(
+                    *pointer,
+                    mem.get(*p2).wrapping_mul(*v3),
+                );
+            }
             CFGOpKind::In => {
                 let mut stdin = stdin().lock();
                 let mut buf = [0u8; 1];

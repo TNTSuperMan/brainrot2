@@ -94,6 +94,12 @@ impl Debug for CFGOp {
             CFGOpKind::MulAdd(p2, val) => {
                 write!(f, "${} = ${} + (${p2} * {val})", self.pointer, self.pointer)
             }
+            CFGOpKind::MulAddConst(v1, p2, val) => {
+                write!(f, "${} = {v1} + (${p2} * {val})", self.pointer)
+            }
+            CFGOpKind::Mul(p2, val) => {
+                write!(f, "${} = ${p2} * {val}", self.pointer)
+            }
             CFGOpKind::In => write!(f, "${} = stdin", self.pointer),
             CFGOpKind::Out => write!(f, "stdout < ${}", self.pointer),
         }
@@ -106,6 +112,8 @@ pub enum CFGOpKind {
     Add(u8),
     Set(u8),
     MulAdd(isize, u8), // [pointer] = [pointer] + [opcode.0] * opcode.1
+    MulAddConst(u8, isize, u8), // [pointer] = opcode.0 + [opcode.1] * opcode.2
+    Mul(isize, u8), // [pointer] = [opcode.0] * opcode.1
     In,
     Out,
 }
