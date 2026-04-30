@@ -23,7 +23,7 @@ impl CFG {
         }
         match self.get_cellstate(block_i, pointer) {
             CellState::Const(0) => self.update_edge(block_i, CFGEdge::Jump(zero)),
-            CellState::NonZero => self.update_edge(block_i, CFGEdge::Jump(nonzero)),
+            CellState::Const(_) | CellState::NonZero => self.update_edge(block_i, CFGEdge::Jump(nonzero)),
             _ => {}
         }
     }
