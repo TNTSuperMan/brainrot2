@@ -9,7 +9,7 @@ pub enum CellState {
 
 impl CFG {
     fn internal_get_cellstate(&self, from: usize, block_i: usize, pointer: isize, recursive_count: u8) -> CellState {
-        if recursive_count > 2 {
+        if recursive_count > 5 {
             return CellState::Unknown;
         }
 
