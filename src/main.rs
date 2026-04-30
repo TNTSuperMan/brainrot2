@@ -18,6 +18,7 @@ fn main() -> ExitCode {
             cfg.inline_flow();
             cfg.fold_jump();
             cfg.fold_const();
+            cfg.fold_ref();
             cfg.eliminate_dead_code();
             cfg.eliminate_dead_instruction();
         }
