@@ -19,6 +19,7 @@ fn main() -> ExitCode {
             cfg.fold_jump();
             cfg.fold_const();
             cfg.eliminate_dead_code();
+            cfg.eliminate_dead_instruction();
         }
         match kind.as_str() {
             "exec_ir" => {
