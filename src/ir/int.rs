@@ -2,9 +2,9 @@ use std::io::{Read, Write, stdin, stdout};
 
 use crate::ir::ir::{IR, IROp};
 
-pub fn exec_from_ir(ir: &[IR]) {
+pub fn exec_from_ir(ir: &[IR], offset: u8) {
     let mut pc = 0;
-    let mut offset = 0;
+    let mut offset = offset as isize;
     let mut memory = [0u8; 65536];
     let mut stdin = stdin().lock();
     let mut stdout = stdout().lock();

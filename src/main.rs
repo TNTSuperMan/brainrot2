@@ -11,7 +11,7 @@ mod bytecode;
 fn main() -> ExitCode {
     if let [_, kind, file] = args().collect::<Vec<String>>().as_slice() {
         let code = fs::read_to_string(&file).unwrap();
-        let ir = IR::parse(&code).unwrap();
+        let (ir, mul_offset) = IR::parse(&code).unwrap();
         let mut cfg = CFG::new(&ir);
         for _ in 0..3 {
             cfg.inline_branch();
@@ -22,10 +22,10 @@ fn main() -> ExitCode {
         }
         match kind.as_str() {
             "exec_ir" => {
-                exec_from_ir(&ir);
+                exec_from_ir(&ir, mul_offset);
             }
             "exec_cfg" => {
-                exec_from_cfg(&cfg);
+                exec_from_cfg(&cfg, mul_offset);
             }
             "dump_ir" => {
                 println!("{ir:?}");
@@ -43,7 +43,7 @@ fn main() -> ExitCode {
             }
             "exec_bytecode" => {
                 let bytecodes = build_bytecode(&cfg).unwrap();
-                exec_bytecode(&bytecodes);
+                exec_bytecode(&bytecodes, mul_offset);
             }
             _ => {
                 eprintln!("unknown kind");

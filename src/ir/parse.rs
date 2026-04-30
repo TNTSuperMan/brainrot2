@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::{cmp::max, ops::Range};
 
 use crate::ir::{error::SyntaxError, ir::{IR, IROp}};
 
@@ -9,7 +9,8 @@ enum SimpleOp {
 }
 
 impl IR {
-    pub fn parse(code: &str) -> Result<Vec<IR>, SyntaxError> {
+    pub fn parse(code: &str) -> Result<(Vec<IR>, u8), SyntaxError> {
+        let mut mul_offset = 0;
         let mut insts = vec![];
         let mut loop_stack = vec![];
         let mut pointer = 0isize;
@@ -120,7 +121,7 @@ impl IR {
                                 if muls.iter().all(|op| op.1 != pointer) {
                                     insts.truncate(start_at + 1);
 
-                                    for (op, ptr, val, loc) in muls {
+                                    for (op, ptr, val, loc) in muls.iter() {
                                         insts.push(IR {
                                             pointer: *ptr,
                                             opcode: match op {
@@ -135,8 +136,14 @@ impl IR {
                                         opcode: IROp::Set(0),
                                         loc: loc.clone(),
                                     });
-                                    insts[start_at].opcode = IROp::JumpZero(insts.len());
-                                    split = true;
+                                    if muls.iter().any(|(op, ..)| *op == SimpleOp::Set) {
+                                        insts[start_at].opcode = IROp::JumpZero(insts.len());
+                                        split = true;
+                                    } else {
+                                        let offset = muls.iter().fold(0, |m, f| max(m, pointer - f.1));
+                                        mul_offset = max(mul_offset, offset as u8);
+                                        insts.remove(start_at);
+                                    }
                                     continue;
                                 }
                             }
@@ -158,6 +165,6 @@ impl IR {
             return Err(SyntaxError::UnmatchedOpeningBracket);
         }
 
-        Ok(insts)
+        Ok((insts, mul_offset))
     }
 }

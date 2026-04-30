@@ -81,9 +81,9 @@ fn exec_node_ir(insts: &[CFGOp], mem: &mut Mem) {
     }
 }
 
-pub fn exec_from_cfg(cfg: &CFG) {
+pub fn exec_from_cfg(cfg: &CFG, offset: u8) {
     let mut mem = Mem {
-        offset: 0,
+        offset: offset as isize,
         memory: [0; 65536],
     };
     let mut node_i = 0;

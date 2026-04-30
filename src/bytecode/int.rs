@@ -18,10 +18,10 @@ impl IndexMut<&i16> for Mem {
     }
 }
 
-pub fn exec_bytecode(bytecodes: &[Bytecode]) {
+pub fn exec_bytecode(bytecodes: &[Bytecode], offset: u8) {
     let mut pc: usize = 0;
     let mut mem = Mem {
-        offset: 0,
+        offset: offset as isize,
         memory: [0u8; 65536],
     };
     let mut stdin = stdin().lock();
