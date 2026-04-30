@@ -77,6 +77,11 @@ fn exec_node_ir(insts: &[CFGOp], mem: &mut Mem) {
                 let _ = stdout.write(&[mem.get(*pointer)]);
                 let _ = stdout.flush();
             }
+            CFGOpKind::OutConst(val) => {
+                let mut stdout = stdout().lock();
+                let _ = stdout.write(&[*val]);
+                let _ = stdout.flush();
+            }
         }
     }
 }

@@ -16,11 +16,12 @@ impl CFGOp {
 
             CFGOpKind::Breakpoint |
             CFGOpKind::Set(_) |
-            CFGOpKind::In => false,
+            CFGOpKind::In |
+            CFGOpKind::OutConst(_) => false,
         }
     }
     fn is_assign_to(&self, ptr: isize) -> bool {
-        !matches!(&self.opcode, CFGOpKind::Breakpoint | CFGOpKind::Out) && self.pointer == ptr
+        !matches!(&self.opcode, CFGOpKind::Breakpoint | CFGOpKind::Out | CFGOpKind::OutConst(_)) && self.pointer == ptr
     }
 }
 
@@ -34,7 +35,7 @@ impl CFG {
             if i >= block.insts.len() {
                 break;
             }
-            if matches!(&block.insts[i].opcode, CFGOpKind::Breakpoint | CFGOpKind::Out) {
+            if matches!(&block.insts[i].opcode, CFGOpKind::Breakpoint | CFGOpKind::Out | CFGOpKind::OutConst(_)) {
                 i += 1;
                 continue;
             }

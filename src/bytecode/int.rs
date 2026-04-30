@@ -73,6 +73,10 @@ pub fn exec_bytecode(bytecodes: &[Bytecode], offset: u8) {
                 let _ = stdout.write(&[mem[p1]]);
                 let _ = stdout.flush();
             }
+            Bytecode::OutConst(v1) => {
+                let _ = stdout.write(&[*v1]);
+                let _ = stdout.flush();
+            }
             Bytecode::Jump(a1) => {
                 pc = *a1 as usize;
                 continue;

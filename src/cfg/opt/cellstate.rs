@@ -33,7 +33,7 @@ impl CFG {
         }
 
         let last_assign = block.insts.iter().rev().find(|&inst|
-            !matches!(inst.opcode, CFGOpKind::Breakpoint|CFGOpKind::Out) && inst.pointer == pointer
+            !matches!(inst.opcode, CFGOpKind::Breakpoint|CFGOpKind::Out|CFGOpKind::OutConst(_)) && inst.pointer == pointer
         );
         if let Some(last_assign) = last_assign {
             return if let CFGOpKind::Set(c) = last_assign.opcode {

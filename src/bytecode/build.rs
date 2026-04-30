@@ -17,6 +17,7 @@ fn try_into_bytecode(cfgop: &CFGOp) -> Result<Bytecode, TryFromIntError> {
         CFGOpKind::Mul(p2, v3) => Bytecode::Mul(p1, (*p2).try_into()?, *v3),
         CFGOpKind::In => Bytecode::In(p1),
         CFGOpKind::Out => Bytecode::Out(p1),
+        CFGOpKind::OutConst(val) => Bytecode::OutConst(*val),
     })
 }
 

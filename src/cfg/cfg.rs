@@ -105,6 +105,7 @@ impl Debug for CFGOp {
             }
             CFGOpKind::In => write!(f, "${} = stdin", self.pointer),
             CFGOpKind::Out => write!(f, "stdout < ${}", self.pointer),
+            CFGOpKind::OutConst(val) => write!(f, "stdout < {val}"),
         }
     }
 }
@@ -122,4 +123,5 @@ pub enum CFGOpKind {
     Mul(isize, u8), // [pointer] = [opcode.0] * opcode.1
     In,
     Out,
+    OutConst(u8),
 }

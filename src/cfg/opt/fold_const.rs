@@ -3,7 +3,7 @@ use crate::cfg::{cfg::{CFG, CFGOpKind}, opt::cellstate::CellState};
 impl CFG {
     fn internal_get_cellstate_inblock(&self, block_i: usize, inst_i: usize, pointer: isize) -> CellState {
         let last_assign = self.0[block_i].insts[0..inst_i].iter().rev().find(|&inst| 
-            !matches!(inst.opcode, CFGOpKind::Breakpoint|CFGOpKind::Out) && inst.pointer == pointer
+            !matches!(inst.opcode, CFGOpKind::Breakpoint|CFGOpKind::Out|CFGOpKind::OutConst(_)) && inst.pointer == pointer
         );
         if let Some(last_assign) = last_assign {
             return if let CFGOpKind::Set(c) = last_assign.opcode {
@@ -109,6 +109,11 @@ impl CFG {
                     }
                     if let CellState::Const(v2) = self.internal_get_cellstate_inblock(block_i, i, p2) {
                         self.0[block_i].insts[i].opcode = CFGOpKind::Set(v2.wrapping_mul(v3));
+                    }
+                }
+                CFGOpKind::Out => {
+                    if let CellState::Const(val) = self.internal_get_cellstate_inblock(block_i, i, pointer) {
+                        self.0[block_i].insts[i].opcode = CFGOpKind::OutConst(val);
                     }
                 }
                 _ => {}
