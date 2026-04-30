@@ -15,18 +15,21 @@ impl CFG {
 
         let block = &self.0[block_i];
 
-        if let CFGEdge::Branch { pointer: b_pointer, zero, nonzero: _ } = &block.edge {
+        let fallback = if let CFGEdge::Branch { pointer: b_pointer, zero, nonzero: _ } = &block.edge {
             if *b_pointer == pointer {
-                return if *zero == from {
-                    CellState::Const(0)
-                } else {
-                    CellState::NonZero
+                if *zero == from {
+                    return CellState::Const(0);
                 }
+                CellState::NonZero
+            } else {
+                CellState::Unknown
             }
-        }
+        } else {
+            CellState::Unknown
+        };
 
         if block.offset.is_some() {
-            return CellState::Unknown;
+            return fallback;
         }
 
         let last_assign = block.insts.iter().rev().find(|&inst| inst.pointer == pointer);
@@ -34,11 +37,14 @@ impl CFG {
             return if let CFGOpKind::Set(c) = last_assign.opcode {
                 CellState::Const(c)
             } else {
-                CellState::Unknown
+                fallback
             }
         }
 
-        self.internal_cellstate_recurse(block_i, pointer, recursive_count + 1)
+        match self.internal_cellstate_recurse(block_i, pointer, recursive_count + 1) {
+            CellState::Unknown => fallback,
+            s => s,
+        }
     }
 
     fn internal_cellstate_recurse(&self, block_i: usize, pointer: isize, recursive_count: u8) -> CellState {
