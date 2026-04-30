@@ -1,7 +1,7 @@
 use std::{env::args, fs, process::ExitCode};
 
 use crate::{
-    bytecode::build::build_bytecode, cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg}, ir::{int::exec_from_ir, ir::IR}
+    bytecode::{build::build_bytecode, int::exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg}, ir::{int::exec_from_ir, ir::IR}
 };
 
 mod cfg;
@@ -40,6 +40,10 @@ fn main() -> ExitCode {
                 for (i, c) in build_bytecode(&cfg).unwrap().iter().enumerate() {
                     println!("%{i}  \t{c:?}");
                 }
+            }
+            "exec_bytecode" => {
+                let bytecodes = build_bytecode(&cfg).unwrap();
+                exec_bytecode(&bytecodes);
             }
             _ => {
                 eprintln!("unknown kind");
