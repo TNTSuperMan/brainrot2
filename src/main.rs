@@ -1,12 +1,12 @@
 use std::{env::args, fs, process::ExitCode};
 
 use crate::{
-    cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg},
-    ir::{int::exec_from_ir, ir::IR},
+    bytecode::build::build_bytecode, cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg}, ir::{int::exec_from_ir, ir::IR}
 };
 
 mod cfg;
 mod ir;
+mod bytecode;
 
 fn main() -> ExitCode {
     if let [_, kind, file] = args().collect::<Vec<String>>().as_slice() {
@@ -35,6 +35,11 @@ fn main() -> ExitCode {
             }
             "print_cfg_dot" => {
                 println!("{}", cfg_to_dot(&cfg));
+            }
+            "dump_bytecode" => {
+                for (i, c) in build_bytecode(&cfg).unwrap().iter().enumerate() {
+                    println!("%{i}  \t{c:?}");
+                }
             }
             _ => {
                 eprintln!("unknown kind");
