@@ -1,29 +1,4 @@
-use crate::cfg::cfg::{CFG, CFGOp, CFGOpKind};
-
-impl CFGOp {
-    fn is_references(&self, ptr: isize) -> bool {
-        match &self.opcode {
-            CFGOpKind::Add(_) |
-            CFGOpKind::Out => self.pointer == ptr,
-
-            CFGOpKind::AddLoad(p) |
-            CFGOpKind::SubLoad(p) |
-            CFGOpKind::MulAdd(p, _) => self.pointer == ptr || *p == ptr,
-
-            CFGOpKind::SetLoad(p) |
-            CFGOpKind::MulAddConst(_, p, _) |
-            CFGOpKind::Mul(p, _) => *p == ptr,
-
-            CFGOpKind::Breakpoint |
-            CFGOpKind::Set(_) |
-            CFGOpKind::In |
-            CFGOpKind::OutConst(_) => false,
-        }
-    }
-    fn is_assign_to(&self, ptr: isize) -> bool {
-        !matches!(&self.opcode, CFGOpKind::Breakpoint | CFGOpKind::Out | CFGOpKind::OutConst(_)) && self.pointer == ptr
-    }
-}
+use crate::cfg::cfg::{CFG, CFGOpKind};
 
 impl CFG {
     fn internal_dce_inst(&mut self, block_i: usize) {
@@ -40,7 +15,7 @@ impl CFG {
                 continue;
             }
             let ptr = block.insts[i].pointer;
-            let next_assign = i + 1 + match block.insts[(i+1)..].iter().position(|inst| inst.is_assign_to(ptr)) {
+            let next_assign = i + 1 + match block.insts[(i+1)..].iter().position(|inst| inst.writes() == Some(ptr)) {
                 Some(n) => n,
                 None => {
                     i += 1;
@@ -48,7 +23,7 @@ impl CFG {
                 }
             };
 
-            if block.insts[(i+1)..=next_assign].iter().all(|inst| !inst.is_references(ptr)) {
+            if block.insts[(i+1)..=next_assign].iter().all(|inst| !inst.reads().contains(&ptr)) {
                 block.insts.remove(i);
                 continue;
             }
