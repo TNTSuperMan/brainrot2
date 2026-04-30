@@ -1,4 +1,4 @@
-use crate::cfg::cfg::{CFG, CFGEdge, CFGOpKind};
+use crate::cfg::{cfg::{CFG, CFGEdge, CFGOpKind}, opt::cellstate::CellState};
 
 impl CFG {
     fn internal_inline_branch(&mut self, block_i: usize) {
@@ -21,8 +21,10 @@ impl CFG {
             }
             return;
         }
-        if self.is_zero_cell(block_i, pointer) {
-            self.update_edge(block_i, CFGEdge::Jump(zero));
+        match self.get_cellstate(block_i, pointer) {
+            CellState::Const(0) => self.update_edge(block_i, CFGEdge::Jump(zero)),
+            CellState::NonZero => self.update_edge(block_i, CFGEdge::Jump(nonzero)),
+            _ => {}
         }
     }
     pub fn inline_branch(&mut self) {
