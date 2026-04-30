@@ -32,7 +32,9 @@ impl CFG {
             return fallback;
         }
 
-        let last_assign = block.insts.iter().rev().find(|&inst| inst.pointer == pointer);
+        let last_assign = block.insts.iter().rev().find(|&inst|
+            !matches!(inst.opcode, CFGOpKind::Breakpoint|CFGOpKind::Out) && inst.pointer == pointer
+        );
         if let Some(last_assign) = last_assign {
             return if let CFGOpKind::Set(c) = last_assign.opcode {
                 CellState::Const(c)
