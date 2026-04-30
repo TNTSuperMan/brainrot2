@@ -64,6 +64,10 @@ impl CFG {
                         change_schedules.push((i, Some(CFGOpKind::AddLoad(p2))));
                         continue;
                     }
+                    if v3 == 255 {
+                        change_schedules.push((i, Some(CFGOpKind::SubLoad(p2))));
+                        continue;
+                    }
                     match (
                         self.internal_get_cellstate_inblock(block_i, i, inst.pointer),
                         self.internal_get_cellstate_inblock(block_i, i, p2),

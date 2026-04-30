@@ -91,6 +91,7 @@ impl Debug for CFGOp {
             CFGOpKind::Breakpoint => write!(f, "breakpoint"),
             CFGOpKind::Add(val) => write!(f, "${} = ${} + {val}", self.pointer, self.pointer),
             CFGOpKind::AddLoad(ptr) => write!(f, "${} = ${} + ${ptr}", self.pointer, self.pointer),
+            CFGOpKind::SubLoad(ptr) => write!(f, "${} = ${} - ${ptr}", self.pointer, self.pointer),
             CFGOpKind::Set(val) => write!(f, "${} = {val}", self.pointer),
             CFGOpKind::SetLoad(ptr) => write!(f, "${} = ${ptr}", self.pointer),
             CFGOpKind::MulAdd(p2, val) => {
@@ -113,6 +114,7 @@ pub enum CFGOpKind {
     Breakpoint,
     Add(u8),
     AddLoad(isize),
+    SubLoad(isize),
     Set(u8),
     SetLoad(isize),
     MulAdd(isize, u8), // [pointer] = [pointer] + [opcode.0] * opcode.1
