@@ -37,29 +37,38 @@ pub fn exec_bytecode(bytecodes: &[Bytecode], offset: u8) {
                 let p = (*p1 as isize + mem.offset) as usize;
                 println!("break; {}", p);
             }
-            Bytecode::Add(p1, value) => {
-                mem[p1] = mem[p1].wrapping_add(*value);
-            }
-            Bytecode::AddLoad(p1, p2) => {
-                mem[p1] = mem[p1].wrapping_add(mem[p2]);
-            }
-            Bytecode::SubLoad(p1, p2) => {
-                mem[p1] = mem[p1].wrapping_sub(mem[p2]);
-            }
-            Bytecode::Set(p1, value) => {
+            Bytecode::SetC(p1, value) => {
                 mem[p1] = *value;
             }
-            Bytecode::SetLoad(p1, p2) => {
+            Bytecode::SetL(p1, p2) => {
                 mem[p1] = mem[p2];
             }
-            Bytecode::MulAdd(p1, p2, v3) => {
-                mem[p1] = mem[p1].wrapping_add(mem[p2].wrapping_mul(*v3));
+            Bytecode::AddC(p1, p2, value) => {
+                mem[p1] = mem[p2].wrapping_add(*value);
             }
-            Bytecode::MulAddConst(p1, v2, p3, v4) => {
-                mem[p1] = v2.wrapping_add(mem[p3].wrapping_mul(*v4));
+            Bytecode::AddL(p1, p2, p3) => {
+                mem[p1] = mem[p2].wrapping_add(mem[p3]);
             }
-            Bytecode::Mul(p1, p2, v3) => {
-                mem[p1] = mem[p2].wrapping_mul(*v3);
+            Bytecode::SubLC(p1, p2, value) => {
+                mem[p1] = mem[p2].wrapping_sub(*value);
+            }
+            Bytecode::SubCL(p1, value, p3) => {
+                mem[p1] = value.wrapping_sub(mem[p3]);
+            }
+            Bytecode::SubLL(p1, p2, p3) => {
+                mem[p1] = mem[p2].wrapping_sub(mem[p3]);
+            }
+            Bytecode::MulC(p1, p2, value) => {
+                mem[p1] = mem[p2].wrapping_mul(*value);
+            }
+            Bytecode::MulL(p1, p2, p3) => {
+                mem[p1] = mem[p2].wrapping_mul(mem[p3]);
+            }
+            Bytecode::MulAddC(p1, value, p3, factor) => {
+                mem[p1] = value.wrapping_add(mem[p3].wrapping_mul(*factor));
+            }
+            Bytecode::MulAddL(p1, p2, p3, factor) => {
+                mem[p1] = mem[p2].wrapping_add(mem[p3].wrapping_mul(*factor));
             }
             Bytecode::In(p1) => {
                 let mut buf = [0u8; 1];
