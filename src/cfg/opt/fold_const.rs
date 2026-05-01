@@ -57,6 +57,11 @@ impl CFG {
             if let CFGOp::Assign(pointer, expr) = &mut self.0[block_i].insts[i] {
                 let pointer = *pointer;
                 match expr.clone() {
+                    CFGExpr::Value(CFGValue::Load(ptr)) => {
+                        if pointer == ptr {
+                            delete_schedules.push(i);
+                        }
+                    }
                     CFGExpr::Add(CFGValue::Const(v1), CFGValue::Const(v2)) => {
                         *expr = CFGExpr::Value(CFGValue::Const(v1.wrapping_add(v2)))
                     }
@@ -85,6 +90,9 @@ impl CFG {
                         *expr = CFGExpr::Add(v1, CFGValue::Const(c2.wrapping_mul(c3)));
                     }
 
+                    CFGExpr::Mul(CFGValue::Const(v1), CFGValue::Const(v2)) => {
+                        *expr = CFGExpr::Value(CFGValue::Const(v1.wrapping_mul(v2)));
+                    }
                     CFGExpr::Mul(CFGValue::Const(c1), CFGValue::Load(p2)) |
                     CFGExpr::Mul(CFGValue::Load(p2), CFGValue::Const(c1)) => {
                         match c1 {
