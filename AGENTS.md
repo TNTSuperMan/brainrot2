@@ -1,9 +1,8 @@
 ## プロジェクト概要
 
-**プロジェクト名**: brainrot2
-**目的**: Brainfuckを高速かつ保守的に最適化し実行する
-**技術スタック**: Rust + thiserror
-**ステータス**: 開発中
+- **プロジェクト名**: brainrot2
+- **目的**: Brainfuckを高速かつ保守的に最適化し実行する
+- **開発言語**: Rust
 
 ## ディレクトリ構造
 
@@ -11,15 +10,18 @@
 - **src**: ソースコード
     - **ir**: IRにまつわるコード
     - **cfg**: 制御フローグラフにまつわるコード
-    - **ssa**: 静的単一代入表現にまつわるコード
-    - **error.rs**: thiserrorによるエラー型の定義
+        - **opt**: 最適化を行うコード
+    - **bytecode**: 実行特化のバイトコードIRにまつわるコード
     - **main.rs**: CLIエントリポイント、現在はデバッグ用コマンドがある
 
 ## コマンド
 ```bash
 
-# SSAダンプを標準出力に出力
-cargo run dump_ssa [filename]
+# 制御フローグラフのダンプを標準出力に出力
+cargo run dump_cfg [filename]
+
+# バイトコードを実行
+cargo run exec_bytecode [filename]
 
 # コンパイルエラーの確認
 cargo check
