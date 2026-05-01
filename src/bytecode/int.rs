@@ -18,7 +18,7 @@ impl IndexMut<&i16> for Mem {
     }
 }
 
-pub fn exec_bytecode(bytecodes: &[Bytecode], offset: u8) {
+pub fn exec_bytecode<const FLUSH: bool>(bytecodes: &[Bytecode], offset: u8) {
     let mut pc: usize = 0;
     let mut mem = Mem {
         offset: offset as isize,
@@ -79,11 +79,15 @@ pub fn exec_bytecode(bytecodes: &[Bytecode], offset: u8) {
             }
             Bytecode::Out(p1) => {
                 let _ = stdout.write(&[mem[p1]]);
-                let _ = stdout.flush();
+                if FLUSH {
+                    let _ = stdout.flush();
+                }
             }
             Bytecode::OutConst(v1) => {
                 let _ = stdout.write(&[*v1]);
-                let _ = stdout.flush();
+                if FLUSH {
+                    let _ = stdout.flush();
+                }
             }
             Bytecode::Jump(a1) => {
                 pc = *a1 as usize;

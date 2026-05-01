@@ -53,7 +53,7 @@ fn main() -> ExitCode {
             }
             "exec_bytecode" => {
                 let bytecodes = build_bytecode(&cfg).unwrap();
-                exec_bytecode(&bytecodes, mul_offset);
+                exec_bytecode::<false>(&bytecodes, mul_offset);
             }
             "dump_offsetrange" => {
                 println!("{:?}", cfg.compute_offset_ranges());
