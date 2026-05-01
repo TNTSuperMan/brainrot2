@@ -47,6 +47,9 @@ fn main() -> ExitCode {
                 let bytecodes = build_bytecode(&cfg).unwrap();
                 exec_bytecode(&bytecodes, mul_offset);
             }
+            "dump_offsetrange" => {
+                println!("{:?}", cfg.compute_offset_ranges());
+            }
             _ => {
                 eprintln!("unknown kind");
                 return ExitCode::FAILURE;
