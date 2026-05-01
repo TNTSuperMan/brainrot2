@@ -1,23 +1,23 @@
 use std::num::TryFromIntError;
 
-use crate::{bytecode::{bytecode::Bytecode, order::compute_block_order}, cfg::cfg::{CFG, CFGEdge, CFGOp, CFGOpKind}};
+use crate::{bytecode::{bytecode::Bytecode, order::compute_block_order}, cfg::cfg::{CFG, CFGEdge, CFGOp}};
 
 fn try_into_bytecode(cfgop: &CFGOp) -> Result<Bytecode, TryFromIntError> {
     let CFGOp { pointer, opcode, loc: _ } = cfgop;
     let p1 = (*pointer).try_into()?;
     Ok(match opcode {
-        CFGOpKind::Breakpoint => Bytecode::Breakpoint(p1),
-        CFGOpKind::Add(v2) => Bytecode::Add(p1, *v2),
-        CFGOpKind::AddLoad(p2) => Bytecode::AddLoad(p1, (*p2).try_into()?),
-        CFGOpKind::SubLoad(p2) => Bytecode::SubLoad(p1, (*p2).try_into()?),
-        CFGOpKind::Set(v2) => Bytecode::Set(p1, *v2),
-        CFGOpKind::SetLoad(p2) => Bytecode::SetLoad(p1, (*p2).try_into()?),
-        CFGOpKind::MulAdd(p2, v3) => Bytecode::MulAdd(p1, (*p2).try_into()?, *v3),
-        CFGOpKind::MulAddConst(v2, p3, v4) => Bytecode::MulAddConst(p1, *v2, (*p3).try_into()?, *v4),
-        CFGOpKind::Mul(p2, v3) => Bytecode::Mul(p1, (*p2).try_into()?, *v3),
-        CFGOpKind::In => Bytecode::In(p1),
-        CFGOpKind::Out => Bytecode::Out(p1),
-        CFGOpKind::OutConst(val) => Bytecode::OutConst(*val),
+        CFGOp::Breakpoint => Bytecode::Breakpoint(p1),
+        CFGOp::Add(v2) => Bytecode::Add(p1, *v2),
+        CFGOp::AddLoad(p2) => Bytecode::AddLoad(p1, (*p2).try_into()?),
+        CFGOp::SubLoad(p2) => Bytecode::SubLoad(p1, (*p2).try_into()?),
+        CFGOp::Set(v2) => Bytecode::Set(p1, *v2),
+        CFGOp::SetLoad(p2) => Bytecode::SetLoad(p1, (*p2).try_into()?),
+        CFGOp::MulAdd(p2, v3) => Bytecode::MulAdd(p1, (*p2).try_into()?, *v3),
+        CFGOp::MulAddConst(v2, p3, v4) => Bytecode::MulAddConst(p1, *v2, (*p3).try_into()?, *v4),
+        CFGOp::Mul(p2, v3) => Bytecode::Mul(p1, (*p2).try_into()?, *v3),
+        CFGOp::In => Bytecode::In(p1),
+        CFGOp::Out => Bytecode::Out(p1),
+        CFGOp::OutConst(val) => Bytecode::OutConst(*val),
     })
 }
 

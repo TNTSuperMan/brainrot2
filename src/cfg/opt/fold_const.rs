@@ -1,13 +1,48 @@
-use crate::cfg::{cfg::{CFG, CFGOpKind}, opt::cellstate::CellState};
+use crate::cfg::{cfg::{CFG, CFGExpr, CFGOp, CFGValue}, opt::cellstate::CellState};
+
+impl CFGOp {
+    fn values(&self) -> Vec<CFGValue> {
+        match self {
+            CFGOp::Breakpoint(_) => vec![],
+            CFGOp::Out(val) => {
+                vec![*val]
+            }
+            CFGOp::Assign(_, expr) => match expr {
+                CFGExpr::In => vec![],
+
+                CFGExpr::Value(val) => vec![*val],
+                CFGExpr::Add(v1, v2) |
+                CFGExpr::Sub(v1, v2) |
+                CFGExpr::Mul(v1, v2) => vec![*v1, *v2],
+                CFGExpr::MulAdd(v1, v2, v3) => vec![*v1, *v2, *v3],
+            }
+        }
+    }
+    fn values_mut(&mut self) -> Vec<&mut CFGValue> {
+        match self {
+            CFGOp::Breakpoint(_) => vec![],
+            CFGOp::Out(val) => {
+                vec![val]
+            }
+            CFGOp::Assign(_, expr) => match expr {
+                CFGExpr::In => vec![],
+
+                CFGExpr::Value(val) => vec![val],
+                CFGExpr::Add(v1, v2) |
+                CFGExpr::Sub(v1, v2) |
+                CFGExpr::Mul(v1, v2) => vec![v1, v2],
+                CFGExpr::MulAdd(v1, v2, v3) => vec![v1, v2, v3],
+            }
+        }
+    }
+}
 
 impl CFG {
     fn internal_get_cellstate_inblock(&self, block_i: usize, inst_i: usize, pointer: isize) -> CellState {
-        let last_assign = self.0[block_i].insts[0..inst_i].iter().rev().find(|&inst| 
-            !matches!(inst.opcode, CFGOpKind::Breakpoint|CFGOpKind::Out|CFGOpKind::OutConst(_)) && inst.pointer == pointer
-        );
+        let last_assign = self.0[block_i].insts[0..inst_i].iter().rev().find(|&inst| inst.writes() == Some(pointer));
         if let Some(last_assign) = last_assign {
-            return if let CFGOpKind::Set(c) = last_assign.opcode {
-                CellState::Const(c)
+            return if let CFGOp::Assign(_, CFGExpr::Value(CFGValue::Const(c))) = last_assign {
+                CellState::Const(*c)
             } else {
                 CellState::Unknown
             }
@@ -15,111 +50,80 @@ impl CFG {
 
         self.get_cellstate(block_i, pointer)
     }
+    fn internal_simply_fold_const(&self, block_i: usize, inst_i: usize, val: &mut CFGValue) {
+        if let CFGValue::Load(ptr) = *val {
+            if let CellState::Const(c) = self.internal_get_cellstate_inblock(block_i, inst_i, ptr) {
+                *val = CFGValue::Const(c);
+            }
+        }
+    }
     fn internal_fold_const(&mut self, block_i: usize) {
         if !self.0[block_i].alive { return }
 
         let mut delete_schedules: Vec<usize> = vec![];
 
         for i in 0..self.0[block_i].insts.len() {
-            let pointer = self.0[block_i].insts[i].pointer;
-            match self.0[block_i].insts[i].opcode {
-                CFGOpKind::Breakpoint => {},
-                CFGOpKind::Add(val) => {
-                    if let CellState::Const(v) = self.internal_get_cellstate_inblock(block_i, i, pointer) {
-                        self.0[block_i].insts[i].opcode = CFGOpKind::Set(val.wrapping_add(v));
+            // TODO!!! 所有権を解決して定数畳み込みをする!!!
+            let consts: Vec<Option<u8>> = self.0[block_i].insts[i].values().iter().map(|val| {
+                if let CFGValue::Load(ptr) = val {
+                    if let CellState::Const(c) = self.internal_get_cellstate_inblock(block_i, i, *ptr) {
+                        return Some(c);
                     }
                 }
-                CFGOpKind::AddLoad(ptr) => {
-                    if let CellState::Const(v) = self.internal_get_cellstate_inblock(block_i, i, ptr) {
-                        self.0[block_i].insts[i].opcode = CFGOpKind::Add(v);
+                None
+            }).collect();
+            let values_mut = self.0[block_i].insts[i].values_mut();
+
+            for (i, c) in consts.iter().enumerate() {
+                if let Some(c) = c {
+                    let val_mut: &&mut CFGValue = values_mut.get(i).unwrap();
+                    //**val_mut = CFGValue::Const(*c);
+                }
+            }
+
+            if let CFGOp::Assign(pointer, expr) = &mut self.0[block_i].insts[i] {
+                let pointer = *pointer;
+                match expr.clone() {
+                    CFGExpr::Add(CFGValue::Const(v1), CFGValue::Const(v2)) => {
+                        *expr = CFGExpr::Value(CFGValue::Const(v1.wrapping_add(v2)))
                     }
-                    match (
-                        self.internal_get_cellstate_inblock(block_i, i, pointer),
-                        self.internal_get_cellstate_inblock(block_i, i, ptr),
-                    ) {
-                        (CellState::Const(v1), CellState::Const(v2)) => { // $p1 = v1 + v2
-                            self.0[block_i].insts[i].opcode = CFGOpKind::Set(v1.wrapping_add(v2));
-                        }
-                        (CellState::Const(0), _) => { // $p1 = 0 + $p2
-                            self.0[block_i].insts[i].opcode = CFGOpKind::SetLoad(ptr);
-                        }
-                        (CellState::Const(v1), _) => { // $p1 = v1 + $p2
-                            // todo
-                            //self.0[block_i].insts[i].opcode = CFGOpKind::MulAddConst(v1, p2, v3);
-                        }
-                        (_, CellState::Const(0)) => { // $p1 = $p1 + 0
+                    CFGExpr::Add(CFGValue::Const(0), CFGValue::Load(p)) |
+                    CFGExpr::Add(CFGValue::Load(p), CFGValue::Const(0)) => {
+                        if pointer == p {
                             delete_schedules.push(i);
+                        } else {
+                            *expr = CFGExpr::Value(CFGValue::Load(p));
                         }
-                        (_, CellState::Const(v2)) => { // $p1 = $p1 + v2
-                            self.0[block_i].insts[i].opcode = CFGOpKind::Add(v2);
-                        }
-                        _ => {}
                     }
+                    CFGExpr::MulAdd(v1, v2, CFGValue::Const(1)) => {
+                        *expr = CFGExpr::Add(v1, v2);
+                    }
+                    CFGExpr::MulAdd(v1, v2, CFGValue::Const(255)) => {
+                        *expr = CFGExpr::Sub(v1, v2);
+                    }
+                    CFGExpr::MulAdd(CFGValue::Const(0), v2, v3) => {
+                        *expr = CFGExpr::Mul(v2, v3);
+                    }
+                    CFGExpr::MulAdd(v1, CFGValue::Const(0), _) |
+                    CFGExpr::MulAdd(v1, _, CFGValue::Const(0)) => {
+                        *expr = CFGExpr::Value(v1);
+                    }
+                    CFGExpr::MulAdd(v1, CFGValue::Const(c2), CFGValue::Const(c3)) => {
+                        *expr = CFGExpr::Add(v1, CFGValue::Const(c2.wrapping_mul(c3)));
+                    }
+
+                    CFGExpr::Mul(CFGValue::Const(c1), CFGValue::Load(p2)) |
+                    CFGExpr::Mul(CFGValue::Load(p2), CFGValue::Const(c1)) => {
+                        match c1 {
+                            0 => delete_schedules.push(i),
+                            1 => *expr = CFGExpr::Value(CFGValue::Load(p2)),
+                            255 => *expr = CFGExpr::Sub(CFGValue::Const(0), CFGValue::Load(p2)),
+                            _ => {}
+                        }
+                    }
+                    
+                    _ => {}
                 }
-                CFGOpKind::Set(..) => {},
-                CFGOpKind::SetLoad(ptr) => {
-                    if let CellState::Const(v) = self.internal_get_cellstate_inblock(block_i, i, ptr) {
-                        self.0[block_i].insts[i].opcode = CFGOpKind::Set(v);
-                    }
-                    if pointer == ptr {
-                        delete_schedules.push(i);
-                    }
-                }
-                CFGOpKind::MulAdd(p2, v3) => {
-                    if v3 == 1 {
-                        self.0[block_i].insts[i].opcode = CFGOpKind::AddLoad(p2);
-                        continue;
-                    }
-                    if v3 == 255 {
-                        self.0[block_i].insts[i].opcode = CFGOpKind::SubLoad(p2);
-                        continue;
-                    }
-                    match (
-                        self.internal_get_cellstate_inblock(block_i, i, pointer),
-                        self.internal_get_cellstate_inblock(block_i, i, p2),
-                    ) {
-                        (CellState::Const(v1), CellState::Const(v2)) => {
-                            self.0[block_i].insts[i].opcode = CFGOpKind::Set(v1.wrapping_add(v2.wrapping_mul(v3)));
-                        }
-                        (CellState::Const(0), _) => {
-                            self.0[block_i].insts[i].opcode = CFGOpKind::Mul(p2, v3);
-                        }
-                        (CellState::Const(v1), _) => {
-                            self.0[block_i].insts[i].opcode = CFGOpKind::MulAddConst(v1, p2, v3);
-                        }
-                        (_, CellState::Const(0)) => {
-                            delete_schedules.push(i);
-                        }
-                        (_, CellState::Const(v2)) => {
-                            self.0[block_i].insts[i].opcode = CFGOpKind::Add(v2.wrapping_mul(v3));
-                        }
-                        _ => {}
-                    }
-                }
-                CFGOpKind::MulAddConst(v1, p2, v3) => {
-                    if v3 == 1 {
-                        self.0[block_i].insts[i].opcode = CFGOpKind::Set(v1);
-                        continue;
-                    }
-                    if let CellState::Const(v2) = self.internal_get_cellstate_inblock(block_i, i, p2) {
-                        self.0[block_i].insts[i].opcode = CFGOpKind::Set(v1.wrapping_add(v2.wrapping_mul(v3)));
-                    }
-                }
-                CFGOpKind::Mul(p2, v3) => {
-                    if v3 == 1 {
-                        self.0[block_i].insts[i].opcode = CFGOpKind::SetLoad(p2);
-                        continue;
-                    }
-                    if let CellState::Const(v2) = self.internal_get_cellstate_inblock(block_i, i, p2) {
-                        self.0[block_i].insts[i].opcode = CFGOpKind::Set(v2.wrapping_mul(v3));
-                    }
-                }
-                CFGOpKind::Out => {
-                    if let CellState::Const(val) = self.internal_get_cellstate_inblock(block_i, i, pointer) {
-                        self.0[block_i].insts[i].opcode = CFGOpKind::OutConst(val);
-                    }
-                }
-                _ => {}
             }
         }
 

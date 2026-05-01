@@ -1,30 +1,40 @@
-use crate::cfg::cfg::{CFGOp, CFGOpKind};
+use crate::cfg::cfg::{CFGExpr, CFGOp, CFGValue};
 
 impl CFGOp {
     pub fn reads(&self) -> Vec<isize> {
-        match &self.opcode {
-            CFGOpKind::Add(_) |
-            CFGOpKind::Out => vec![self.pointer],
+        match self {
+            Self::Out(CFGValue::Const(_)) => vec![],
+            
+            Self::Breakpoint(p) |
+            Self::Out(CFGValue::Load(p)) => vec![*p],
 
-            CFGOpKind::AddLoad(p) |
-            CFGOpKind::SubLoad(p) |
-            CFGOpKind::MulAdd(p, _) => vec![self.pointer, *p],
+            Self::Assign(_, expr) => {
+                let values: &[&CFGValue] = match expr {
+                    CFGExpr::In => &[],
 
-            CFGOpKind::SetLoad(p) |
-            CFGOpKind::MulAddConst(_, p, _) |
-            CFGOpKind::Mul(p, _) => vec![*p],
+                    CFGExpr::Value(v) => &[v],
 
-            CFGOpKind::Breakpoint |
-            CFGOpKind::Set(_) |
-            CFGOpKind::In |
-            CFGOpKind::OutConst(_) => vec![],
+                    CFGExpr::Add(v1, v2) |
+                    CFGExpr::Sub(v1, v2) |
+                    CFGExpr::Mul(v1, v2) => &[v1, v2],
+
+                    CFGExpr::MulAdd(v1, v2, v3) => &[v1, v2, v3],
+                };
+                let mut refs = vec![];
+                for val in values {
+                    if let CFGValue::Load(ptr) = val {
+                        refs.push(*ptr);
+                    }
+                }
+                refs
+            }
         }
     }
     pub fn writes(&self) -> Option<isize> {
-        if matches!(&self.opcode, CFGOpKind::Breakpoint | CFGOpKind::Out | CFGOpKind::OutConst(_)) {
-            None
+        if let CFGOp::Assign(ptr, _) = self {
+            Some(*ptr)
         } else {
-            Some(self.pointer)
+            None
         }
     }
 }

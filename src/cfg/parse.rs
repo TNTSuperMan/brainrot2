@@ -1,25 +1,21 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::{
-    cfg::cfg::{CFG, CFGBlock, CFGEdge, CFGOp, CFGOpKind},
+    cfg::cfg::{CFG, CFGBlock, CFGEdge, CFGExpr, CFGOp, CFGValue},
     ir::ir::{IR, IROp},
 };
 
 pub fn ir_to_cfgir(ir: &IR) -> Option<CFGOp> {
-    Some(CFGOp {
-        pointer: ir.pointer,
-        loc: ir.loc.clone(),
-        opcode: match ir.opcode {
-            IROp::Breakpoint => CFGOpKind::Breakpoint,
-            IROp::Add(val) => CFGOpKind::Add(val),
-            IROp::Set(val) => CFGOpKind::Set(val),
-            IROp::MulAdd(p, v) => CFGOpKind::MulAdd(p, v),
-            IROp::In => CFGOpKind::In,
-            IROp::Out => CFGOpKind::Out,
-            IROp::JumpZero(..) | IROp::JumpNotZero(..) | IROp::JumpNotZeroWithOffset(..) => {
-                return None;
-            }
-        },
+    Some(match ir.opcode {
+        IROp::Breakpoint => CFGOp::Breakpoint(ir.pointer),
+        IROp::Add(val) => CFGOp::Assign(ir.pointer, CFGExpr::Add(CFGValue::Load(ir.pointer), CFGValue::Const(val))),
+        IROp::Set(val) => CFGOp::Assign(ir.pointer, CFGExpr::Value(CFGValue::Const(val))),
+        IROp::MulAdd(p, v) => CFGOp::Assign(ir.pointer, CFGExpr::MulAdd(CFGValue::Load(ir.pointer), CFGValue::Load(p), CFGValue::Const(v))),
+        IROp::In => CFGOp::Assign(ir.pointer, CFGExpr::In),
+        IROp::Out => CFGOp::Out(CFGValue::Load(ir.pointer)),
+        IROp::JumpZero(..) | IROp::JumpNotZero(..) | IROp::JumpNotZeroWithOffset(..) => {
+            return None;
+        }
     })
 }
 

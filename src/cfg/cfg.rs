@@ -1,4 +1,4 @@
-use std::{fmt::Debug, ops::Range};
+use std::fmt::Debug;
 
 #[derive(Clone)]
 pub struct CFG(pub Vec<CFGBlock>);
@@ -79,49 +79,54 @@ impl CFGEdge {
     }
 }
 
-#[derive(Clone)]
-pub struct CFGOp {
-    pub pointer: isize,
-    pub opcode: CFGOpKind,
-    pub loc: Range<usize>,
+#[derive(Clone, PartialEq, Eq)]
+pub enum CFGOp {
+    Breakpoint(isize),
+    Out(CFGValue),
+    Assign(isize, CFGExpr)
 }
 impl Debug for CFGOp {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.opcode {
-            CFGOpKind::Breakpoint => write!(f, "breakpoint"),
-            CFGOpKind::Add(val) => write!(f, "${} = ${} + {val}", self.pointer, self.pointer),
-            CFGOpKind::AddLoad(ptr) => write!(f, "${} = ${} + ${ptr}", self.pointer, self.pointer),
-            CFGOpKind::SubLoad(ptr) => write!(f, "${} = ${} - ${ptr}", self.pointer, self.pointer),
-            CFGOpKind::Set(val) => write!(f, "${} = {val}", self.pointer),
-            CFGOpKind::SetLoad(ptr) => write!(f, "${} = ${ptr}", self.pointer),
-            CFGOpKind::MulAdd(p2, val) => {
-                write!(f, "${} = ${} + (${p2} * {val})", self.pointer, self.pointer)
-            }
-            CFGOpKind::MulAddConst(v1, p2, val) => {
-                write!(f, "${} = {v1} + (${p2} * {val})", self.pointer)
-            }
-            CFGOpKind::Mul(p2, val) => {
-                write!(f, "${} = ${p2} * {val}", self.pointer)
-            }
-            CFGOpKind::In => write!(f, "${} = stdin", self.pointer),
-            CFGOpKind::Out => write!(f, "stdout < ${}", self.pointer),
-            CFGOpKind::OutConst(val) => write!(f, "stdout < {val}"),
+        match self {
+            Self::Breakpoint(ptr) => write!(f, "breakpoint ${ptr}"),
+            Self::Out(val) => write!(f, "stdout < {val:?}"),
+            Self::Assign(ptr, expr) => write!(f, "${ptr} = {expr:?}"),
         }
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum CFGOpKind {
-    Breakpoint,
-    Add(u8),
-    AddLoad(isize),
-    SubLoad(isize),
-    Set(u8),
-    SetLoad(isize),
-    MulAdd(isize, u8), // [pointer] = [pointer] + [opcode.0] * opcode.1
-    MulAddConst(u8, isize, u8), // [pointer] = opcode.0 + [opcode.1] * opcode.2
-    Mul(isize, u8), // [pointer] = [opcode.0] * opcode.1
+#[derive(Clone, PartialEq, Eq)]
+pub enum CFGExpr {
+    Value(CFGValue),
+    Add(CFGValue, CFGValue),
+    Sub(CFGValue, CFGValue),
+    Mul(CFGValue, CFGValue),
+    MulAdd(CFGValue, CFGValue, CFGValue), // [0] + [1] * 2
     In,
-    Out,
-    OutConst(u8),
+}
+impl Debug for CFGExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Value(val) => write!(f, "{val:?}"),
+            Self::Add(v1, v2) => write!(f, "{v1:?} + {v2:?}"),
+            Self::Sub(v1, v2) => write!(f, "{v1:?} - {v2:?}"),
+            Self::Mul(v1, v2) => write!(f, "{v1:?} * {v2:?}"),
+            Self::MulAdd(v1, v2, v3) => write!(f, "{v1:?} + {v2:?} * {v3:?}"),
+            Self::In => write!(f, "stdin"),
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum CFGValue {
+    Load(isize),
+    Const(u8),
+}
+impl Debug for CFGValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Load(ptr) => write!(f, "${ptr}"),
+            Self::Const(val) => write!(f, "{val}"),
+        }
+    }
 }

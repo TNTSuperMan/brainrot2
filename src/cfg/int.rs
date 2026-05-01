@@ -1,86 +1,50 @@
 use std::io::{Read, Write, stdin, stdout};
 
-use crate::cfg::cfg::{CFG, CFGEdge, CFGOp, CFGOpKind};
+use crate::cfg::cfg::{CFG, CFGEdge, CFGExpr, CFGOp, CFGValue};
 
 struct Mem {
     offset: isize,
     memory: [u8; 65536],
 }
 impl Mem {
-    pub fn get(&self, idx: isize) -> u8 {
-        self.memory[(self.offset + idx) as usize]
-    }
-    pub fn set(&mut self, idx: isize, val: u8) {
-        self.memory[(self.offset + idx) as usize] = val;
+    fn get(&self, index: &CFGValue) -> u8 {
+        match index {
+            CFGValue::Load(ptr) => self.memory[(*ptr + self.offset) as usize],
+            CFGValue::Const(c) => *c,
+        }
     }
 }
 
 fn exec_node_ir(insts: &[CFGOp], mem: &mut Mem) {
-    for CFGOp {
-        pointer,
-        opcode,
-        loc: _,
-    } in insts
+    for opcode in insts
     {
         match opcode {
-            CFGOpKind::Breakpoint => {
-                println!("break; {}", mem.offset);
+            CFGOp::Breakpoint(ptr) => {
+                println!("break; $[{ptr} + {}] = {}", mem.offset, mem.get(&CFGValue::Load(*ptr)));
             }
-            CFGOpKind::Add(val) => {
-                mem.set(*pointer, mem.get(*pointer).wrapping_add(*val));
-            }
-            CFGOpKind::AddLoad(ptr) => {
-                mem.set(*pointer, mem.get(*pointer).wrapping_add(mem.get(*ptr)));
-            }
-            CFGOpKind::SubLoad(ptr) => {
-                mem.set(*pointer, mem.get(*pointer).wrapping_sub(mem.get(*ptr)));
-            }
-            CFGOpKind::Set(val) => {
-                mem.set(*pointer, *val);
-            }
-            CFGOpKind::SetLoad(ptr) => {
-                mem.set(*pointer, mem.get(*ptr));
-            }
-            CFGOpKind::MulAdd(ptr2, val) => {
-                mem.set(
-                    *pointer,
-                    mem.get(*pointer)
-                        .wrapping_add(mem.get(*ptr2).wrapping_mul(*val)),
-                );
-            }
-            CFGOpKind::MulAddConst(v1, p2, v3) => {
-                mem.set(
-                    *pointer,
-                    v1.wrapping_add(mem.get(*p2).wrapping_mul(*v3)),
-                );
-            }
-            CFGOpKind::Mul(p2, v3) => {
-                mem.set(
-                    *pointer,
-                    mem.get(*p2).wrapping_mul(*v3),
-                );
-            }
-            CFGOpKind::In => {
-                let mut stdin = stdin().lock();
-                let mut buf = [0u8; 1];
-                mem.set(
-                    *pointer,
-                    if stdin.read_exact(&mut buf).is_ok() {
-                        buf[0]
-                    } else {
-                        0
-                    },
-                );
-            }
-            CFGOpKind::Out => {
+            CFGOp::Out(val) => {
                 let mut stdout = stdout().lock();
-                let _ = stdout.write(&[mem.get(*pointer)]);
+                let _ = stdout.write(&[mem.get(val)]);
                 let _ = stdout.flush();
             }
-            CFGOpKind::OutConst(val) => {
-                let mut stdout = stdout().lock();
-                let _ = stdout.write(&[*val]);
-                let _ = stdout.flush();
+            CFGOp::Assign(ptr, expr) => {
+                mem.memory[(*ptr + mem.offset) as usize] = match expr {
+                    CFGExpr::Value(val) => mem.get(val),
+                    CFGExpr::Add(v1, v2) => mem.get(v1).wrapping_add(mem.get(v2)),
+                    CFGExpr::Sub(v1, v2) => mem.get(v1).wrapping_sub(mem.get(v2)),
+                    CFGExpr::Mul(v1, v2) => mem.get(v1).wrapping_mul(mem.get(v2)),
+                    CFGExpr::MulAdd(v1, v2, v3) => mem.get(v1).wrapping_add(mem.get(v2).wrapping_mul(mem.get(v3))),
+                    CFGExpr::In => {
+                        let mut stdin = stdin().lock();
+                        let mut buf = [0u8; 1];
+                        if stdin.read_exact(&mut buf).is_ok() {
+                            buf[0]
+                        } else {
+                            0
+                        }
+                    }
+
+                }
             }
         }
     }
@@ -107,7 +71,7 @@ pub fn exec_from_cfg(cfg: &CFG, offset: u8) {
                 zero,
                 nonzero,
             } => {
-                if mem.get(*pointer) == 0 {
+                if mem.get(&CFGValue::Load(*pointer)) == 0 {
                     node_i = *zero;
                 } else {
                     node_i = *nonzero;

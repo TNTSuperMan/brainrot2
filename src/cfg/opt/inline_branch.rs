@@ -1,4 +1,4 @@
-use crate::cfg::{cfg::{CFG, CFGEdge, CFGOpKind}, opt::cellstate::CellState};
+use crate::cfg::{cfg::{CFG, CFGEdge, CFGExpr, CFGOp, CFGValue}, opt::cellstate::CellState};
 
 impl CFG {
     fn internal_inline_branch(&mut self, block_i: usize) {
@@ -10,10 +10,10 @@ impl CFG {
             CFGEdge::End => return,
         };
 
-        let last_assign = self.0[block_i].insts.iter().rev().find(|&inst| inst.pointer == pointer);
+        let last_assign = self.0[block_i].insts.iter().rev().find(|&inst| inst.writes() == Some(pointer));
         if let Some(last_assign) = last_assign {
-            if let CFGOpKind::Set(val) = last_assign.opcode {
-                self.update_edge(block_i, CFGEdge::Jump(if val == 0 {
+            if let CFGOp::Assign(_, CFGExpr::Value(CFGValue::Const(val))) = last_assign {
+                self.update_edge(block_i, CFGEdge::Jump(if *val == 0 {
                     zero
                 } else {
                     nonzero

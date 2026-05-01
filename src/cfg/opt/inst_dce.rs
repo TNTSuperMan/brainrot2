@@ -1,4 +1,4 @@
-use crate::cfg::cfg::{CFG, CFGOpKind};
+use crate::cfg::cfg::{CFG, CFGOp};
 
 impl CFG {
     fn internal_dce_inst(&mut self, block_i: usize) {
@@ -10,11 +10,12 @@ impl CFG {
             if i >= block.insts.len() {
                 break;
             }
-            if matches!(&block.insts[i].opcode, CFGOpKind::Breakpoint | CFGOpKind::Out | CFGOpKind::OutConst(_)) {
+            let ptr = if let CFGOp::Assign(ptr, _) = block.insts[i] {
+                ptr
+            } else {
                 i += 1;
                 continue;
-            }
-            let ptr = block.insts[i].pointer;
+            };
             let next_assign = i + 1 + match block.insts[(i+1)..].iter().position(|inst| inst.writes() == Some(ptr)) {
                 Some(n) => n,
                 None => {

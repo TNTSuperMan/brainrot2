@@ -1,4 +1,4 @@
-use crate::cfg::cfg::{CFG, CFGEdge, CFGOpKind};
+use crate::cfg::cfg::{CFG, CFGEdge, CFGExpr, CFGOp, CFGValue};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum CellState {
@@ -32,12 +32,10 @@ impl CFG {
             return fallback;
         }
 
-        let last_assign = block.insts.iter().rev().find(|&inst|
-            !matches!(inst.opcode, CFGOpKind::Breakpoint|CFGOpKind::Out|CFGOpKind::OutConst(_)) && inst.pointer == pointer
-        );
+        let last_assign = block.insts.iter().rev().find(|&inst| inst.writes() == Some(pointer));
         if let Some(last_assign) = last_assign {
-            return if let CFGOpKind::Set(c) = last_assign.opcode {
-                CellState::Const(c)
+            return if let CFGOp::Assign(_, CFGExpr::Value(CFGValue::Const(c))) = last_assign {
+                CellState::Const(*c)
             } else {
                 fallback
             }
