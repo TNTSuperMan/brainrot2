@@ -22,11 +22,6 @@ pub enum Bytecode {
     Jump(u32),
     JumpIfZero(i16, u32),
     JumpIfNotZero(i16, u32),
-    Branch {
-        ptr: i16,
-        zero: u32,
-        nonzero: u32,
-    },
     Offset(i8),
     End,
 }
@@ -55,7 +50,6 @@ impl Debug for Bytecode {
             Self::Jump(a1) => write!(f, "jump %{a1}"),
             Self::JumpIfZero(p1, a2) => write!(f, "jz ${p1}, %{a2}"),
             Self::JumpIfNotZero(p1, a2) => write!(f, "jnz ${p1}, %{a2}"),
-            Self::Branch { ptr, zero, nonzero } => write!(f, "branch ${ptr} ? %{nonzero} : %{zero}"),
             Self::Offset(o1) => write!(f, "offset {o1}"),
             Self::End => write!(f, "end"),
         }

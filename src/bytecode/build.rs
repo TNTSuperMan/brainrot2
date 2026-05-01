@@ -67,12 +67,8 @@ pub fn build_bytecode(cfg: &CFG) -> Result<Vec<Bytecode>, TryFromIntError> {
                 } else if order.get(i + 1).copied() == Some(*zero) {
                     bytecodes.push(Bytecode::JumpIfNotZero((*pointer).try_into()?, (*nonzero).try_into()?));
                 } else {
-                    // bytecodes.push(Bytecode::Jump((*nonzero).try_into()?));
-                    bytecodes.push(Bytecode::Branch {
-                        ptr: (*pointer).try_into()?,
-                        zero: (*zero).try_into()?,
-                        nonzero: (*nonzero).try_into()?
-                    });
+                    bytecodes.push(Bytecode::JumpIfZero((*pointer).try_into()?, (*zero).try_into()?));
+                    bytecodes.push(Bytecode::Jump((*nonzero).try_into()?));
                 }
             }
             CFGEdge::End => {
@@ -87,10 +83,6 @@ pub fn build_bytecode(cfg: &CFG) -> Result<Vec<Bytecode>, TryFromIntError> {
             Bytecode::JumpIfZero(_, addr) |
             Bytecode::JumpIfNotZero(_, addr) => {
                 *addr = jumptable[*addr as usize];
-            }
-            Bytecode::Branch { ptr: _, zero, nonzero } => {
-                *zero = jumptable[*zero as usize];
-                *nonzero = jumptable[*nonzero as usize];
             }
             _ => {}
         }

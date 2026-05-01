@@ -102,14 +102,6 @@ pub fn exec_bytecode(bytecodes: &[Bytecode], offset: u8) {
                     continue;
                 }
             }
-            Bytecode::Branch { ptr, zero, nonzero } => {
-                if mem[&ptr] == 0 {
-                    pc = *zero as usize;
-                } else {
-                    pc = *nonzero as usize;
-                }
-                continue;
-            }
             Bytecode::Offset(o1) => {
                 mem.offset += *o1 as isize;
             }
