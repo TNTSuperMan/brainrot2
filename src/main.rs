@@ -1,4 +1,4 @@
-use std::{env::args, fs, process::ExitCode};
+use std::{env::args, fs, process::ExitCode, time::Instant};
 
 use crate::{
     bytecode::{build::build_bytecode, int::exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg}, ir::{int::exec_from_ir, ir::IR}
@@ -11,8 +11,11 @@ mod bytecode;
 fn main() -> ExitCode {
     if let [_, kind, file] = args().collect::<Vec<String>>().as_slice() {
         let code = fs::read_to_string(&file).unwrap();
+        let start = Instant::now();
         let (ir, mul_offset) = IR::parse(&code).unwrap();
+        let ir_end = Instant::now();
         let mut cfg = CFG::new(&ir);
+        let cfg_end = Instant::now();
         for _ in 0..3 {
             cfg.inline_branch();
             cfg.inline_flow();
@@ -22,6 +25,11 @@ fn main() -> ExitCode {
             cfg.eliminate_dead_code();
             cfg.eliminate_dead_instruction();
         }
+        let end = Instant::now();
+        eprintln!("all: {:?}", end - start);
+        eprintln!("ir: {:?}", ir_end - start);
+        eprintln!("cfg: {:?}", cfg_end - ir_end);
+        eprintln!("opt: {:?}", end - cfg_end);
         match kind.as_str() {
             "exec_ir" => {
                 exec_from_ir(&ir, mul_offset);
