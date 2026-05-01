@@ -14,17 +14,27 @@ impl CFG {
                         None => continue,
                     };
                     let assign_reads = block.insts[assign_i].reads();
-                    for inst in &block.insts[(assign_i+1)..i] {
+                    for inst in &block.insts[assign_i..i] {
                         if let Some(w) = inst.writes() {
                             if assign_reads.contains(&w) {
                                 continue 'root_loop;
                             }
                         }
                     }
-                    block.insts[i] = CFGOp::Assign(pointer, match block.insts[assign_i] {
-                        CFGOp::Assign(_, CFGExpr::Value(CFGValue::Load(ptr))) => CFGExpr::Value(CFGValue::Load(ptr)),
-                        _ => continue,
-                    });
+                    let expr = if let CFGOp::Assign(_, expr) = &block.insts[assign_i] {
+                        expr
+                    } else {
+                        unreachable!();
+                    };
+                    if let CFGExpr::Value(CFGValue::Load(ptr)) = expr {
+                        block.insts[i] = CFGOp::Assign(pointer, CFGExpr::Value(CFGValue::Load(*ptr)));
+                        continue;
+                    }
+                    if let Some(next) = block.insts[(i+1)..].iter().find(|inst| inst.writes() == Some(ptr)) {
+                        if !next.reads().contains(&pointer) && !next.reads().contains(&ptr) {
+                            block.insts[i] = CFGOp::Assign(pointer, expr.clone());
+                        }
+                    }
                 }
                 _ => {}
             }
