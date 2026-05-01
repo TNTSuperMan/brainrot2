@@ -1,42 +1,5 @@
 use crate::cfg::{cfg::{CFG, CFGExpr, CFGOp, CFGValue}, opt::cellstate::CellState};
 
-impl CFGOp {
-    fn values(&self) -> Vec<CFGValue> {
-        match self {
-            CFGOp::Breakpoint(_) => vec![],
-            CFGOp::Out(val) => {
-                vec![*val]
-            }
-            CFGOp::Assign(_, expr) => match expr {
-                CFGExpr::In => vec![],
-
-                CFGExpr::Value(val) => vec![*val],
-                CFGExpr::Add(v1, v2) |
-                CFGExpr::Sub(v1, v2) |
-                CFGExpr::Mul(v1, v2) => vec![*v1, *v2],
-                CFGExpr::MulAdd(v1, v2, v3) => vec![*v1, *v2, *v3],
-            }
-        }
-    }
-    fn values_mut(&mut self) -> Vec<&mut CFGValue> {
-        match self {
-            CFGOp::Breakpoint(_) => vec![],
-            CFGOp::Out(val) => {
-                vec![val]
-            }
-            CFGOp::Assign(_, expr) => match expr {
-                CFGExpr::In => vec![],
-
-                CFGExpr::Value(val) => vec![val],
-                CFGExpr::Add(v1, v2) |
-                CFGExpr::Sub(v1, v2) |
-                CFGExpr::Mul(v1, v2) => vec![v1, v2],
-                CFGExpr::MulAdd(v1, v2, v3) => vec![v1, v2, v3],
-            }
-        }
-    }
-}
-
 impl CFG {
     fn internal_get_cellstate_inblock(&self, block_i: usize, inst_i: usize, pointer: isize) -> CellState {
         let last_assign = self.0[block_i].insts[0..inst_i].iter().rev().find(|&inst| inst.writes() == Some(pointer));
@@ -63,23 +26,33 @@ impl CFG {
         let mut delete_schedules: Vec<usize> = vec![];
 
         for i in 0..self.0[block_i].insts.len() {
-            // TODO!!! 所有権を解決して定数畳み込みをする!!!
-            let consts: Vec<Option<u8>> = self.0[block_i].insts[i].values().iter().map(|val| {
-                if let CFGValue::Load(ptr) = val {
-                    if let CellState::Const(c) = self.internal_get_cellstate_inblock(block_i, i, *ptr) {
-                        return Some(c);
+            
+            let mut newop = self.0[block_i].insts[i].clone();
+            match &mut newop {
+                CFGOp::Breakpoint(_) => {},
+                CFGOp::Out(val) => {
+                    self.internal_simply_fold_const(block_i, i, val);
+                }
+                CFGOp::Assign(_, expr) => match expr {
+                    CFGExpr::In => {},
+
+                    CFGExpr::Value(val) => {
+                        self.internal_simply_fold_const(block_i, i, val);
+                    },
+                    CFGExpr::Add(v1, v2) |
+                    CFGExpr::Sub(v1, v2) |
+                    CFGExpr::Mul(v1, v2) => {
+                        self.internal_simply_fold_const(block_i, i, v1);
+                        self.internal_simply_fold_const(block_i, i, v2);
+                    }
+                    CFGExpr::MulAdd(v1, v2, v3) => {
+                        self.internal_simply_fold_const(block_i, i, v1);
+                        self.internal_simply_fold_const(block_i, i, v2);
+                        self.internal_simply_fold_const(block_i, i, v3);
                     }
                 }
-                None
-            }).collect();
-            let values_mut = self.0[block_i].insts[i].values_mut();
-
-            for (i, c) in consts.iter().enumerate() {
-                if let Some(c) = c {
-                    let val_mut: &&mut CFGValue = values_mut.get(i).unwrap();
-                    //**val_mut = CFGValue::Const(*c);
-                }
             }
+            self.0[block_i].insts[i] = newop;
 
             if let CFGOp::Assign(pointer, expr) = &mut self.0[block_i].insts[i] {
                 let pointer = *pointer;
