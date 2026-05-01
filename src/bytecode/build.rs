@@ -1,23 +1,41 @@
 use std::num::TryFromIntError;
 
-use crate::{bytecode::{bytecode::Bytecode, order::compute_block_order}, cfg::cfg::{CFG, CFGEdge, CFGOp}};
+use crate::{bytecode::{bytecode::Bytecode, order::compute_block_order}, cfg::cfg::{CFG, CFGEdge, CFGExpr, CFGOp, CFGValue}};
 
 fn try_into_bytecode(cfgop: &CFGOp) -> Result<Bytecode, TryFromIntError> {
-    let CFGOp { pointer, opcode, loc: _ } = cfgop;
-    let p1 = (*pointer).try_into()?;
-    Ok(match opcode {
-        CFGOp::Breakpoint => Bytecode::Breakpoint(p1),
-        CFGOp::Add(v2) => Bytecode::Add(p1, *v2),
-        CFGOp::AddLoad(p2) => Bytecode::AddLoad(p1, (*p2).try_into()?),
-        CFGOp::SubLoad(p2) => Bytecode::SubLoad(p1, (*p2).try_into()?),
-        CFGOp::Set(v2) => Bytecode::Set(p1, *v2),
-        CFGOp::SetLoad(p2) => Bytecode::SetLoad(p1, (*p2).try_into()?),
-        CFGOp::MulAdd(p2, v3) => Bytecode::MulAdd(p1, (*p2).try_into()?, *v3),
-        CFGOp::MulAddConst(v2, p3, v4) => Bytecode::MulAddConst(p1, *v2, (*p3).try_into()?, *v4),
-        CFGOp::Mul(p2, v3) => Bytecode::Mul(p1, (*p2).try_into()?, *v3),
-        CFGOp::In => Bytecode::In(p1),
-        CFGOp::Out => Bytecode::Out(p1),
-        CFGOp::OutConst(val) => Bytecode::OutConst(*val),
+    Ok(match cfgop {
+        CFGOp::Breakpoint(p1) => Bytecode::Breakpoint((*p1).try_into()?),
+        CFGOp::Out(CFGValue::Load(p1)) => Bytecode::Out((*p1).try_into()?),
+        CFGOp::Out(CFGValue::Const(c1)) => Bytecode::OutConst(*c1),
+        CFGOp::Assign(ptr, expr) => {
+            let ptr = (*ptr).try_into()?;
+            match expr {
+                CFGExpr::Value(CFGValue::Const(c1)) => Bytecode::SetC(ptr, *c1),
+                CFGExpr::Value(CFGValue::Load(p1)) => Bytecode::SetL(ptr, (*p1).try_into()?),
+
+                CFGExpr::Add(CFGValue::Load(p1), CFGValue::Load(p2)) => Bytecode::AddL(ptr, (*p1).try_into()?, (*p2).try_into()?),
+                CFGExpr::Add(CFGValue::Load(p), CFGValue::Const(c)) |
+                CFGExpr::Add(CFGValue::Const(c), CFGValue::Load(p)) => Bytecode::AddC(ptr, (*p).try_into()?, *c),
+                CFGExpr::Add(CFGValue::Const(c1), CFGValue::Const(c2)) => Bytecode::SetC(ptr, c1.wrapping_add(*c2)),
+
+                CFGExpr::Sub(CFGValue::Load(p1), CFGValue::Load(p2)) => Bytecode::SubLL(ptr, (*p1).try_into()?, (*p2).try_into()?),
+                CFGExpr::Sub(CFGValue::Load(p1), CFGValue::Const(c2)) => Bytecode::SubLC(ptr, (*p1).try_into()?, *c2),
+                CFGExpr::Sub(CFGValue::Const(c1), CFGValue::Load(p2)) => Bytecode::SubCL(ptr, *c1, (*p2).try_into()?),
+                CFGExpr::Sub(CFGValue::Const(c1), CFGValue::Const(c2)) => Bytecode::SetC(ptr, c1.wrapping_sub(*c2)),
+
+                CFGExpr::Mul(CFGValue::Load(p1), CFGValue::Load(p2)) => Bytecode::MulL(ptr, (*p1).try_into()?, (*p2).try_into()?),
+                CFGExpr::Mul(CFGValue::Load(p), CFGValue::Const(c)) |
+                CFGExpr::Mul(CFGValue::Const(c), CFGValue::Load(p)) => Bytecode::MulC(ptr, (*p).try_into()?, *c),
+                CFGExpr::Mul(CFGValue::Const(c1), CFGValue::Const(c2)) => Bytecode::SetC(ptr, c1.wrapping_mul(*c2)),
+
+                CFGExpr::MulAdd(CFGValue::Load(p1), CFGValue::Load(p2), c3) => Bytecode::MulAddL(ptr, (*p1).try_into()?, (*p2).try_into()?, *c3),
+                CFGExpr::MulAdd(CFGValue::Load(p1), CFGValue::Const(c2), c3) => Bytecode::AddC(ptr, (*p1).try_into()?, c2.wrapping_mul(*c3)),
+                CFGExpr::MulAdd(CFGValue::Const(c1), CFGValue::Load(p2), c3) => Bytecode::MulAddC(ptr, *c1, (*p2).try_into()?, *c3),
+                CFGExpr::MulAdd(CFGValue::Const(c1), CFGValue::Const(c2), c3) => Bytecode::SetC(ptr, c1.wrapping_add(c2.wrapping_mul(*c3))),
+
+                CFGExpr::In => Bytecode::In(ptr),
+            }
+        }
     })
 }
 

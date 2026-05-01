@@ -16,9 +16,8 @@ impl CFGOp {
 
                     CFGExpr::Add(v1, v2) |
                     CFGExpr::Sub(v1, v2) |
-                    CFGExpr::Mul(v1, v2) => &[v1, v2],
-
-                    CFGExpr::MulAdd(v1, v2, v3) => &[v1, v2, v3],
+                    CFGExpr::Mul(v1, v2) |
+                    CFGExpr::MulAdd(v1, v2, _) => &[v1, v2],
                 };
                 let mut refs = vec![];
                 for val in values {

@@ -33,7 +33,7 @@ fn exec_node_ir(insts: &[CFGOp], mem: &mut Mem) {
                     CFGExpr::Add(v1, v2) => mem.get(v1).wrapping_add(mem.get(v2)),
                     CFGExpr::Sub(v1, v2) => mem.get(v1).wrapping_sub(mem.get(v2)),
                     CFGExpr::Mul(v1, v2) => mem.get(v1).wrapping_mul(mem.get(v2)),
-                    CFGExpr::MulAdd(v1, v2, v3) => mem.get(v1).wrapping_add(mem.get(v2).wrapping_mul(mem.get(v3))),
+                    CFGExpr::MulAdd(v1, v2, v3) => mem.get(v1).wrapping_add(mem.get(v2).wrapping_mul(*v3)),
                     CFGExpr::In => {
                         let mut stdin = stdin().lock();
                         let mut buf = [0u8; 1];

@@ -101,7 +101,7 @@ pub enum CFGExpr {
     Add(CFGValue, CFGValue),
     Sub(CFGValue, CFGValue),
     Mul(CFGValue, CFGValue),
-    MulAdd(CFGValue, CFGValue, CFGValue), // [0] + [1] * 2
+    MulAdd(CFGValue, CFGValue, u8), // [0] + [1] * 2
     In,
 }
 impl Debug for CFGExpr {
@@ -111,7 +111,7 @@ impl Debug for CFGExpr {
             Self::Add(v1, v2) => write!(f, "{v1:?} + {v2:?}"),
             Self::Sub(v1, v2) => write!(f, "{v1:?} - {v2:?}"),
             Self::Mul(v1, v2) => write!(f, "{v1:?} * {v2:?}"),
-            Self::MulAdd(v1, v2, v3) => write!(f, "{v1:?} + {v2:?} * {v3:?}"),
+            Self::MulAdd(v1, v2, v3) => write!(f, "{v1:?} + {v2:?} * {v3}"),
             Self::In => write!(f, "stdin"),
         }
     }

@@ -41,14 +41,10 @@ impl CFG {
                     },
                     CFGExpr::Add(v1, v2) |
                     CFGExpr::Sub(v1, v2) |
-                    CFGExpr::Mul(v1, v2) => {
+                    CFGExpr::Mul(v1, v2) |
+                    CFGExpr::MulAdd(v1, v2, _) => {
                         self.internal_simply_fold_const(block_i, i, v1);
                         self.internal_simply_fold_const(block_i, i, v2);
-                    }
-                    CFGExpr::MulAdd(v1, v2, v3) => {
-                        self.internal_simply_fold_const(block_i, i, v1);
-                        self.internal_simply_fold_const(block_i, i, v2);
-                        self.internal_simply_fold_const(block_i, i, v3);
                     }
                 }
             }
@@ -73,20 +69,20 @@ impl CFG {
                             *expr = CFGExpr::Value(CFGValue::Load(p));
                         }
                     }
-                    CFGExpr::MulAdd(v1, v2, CFGValue::Const(1)) => {
+                    CFGExpr::MulAdd(v1, v2, 1) => {
                         *expr = CFGExpr::Add(v1, v2);
                     }
-                    CFGExpr::MulAdd(v1, v2, CFGValue::Const(255)) => {
+                    CFGExpr::MulAdd(v1, v2, 255) => {
                         *expr = CFGExpr::Sub(v1, v2);
                     }
                     CFGExpr::MulAdd(CFGValue::Const(0), v2, v3) => {
-                        *expr = CFGExpr::Mul(v2, v3);
+                        *expr = CFGExpr::Mul(v2, CFGValue::Const(v3));
                     }
                     CFGExpr::MulAdd(v1, CFGValue::Const(0), _) |
-                    CFGExpr::MulAdd(v1, _, CFGValue::Const(0)) => {
+                    CFGExpr::MulAdd(v1, _, 0) => {
                         *expr = CFGExpr::Value(v1);
                     }
-                    CFGExpr::MulAdd(v1, CFGValue::Const(c2), CFGValue::Const(c3)) => {
+                    CFGExpr::MulAdd(v1, CFGValue::Const(c2), c3) => {
                         *expr = CFGExpr::Add(v1, CFGValue::Const(c2.wrapping_mul(c3)));
                     }
 
