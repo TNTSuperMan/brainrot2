@@ -1,4 +1,4 @@
-use crate::cfg::cfg::{CFG, CFGOp};
+use crate::cfg::cfg::{CFG, CFGExpr, CFGOp};
 
 impl CFG {
     fn internal_dce_inst(&mut self, block_i: usize) {
@@ -16,6 +16,10 @@ impl CFG {
                 i += 1;
                 continue;
             };
+            if matches!(block.insts[i], CFGOp::Assign(_, CFGExpr::In)) {
+                i += 1;
+                continue;
+            }
             let next_assign = i + 1 + match block.insts[(i+1)..].iter().position(|inst| inst.writes() == Some(ptr)) {
                 Some(n) => n,
                 None => {
