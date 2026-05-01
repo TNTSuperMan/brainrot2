@@ -33,10 +33,6 @@ pub fn exec_bytecode(bytecodes: &[Bytecode], offset: u8) {
         }
 
         match &bytecodes[pc] {
-            Bytecode::Breakpoint(p1) => {
-                let p = (*p1 as isize + mem.offset) as usize;
-                println!("break; {}", p);
-            }
             Bytecode::SetC(p1, value) => {
                 mem[p1] = *value;
             }
@@ -64,12 +60,14 @@ pub fn exec_bytecode(bytecodes: &[Bytecode], offset: u8) {
             Bytecode::MulL(p1, p2, p3) => {
                 mem[p1] = mem[p2].wrapping_mul(mem[p3]);
             }
+
             Bytecode::MulAddC(p1, value, p3, factor) => {
                 mem[p1] = value.wrapping_add(mem[p3].wrapping_mul(*factor));
             }
             Bytecode::MulAddL(p1, p2, p3, factor) => {
                 mem[p1] = mem[p2].wrapping_add(mem[p3].wrapping_mul(*factor));
             }
+
             Bytecode::In(p1) => {
                 let mut buf = [0u8; 1];
                 mem[p1] = if stdin.read_exact(&mut buf).is_ok() {
@@ -77,6 +75,11 @@ pub fn exec_bytecode(bytecodes: &[Bytecode], offset: u8) {
                 } else {
                     0
                 };
+            }
+            
+            Bytecode::Breakpoint(p1) => {
+                let p = (*p1 as isize + mem.offset) as usize;
+                println!("break; {}", p);
             }
             Bytecode::Out(p1) => {
                 let _ = stdout.write(&[mem[p1]]);
