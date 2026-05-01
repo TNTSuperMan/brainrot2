@@ -28,10 +28,6 @@ pub fn exec_bytecode(bytecodes: &[Bytecode], offset: u8) {
     let mut stdout = stdout().lock();
 
     loop {
-        if pc >= bytecodes.len() {
-            return;
-        }
-
         match &bytecodes[pc] {
             Bytecode::SetC(p1, value) => {
                 mem[p1] = *value;
