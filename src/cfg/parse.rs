@@ -21,23 +21,25 @@ pub fn ir_to_cfgir(ir: &IR) -> Option<CFGOp> {
 
 fn split_node(nodes: &mut Vec<CFGBlock>, index: usize) {
     let mut node_i = 0usize;
-    let mut i = 0usize;
-    for _ in 0..index {
-        i = i.wrapping_add(1);
-        if nodes[node_i].insts.len() <= i {
-            i = if let CFGEdge::Branch { .. } = nodes[node_i].edge {
-                usize::MAX
-            } else {
-                0
-            };
-            node_i += 1;
-            continue;
+    let mut offset = index;
+
+    while node_i < nodes.len() {
+        let node_len = nodes[node_i].insts.len();
+        if offset < node_len {
+            break;
         }
+        offset -= node_len;
+        if let CFGEdge::Branch { .. } = nodes[node_i].edge {
+            return;
+        }
+        node_i += 1;
     }
-    if i == usize::MAX || i == 0 {
+
+    if node_i >= nodes.len() || offset == 0 {
         return;
     }
-    let right = nodes[node_i].insts.split_off(i);
+
+    let right = nodes[node_i].insts.split_off(offset);
     let right_edge = nodes[node_i].edge.clone();
     nodes[node_i].edge = CFGEdge::Jump(usize::MAX);
     let right_offset = nodes[node_i].offset;
