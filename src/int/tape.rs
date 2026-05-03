@@ -1,4 +1,4 @@
-use std::{fmt::Display, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData};
 
 use crate::TAPE_LENGTH;
 
@@ -7,7 +7,7 @@ pub struct OutOfRangeError {
     offset: i16,
     kind: String,
 }
-impl Display for OutOfRangeError {
+impl Debug for OutOfRangeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let OutOfRangeError { index, offset, kind } = self;
         write!(f, "Out of range: {kind} ${index}(offset: {offset})")

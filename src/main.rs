@@ -1,7 +1,7 @@
 use std::{env::args, fs, process::ExitCode, time::Instant};
 
 use crate::{
-    bytecode::{build::build_bytecode, int::exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg}, ir::{int::exec_from_ir, ir::IR}
+    bytecode::{build::build_bytecode, int::exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg}, int::run, ir::{int::exec_from_ir, ir::IR}
 };
 
 mod cfg;
@@ -68,6 +68,12 @@ fn main() -> ExitCode {
             }
             "dump_offsetrange" => {
                 println!("{:?}", cfg.compute_offset_ranges());
+            }
+            "exec_int" => {
+                run(&bytecodes, mul_offset, match offset_ranges.get(&0) {
+                    Some(r) => r.contains(&(mul_offset as isize)),
+                    None => true,
+                }).unwrap();
             }
             _ => {
                 eprintln!("unknown kind");
