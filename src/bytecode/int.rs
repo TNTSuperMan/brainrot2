@@ -168,6 +168,10 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: u8
                 mem[p1] = mem[p1].wrapping_add(*c1);
                 mem[p2] = *c2;
             }
+            Bytecode::AddLSetC(p1, p2, p3, p4, c5) => {
+                mem[p1] = mem[p2].wrapping_add(mem[p3]);
+                mem[p4] = *c5;
+            }
         }
 
         pc += 1;

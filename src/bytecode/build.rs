@@ -79,6 +79,14 @@ fn cfgops_to_bytecodes(insts: &[CFGOp]) -> Result<Vec<Bytecode>, TryFromIntError
                     continue;
                 }
             }
+            (Bytecode::AddL(p1, p2, p3), Bytecode::SetC(p4, c5)) |
+            (Bytecode::SetC(p4, c5), Bytecode::AddL(p1, p2, p3)) => {
+                if p1 != p4 {
+                    codes.push(Bytecode::AddLSetC(p1.try_into()?, p2.try_into()?, p3.try_into()?, p4.try_into()?, c5));
+                    i += 2;
+                    continue;
+                }
+            }
             _ => {}
         }
         codes.push(try_into_bytecode(&insts[i])?);

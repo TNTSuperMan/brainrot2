@@ -42,9 +42,10 @@ pub enum Bytecode {
         ptr: i16,
         addr: i32,
     },
-    SetCSetC(i16, u8, i16, u8),
-    AddAdd  (i16, u8, i16, u8),
-    AddSetC (i16, u8, i16, u8),
+    SetCSetC(i16, u8,       i16, u8),
+    AddAdd  (i16, u8,       i16, u8),
+    AddSetC (i16, u8,       i16, u8),
+    AddLSetC(i16, i16, i16, i16, u8),
 }
 
 impl Display for Bytecode {
@@ -81,6 +82,7 @@ impl Display for Bytecode {
             Self::SetCSetC(p1, c1, p2, c2) => write!(f, "${p1} = {c1}, ${p2} = {c2}"),
             Self::AddAdd(p1, c1, p2, c2) => write!(f, "${p1} += {c1}, ${p2} += {c2}"),
             Self::AddSetC(p1, c1, p2, c2) => write!(f, "${p1} += {c1}, ${p2} = {c2}"),
+            Self::AddLSetC(p1, p2, p3, p4, c5) => write!(f, "${p1} = ${p2} + ${p3}, ${p4} = {c5}"),
         }
     }
 }
