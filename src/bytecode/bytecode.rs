@@ -4,6 +4,7 @@ use std::fmt::Display;
 pub enum Bytecode {
     SetC(i16, u8),
     SetL(i16, i16),
+    Add(i16, u8),
     AddC(i16, i16, u8),
     AddL(i16, i16, i16),
     SubLC(i16, i16, u8),
@@ -49,6 +50,7 @@ impl Display for Bytecode {
         match self {
             Self::SetC(p1, c2) => write!(f, "${p1} = {c2}"),
             Self::SetL(p1, p2) => write!(f, "${p1} = ${p2}"),
+            Self::Add(ptr, val) => write!(f, "${ptr} += {val}"),
             Self::AddC(p1, p2, c3) => write!(f, "${p1} = ${p2} + {c3}"),
             Self::AddL(p1, p2, p3) => write!(f, "${p1} = ${p2} + ${p3}"),
             Self::SubLC(p1, p2, c3) => write!(f, "${p1} = ${p2} - {c3}"),

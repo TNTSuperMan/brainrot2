@@ -15,7 +15,14 @@ fn try_into_bytecode(cfgop: &CFGOp) -> Result<Bytecode, TryFromIntError> {
 
                 CFGExpr::Add(CFGValue::Load(p1), CFGValue::Load(p2)) => Bytecode::AddL(ptr, (*p1).try_into()?, (*p2).try_into()?),
                 CFGExpr::Add(CFGValue::Load(p), CFGValue::Const(c)) |
-                CFGExpr::Add(CFGValue::Const(c), CFGValue::Load(p)) => Bytecode::AddC(ptr, (*p).try_into()?, *c),
+                CFGExpr::Add(CFGValue::Const(c), CFGValue::Load(p)) => {
+                    let p = (*p).try_into()?;
+                    if ptr == p {
+                        Bytecode::Add(ptr, *c)
+                    } else {
+                        Bytecode::AddC(ptr, p, *c)
+                    }
+                },
                 CFGExpr::Add(CFGValue::Const(c1), CFGValue::Const(c2)) => Bytecode::SetC(ptr, c1.wrapping_add(*c2)),
 
                 CFGExpr::Sub(CFGValue::Load(p1), CFGValue::Load(p2)) => Bytecode::SubLL(ptr, (*p1).try_into()?, (*p2).try_into()?),

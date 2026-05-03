@@ -38,6 +38,9 @@ pub fn debug_exec_bytecode<const OUT: bool>(bytecodes: &[Bytecode], offset: u8, 
             Bytecode::SetL(p1, p2) => {
                 mem[p1] = mem[p2];
             }
+            Bytecode::Add(ptr, val) => {
+                mem[ptr] = mem[ptr].wrapping_add(*val);
+            }
             Bytecode::AddC(p1, p2, value) => {
                 mem[p1] = mem[p2].wrapping_add(*value);
             }
