@@ -8,6 +8,8 @@ mod cfg;
 mod ir;
 mod bytecode;
 
+pub const TAPE_LENGTH: usize = 30000;
+
 fn main() -> ExitCode {
     if let [_, kind, file] = args().collect::<Vec<String>>().as_slice() {
         let code = fs::read_to_string(&file).unwrap();

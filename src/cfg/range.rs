@@ -1,6 +1,6 @@
 use std::{cmp::{max, min}, collections::{HashMap, HashSet}, ops::RangeInclusive};
 
-use crate::cfg::cfg::{CFG, CFGEdge};
+use crate::{TAPE_LENGTH, cfg::cfg::{CFG, CFGEdge}};
 
 fn extend_range(range: Option<RangeInclusive<isize>>, point: isize) -> Option<RangeInclusive<isize>> {
     Some(if let Some(r) = range {
@@ -18,7 +18,7 @@ fn accessrange_to_offsetrange(range: RangeInclusive<isize>) -> RangeInclusive<is
     (
         0 - range.start()
     )..=(
-        65535 - range.end()
+        (TAPE_LENGTH - 1) as isize - range.end()
     )
 }
 

@@ -1,10 +1,10 @@
 use std::{io::{Read, Write, stdin, stdout}, ops::{Index, IndexMut}};
 
-use crate::bytecode::bytecode::Bytecode;
+use crate::{TAPE_LENGTH, bytecode::bytecode::Bytecode};
 
 struct Mem {
     offset: isize,
-    memory: [u8; 65536],
+    memory: [u8; TAPE_LENGTH],
 }
 impl Index<&i16> for Mem {
     type Output = u8;
@@ -22,7 +22,7 @@ pub fn exec_bytecode<const FLUSH: bool>(bytecodes: &[Bytecode], offset: u8) {
     let mut pc: usize = 0;
     let mut mem = Mem {
         offset: offset as isize,
-        memory: [0u8; 65536],
+        memory: [0u8; TAPE_LENGTH],
     };
     let mut stdin = stdin().lock();
     let mut stdout = stdout().lock();
