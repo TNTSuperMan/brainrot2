@@ -60,6 +60,11 @@ fn main() -> ExitCode {
                     println!("%{i}  \t{c}");
                 }
             }
+            "dump_classic_bytecode" => {
+                for c in bytecodes {
+                    println!("{c:?}");
+                }
+            }
             "exec_bytecode" => {
                 debug_exec_bytecode::<true>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
                     Some(r) => r.contains(&(mul_offset as isize)),
