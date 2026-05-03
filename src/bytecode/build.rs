@@ -43,7 +43,7 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
     let mut bytecodes = vec![];
     let order = compute_block_order(cfg);
 
-    let mut jumptable = vec![0u32; cfg.0.len()];
+    let mut jumptable = vec![0; cfg.0.len()];
 
     // この時点のJump系命令はバイトコードアドレスではなくCFGブロックIDを指す
     for (i, b) in order.iter().enumerate() {
@@ -86,12 +86,12 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
         }
     }
 
-    for code in bytecodes.iter_mut() {
+    for (i, code) in bytecodes.iter_mut().enumerate() {
         match code {
             Bytecode::Jump(addr) |
             Bytecode::JumpIfZero(_, addr) |
             Bytecode::JumpIfNotZero(_, addr) => {
-                *addr = jumptable[*addr as usize];
+                *addr = jumptable[*addr as usize] - (i as i32);
             }
             _ => {}
         }

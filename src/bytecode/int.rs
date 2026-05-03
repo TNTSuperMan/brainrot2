@@ -91,18 +91,18 @@ pub fn exec_bytecode<const FLUSH: bool>(bytecodes: &[Bytecode], offset: u8, opt_
                 }
             }
             Bytecode::Jump(a1) => {
-                pc = *a1 as usize;
+                pc = pc.wrapping_add_signed(*a1 as isize);
                 continue;
             }
             Bytecode::JumpIfZero(p1, a2) => {
                 if mem[p1] == 0 {
-                    pc = *a2 as usize;
+                    pc = pc.wrapping_add_signed(*a2 as isize);
                     continue;
                 }
             }
             Bytecode::JumpIfNotZero(p1, a2) => {
                 if mem[p1] != 0 {
-                    pc = *a2 as usize;
+                    pc = pc.wrapping_add_signed(*a2 as isize);
                     continue;
                 }
             }
