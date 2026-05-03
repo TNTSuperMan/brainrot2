@@ -7,6 +7,7 @@ use crate::{
 mod cfg;
 mod ir;
 mod bytecode;
+mod int;
 
 pub const TAPE_LENGTH: usize = 30000;
 
