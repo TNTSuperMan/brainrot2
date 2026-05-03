@@ -32,7 +32,7 @@ fn main() -> ExitCode {
         let offset_end = Instant::now();
         let bytecodes = build_bytecode(&cfg, &offset_ranges).unwrap();
         let bytecode_end = Instant::now();
-        eprintln!("all: {:?}", opt_end - start);
+        eprintln!("all: {:?}", bytecode_end - start);
         eprintln!("ir: {:?}", ir_end - start);
         eprintln!("cfg: {:?}", cfg_end - ir_end);
         eprintln!("opt: {:?}", opt_end - cfg_end);
