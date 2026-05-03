@@ -125,7 +125,7 @@ pub fn debug_exec_bytecode<const OUT: bool>(bytecodes: &[Bytecode], offset: u8, 
                 return (stdout, exec_counts);
             }
 
-            Bytecode::OffsetRangeJumpZero { offset, rb, re, ptr, jmp } => {
+            Bytecode::OffsetRangeJumpZero { offset, rb, re, ptr, addr: jmp } => {
                 mem.offset += *offset as isize;
                 if opt && (mem.offset < (*rb as isize) || (*re as isize) < mem.offset) {
                     eprintln!("deopt {pc}");
@@ -138,7 +138,7 @@ pub fn debug_exec_bytecode<const OUT: bool>(bytecodes: &[Bytecode], offset: u8, 
                     pc = pc.wrapping_add_signed(*jmp as isize);
                 }
             }
-            Bytecode::OffsetRangeJumpNotZero { offset, rb, re, ptr, jmp } => {
+            Bytecode::OffsetRangeJumpNotZero { offset, rb, re, ptr, addr: jmp } => {
                 mem.offset += *offset as isize;
                 if opt && (mem.offset < (*rb as isize) || (*re as isize) < mem.offset) {
                     eprintln!("deopt {pc}");

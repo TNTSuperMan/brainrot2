@@ -64,7 +64,7 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
                             rb,
                             re,
                             ptr: (*pointer).try_into()?,
-                            jmp: (*zero).try_into()?,
+                            addr: (*zero).try_into()?,
                         });
 
                         continue;
@@ -75,7 +75,7 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
                             rb,
                             re,
                             ptr: (*pointer).try_into()?,
-                            jmp: (*nonzero).try_into()?,
+                            addr: (*nonzero).try_into()?,
                         });
                         
                         continue;
@@ -113,7 +113,9 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
         match code {
             Bytecode::Jump(addr) |
             Bytecode::JumpIfZero(_, addr) |
-            Bytecode::JumpIfNotZero(_, addr) => {
+            Bytecode::JumpIfNotZero(_, addr) |
+            Bytecode::OffsetRangeJumpZero { addr, .. } |
+            Bytecode::OffsetRangeJumpNotZero { addr, .. } => {
                 *addr = jumptable[*addr as usize] - (i as i32);
             }
             _ => {}

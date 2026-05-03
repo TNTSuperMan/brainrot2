@@ -32,14 +32,14 @@ pub enum Bytecode {
         rb: i16,
         re: i16,
         ptr: i16,
-        jmp: i16,
+        addr: i32,
     },
     OffsetRangeJumpNotZero {
         offset: i16,
         rb: i16,
         re: i16,
         ptr: i16,
-        jmp: i16,
+        addr: i32,
     },
 }
 
@@ -71,8 +71,8 @@ impl Display for Bytecode {
             Self::OffsetWithRangeCheck(o1, rb, re) => write!(f, "offset {o1}, rangecheck {rb}..={re}"),
             Self::End => write!(f, "end"),
 
-            Self::OffsetRangeJumpZero { offset, rb, re, ptr, jmp } => write!(f, "offset {offset}, rangecheck {rb}..={re}, jrz ${ptr} {jmp}"),
-            Self::OffsetRangeJumpNotZero { offset, rb, re, ptr, jmp } => write!(f, "offset {offset}, rangecheck {rb}..={re}, jrnz ${ptr} {jmp}"),
+            Self::OffsetRangeJumpZero { offset, rb, re, ptr, addr: jmp } => write!(f, "offset {offset}, rangecheck {rb}..={re}, jrz ${ptr} {jmp}"),
+            Self::OffsetRangeJumpNotZero { offset, rb, re, ptr, addr: jmp } => write!(f, "offset {offset}, rangecheck {rb}..={re}, jrnz ${ptr} {jmp}"),
         }
     }
 }
