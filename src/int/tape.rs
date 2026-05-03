@@ -50,6 +50,7 @@ pub struct UnsafeTape<'a> {
     root: *const u8,
     curr: *mut u8,
     _marker: PhantomData<&'a mut [u8]>,
+    inner_offset: &'a mut i16,
 }
 
 impl<'a> UnsafeTape<'a> {
@@ -59,6 +60,7 @@ impl<'a> UnsafeTape<'a> {
             root: ptr,
             curr: ptr.wrapping_add(tape.offset as isize as usize),
             _marker: PhantomData,
+            inner_offset: &mut tape.offset,
         }
     }
     pub unsafe fn get(&self, index: i16) -> u8 {
@@ -72,5 +74,11 @@ impl<'a> UnsafeTape<'a> {
     }
     pub unsafe fn offset(&mut self, size: i16) {
         self.curr = unsafe { self.curr.offset(size as isize) };
+    }
+}
+
+impl<'a> Drop for UnsafeTape<'a> {
+    fn drop(&mut self) {
+        *self.inner_offset = self.get_offset();
     }
 }
