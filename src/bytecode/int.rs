@@ -136,6 +136,7 @@ pub fn debug_exec_bytecode<const OUT: bool>(bytecodes: &[Bytecode], offset: u8, 
                 }
                 if mem[ptr] == 0 {
                     pc = pc.wrapping_add_signed(*jmp as isize);
+                    continue;
                 }
             }
             Bytecode::OffsetRangeJumpNotZero { offset, rb, re, ptr, addr: jmp } => {
@@ -149,6 +150,7 @@ pub fn debug_exec_bytecode<const OUT: bool>(bytecodes: &[Bytecode], offset: u8, 
                 }
                 if mem[ptr] != 0 {
                     pc = pc.wrapping_add_signed(*jmp as isize);
+                    continue;
                 }
             }
         }
