@@ -1,5 +1,6 @@
-use std::fmt::Debug;
+use std::fmt::Display;
 
+#[derive(Debug)]
 pub enum Bytecode {
     SetC(i16, u8),
     SetL(i16, i16),
@@ -27,7 +28,7 @@ pub enum Bytecode {
     End,
 }
 
-impl Debug for Bytecode {
+impl Display for Bytecode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::SetC(p1, c2) => write!(f, "${p1} = {c2}"),

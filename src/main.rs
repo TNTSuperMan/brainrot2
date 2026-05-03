@@ -57,7 +57,7 @@ fn main() -> ExitCode {
             }
             "dump_bytecode" => {
                 for (i, c) in bytecodes.iter().enumerate() {
-                    println!("%{i}  \t{c:?}");
+                    println!("%{i}  \t{c}");
                 }
             }
             "check_exec_counts" => {
