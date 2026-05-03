@@ -22,7 +22,8 @@ pub enum Bytecode {
     Jump(u32),
     JumpIfZero(i16, u32),
     JumpIfNotZero(i16, u32),
-    Offset(i8),
+    Offset(i16),
+    OffsetWithRangeCheck(i16, i16, i16),
     End,
 }
 
@@ -51,6 +52,7 @@ impl Debug for Bytecode {
             Self::JumpIfZero(p1, a2) => write!(f, "jz ${p1}, %{a2}"),
             Self::JumpIfNotZero(p1, a2) => write!(f, "jnz ${p1}, %{a2}"),
             Self::Offset(o1) => write!(f, "offset {o1}"),
+            Self::OffsetWithRangeCheck(o1, rb, re) => write!(f, "offset {o1}, rangecheck {rb}..={re}"),
             Self::End => write!(f, "end"),
         }
     }

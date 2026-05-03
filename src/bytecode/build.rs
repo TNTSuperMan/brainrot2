@@ -1,4 +1,4 @@
-use std::num::TryFromIntError;
+use std::{collections::HashMap, num::TryFromIntError, ops::RangeInclusive};
 
 use crate::{bytecode::{bytecode::Bytecode, order::compute_block_order}, cfg::cfg::{CFG, CFGEdge, CFGExpr, CFGOp, CFGValue}};
 
@@ -39,7 +39,7 @@ fn try_into_bytecode(cfgop: &CFGOp) -> Result<Bytecode, TryFromIntError> {
     })
 }
 
-pub fn build_bytecode(cfg: &CFG) -> Result<Vec<Bytecode>, TryFromIntError> {
+pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<isize>>) -> Result<Vec<Bytecode>, TryFromIntError> {
     let mut bytecodes = vec![];
     let order = compute_block_order(cfg);
 
@@ -52,7 +52,16 @@ pub fn build_bytecode(cfg: &CFG) -> Result<Vec<Bytecode>, TryFromIntError> {
         bytecodes.append(&mut block.insts.iter().map(|e| try_into_bytecode(e)).collect::<Result<Vec<_>, _>>()?);
 
         if let Some(offset) = block.offset {
-            bytecodes.push(Bytecode::Offset(offset.try_into()?));
+            let offset = offset.try_into()?;
+            if let Some(range) = offset_ranges.get(&i) {
+                bytecodes.push(Bytecode::OffsetWithRangeCheck(
+                    offset,
+                    (*range.start()).try_into()?,
+                    (*range.end()).try_into()?,
+                ));
+            } else {
+                bytecodes.push(Bytecode::Offset(offset));
+            }
         }
 
         match &block.edge {

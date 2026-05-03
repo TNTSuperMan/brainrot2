@@ -27,11 +27,17 @@ fn main() -> ExitCode {
             cfg.eliminate_dead_code();
             cfg.eliminate_dead_instruction();
         }
-        let end = Instant::now();
-        eprintln!("all: {:?}", end - start);
+        let opt_end = Instant::now();
+        let offset_ranges = cfg.compute_offset_ranges();
+        let offset_end = Instant::now();
+        let bytecodes = build_bytecode(&cfg, &offset_ranges).unwrap();
+        let bytecode_end = Instant::now();
+        eprintln!("all: {:?}", opt_end - start);
         eprintln!("ir: {:?}", ir_end - start);
         eprintln!("cfg: {:?}", cfg_end - ir_end);
-        eprintln!("opt: {:?}", end - cfg_end);
+        eprintln!("opt: {:?}", opt_end - cfg_end);
+        eprintln!("ofs: {:?}", offset_end - opt_end);
+        eprintln!("byt: {:?}", bytecode_end - offset_end);
         match kind.as_str() {
             "exec_ir" => {
                 exec_from_ir(&ir, mul_offset);
@@ -49,12 +55,11 @@ fn main() -> ExitCode {
                 println!("{}", cfg_to_dot(&cfg));
             }
             "dump_bytecode" => {
-                for (i, c) in build_bytecode(&cfg).unwrap().iter().enumerate() {
+                for (i, c) in bytecodes.iter().enumerate() {
                     println!("%{i}  \t{c:?}");
                 }
             }
             "exec_bytecode" => {
-                let bytecodes = build_bytecode(&cfg).unwrap();
                 exec_bytecode::<false>(&bytecodes, mul_offset);
             }
             "dump_offsetrange" => {

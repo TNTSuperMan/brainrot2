@@ -108,6 +108,12 @@ pub fn exec_bytecode<const FLUSH: bool>(bytecodes: &[Bytecode], offset: u8) {
             Bytecode::Offset(o1) => {
                 mem.offset += *o1 as isize;
             }
+            Bytecode::OffsetWithRangeCheck(o1, rb, re) => {
+                mem.offset += *o1 as isize;
+                if mem.offset < (*rb as isize) || (*re as isize) < mem.offset {
+                    eprintln!("\n[maybe] out of range detected");
+                }
+            }
             Bytecode::End => {
                 return;
             }
