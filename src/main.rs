@@ -66,13 +66,13 @@ fn main() -> ExitCode {
                 }
             }
             "exec_bytecode" => {
-                debug_exec_bytecode::<true>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
+                debug_exec_bytecode::<false>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
                     Some(r) => r.contains(&(mul_offset as isize)),
                     None => true,
                 });
             }
             "check_exec_counts" => {
-                let (_, counts) = debug_exec_bytecode::<false>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
+                let counts = debug_exec_bytecode::<true>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
                     Some(r) => r.contains(&(mul_offset as isize)),
                     None => true,
                 });

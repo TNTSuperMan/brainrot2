@@ -1,4 +1,4 @@
-use std::{io::{Read, stdin}, ops::{Index, IndexMut}};
+use std::{io::{Read, Write, stdin, stdout}, ops::{Index, IndexMut}};
 
 use crate::{TAPE_LENGTH, bytecode::bytecode::Bytecode};
 
@@ -18,19 +18,21 @@ impl IndexMut<&i16> for Mem {
     }
 }
 
-pub fn debug_exec_bytecode<const OUT: bool>(bytecodes: &[Bytecode], offset: u8, opt_first: bool) -> (Vec<u8>, Vec<u32>) {
-    let mut exec_counts = vec![0; bytecodes.len()];
-    let mut stdout = vec![];
+pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: u8, opt_first: bool) -> Vec<u32> {
+    let mut exec_counts = if DEBUG { vec![0; bytecodes.len()] } else { vec![] };
     let mut pc: usize = 0;
     let mut mem = Mem {
         offset: offset as isize,
         memory: [0u8; TAPE_LENGTH],
     };
     let mut stdin = stdin().lock();
+    let mut stdout = stdout().lock();
     let mut opt = opt_first;
 
     loop {
-        exec_counts[pc] += 1;
+        if DEBUG {
+            exec_counts[pc] += 1;
+        }
         match &bytecodes[pc] {
             Bytecode::SetC(p1, value) => {
                 mem[p1] = *value;
@@ -84,15 +86,13 @@ pub fn debug_exec_bytecode<const OUT: bool>(bytecodes: &[Bytecode], offset: u8, 
                 println!("break; {}", p);
             }
             Bytecode::Out(p1) => {
-                stdout.push(mem[p1]);
-                if OUT {
-                    print!("{}", mem[p1] as char);
+                if !DEBUG {
+                    let _ = stdout.write(&[mem[p1]]);
                 }
             }
             Bytecode::OutConst(v1) => {
-                stdout.push(*v1);
-                if OUT {
-                    print!("{}", *v1 as char);
+                if !DEBUG {
+                    let _ = stdout.write(&[*v1]);
                 }
             }
             Bytecode::Jump(a1) => {
@@ -125,7 +125,7 @@ pub fn debug_exec_bytecode<const OUT: bool>(bytecodes: &[Bytecode], offset: u8, 
                 }
             }
             Bytecode::End => {
-                return (stdout, exec_counts);
+                return exec_counts;
             }
 
             Bytecode::OffsetRangeJumpZero { offset, rb, re, ptr, addr: jmp } => {
