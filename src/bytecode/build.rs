@@ -63,17 +63,25 @@ fn cfgops_to_bytecodes(insts: &[CFGOp]) -> Result<Vec<Bytecode>, TryFromIntError
         match (curr_op, next_op) {
             (Bytecode::SetC(p1, c1), Bytecode::SetC(p2, c2)) => {
                 codes.push(Bytecode::SetCSetC(p1.try_into()?, c1, p2.try_into()?, c2));
-                i += 1;
+                i += 2;
+                continue;
             }
             (Bytecode::Add(p1, c1), Bytecode::Add(p2, c2)) => {
                 codes.push(Bytecode::AddAdd(p1.try_into()?, c1, p2.try_into()?, c2));
-                i += 1;
+                i += 2;
+                continue;
             }
-            (curr_op, _) => {
-                codes.push(curr_op);
+            (Bytecode::Add(p1, c1), Bytecode::SetC(p2, c2)) |
+            (Bytecode::SetC(p2, c2), Bytecode::Add(p1, c1)) => {
+                if p1 != p2 {
+                    codes.push(Bytecode::AddSetC(p1.try_into()?, c1, p2.try_into()?, c2));
+                    i += 2;
+                    continue;
+                }
             }
+            _ => {}
         }
-
+        codes.push(try_into_bytecode(&insts[i])?);
         i += 1;
     }
     if i == len_sub {
