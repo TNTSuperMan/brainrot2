@@ -1,8 +1,9 @@
-use crate::{bytecode::bytecode::Bytecode, int::{program::UnsafeProgram, run_deopt::run_deopt, tape::{OutOfRangeError, Tape}}};
+use crate::{bytecode::bytecode::Bytecode, int::{program::UnsafeProgram, run_deopt::run_deopt, run_opt::run_opt, tape::{OutOfRangeError, Tape, UnsafeTape}}};
 
 mod tape;
 mod program;
 mod run_deopt;
+mod run_opt;
 
 enum InterpretResult {
     End,
@@ -17,7 +18,10 @@ pub fn run(bytecodes: &[Bytecode], mul_offset: u8, opt_first: bool) -> Result<()
 
     loop {
         let result = match opt {
-            true => todo!(),
+            true => {
+                let mut unsafe_tape = UnsafeTape::new(&mut tape);
+                unsafe { run_opt::<false>(&mut program, &mut unsafe_tape) }
+            },
             false => run_deopt::<false, false>(&mut program, &mut tape)?,
         };
         match result {
