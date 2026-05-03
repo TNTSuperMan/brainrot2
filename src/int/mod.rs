@@ -22,7 +22,7 @@ pub fn run<const FLUSH: bool>(bytecodes: &[Bytecode], mul_offset: u8, opt_first:
                 let mut unsafe_tape = UnsafeTape::new(&mut tape);
                 unsafe { run_opt::<FLUSH>(&mut program, &mut unsafe_tape) }
             },
-            false => run_deopt::<FLUSH, false>(&mut program, &mut tape)?,
+            false => run_deopt::<FLUSH, true>(&mut program, &mut tape)?,
         };
         match result {
             InterpretResult::End => {
