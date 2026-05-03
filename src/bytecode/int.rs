@@ -160,6 +160,10 @@ pub fn debug_exec_bytecode<const OUT: bool>(bytecodes: &[Bytecode], offset: u8, 
                 mem[p1] = *c1;
                 mem[p2] = *c2;
             }
+            Bytecode::AddAdd(p1, c1, p2, c2) => {
+                mem[p1] = mem[p1].wrapping_add(*c1);
+                mem[p2] = mem[p2].wrapping_add(*c2);
+            }
         }
 
         pc += 1;
