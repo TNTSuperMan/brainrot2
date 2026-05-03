@@ -1,6 +1,6 @@
-use std::{io::{Read, Write, stdin, stdout}, ops::{Index, IndexMut}};
+use std::io::{Read, Write, stdin, stdout};
 
-use crate::{TAPE_LENGTH, bytecode::bytecode::Bytecode, int::{InterpretResult, program::UnsafeProgram, tape::{OutOfRangeError, Tape}}};
+use crate::{bytecode::bytecode::Bytecode, int::{InterpretResult, program::UnsafeProgram, tape::{OutOfRangeError, Tape}}};
 
 pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafeProgram, tape: &mut Tape) -> Result<InterpretResult, OutOfRangeError> {
     let mut stdin = stdin().lock();
@@ -63,7 +63,7 @@ pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafePro
             }
             
             Bytecode::Breakpoint(p1) => {
-                todo!();
+                eprintln!("\nbreak; ${p1}, offset: {}", tape.get_offset());
             }
             Bytecode::Out(p1) => {
                 let _ = stdout.write(&[tape.get(*p1)?]);
