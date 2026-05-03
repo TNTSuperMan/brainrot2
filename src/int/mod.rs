@@ -10,7 +10,7 @@ enum InterpretResult {
     ToggleOpt(bool),
 }
 
-pub fn run(bytecodes: &[Bytecode], mul_offset: u8, opt_first: bool) -> Result<(), OutOfRangeError> {
+pub fn run<const FLUSH: bool>(bytecodes: &[Bytecode], mul_offset: u8, opt_first: bool) -> Result<(), OutOfRangeError> {
     let mut program = UnsafeProgram::new(bytecodes);
     let mut tape = Tape::new(mul_offset);
 
@@ -20,9 +20,9 @@ pub fn run(bytecodes: &[Bytecode], mul_offset: u8, opt_first: bool) -> Result<()
         let result = match opt {
             true => {
                 let mut unsafe_tape = UnsafeTape::new(&mut tape);
-                unsafe { run_opt::<false>(&mut program, &mut unsafe_tape) }
+                unsafe { run_opt::<FLUSH>(&mut program, &mut unsafe_tape) }
             },
-            false => run_deopt::<false, false>(&mut program, &mut tape)?,
+            false => run_deopt::<FLUSH, false>(&mut program, &mut tape)?,
         };
         match result {
             InterpretResult::End => {

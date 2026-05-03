@@ -70,7 +70,7 @@ fn main() -> ExitCode {
                 println!("{:?}", cfg.compute_offset_ranges());
             }
             "exec_int" => {
-                run(&bytecodes, mul_offset, match offset_ranges.get(&0) {
+                run::<false>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
                     Some(r) => r.contains(&(mul_offset as isize)),
                     None => true,
                 }).unwrap();
