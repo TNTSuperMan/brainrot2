@@ -60,8 +60,14 @@ fn main() -> ExitCode {
                     println!("%{i}  \t{c}");
                 }
             }
+            "exec_bytecode" => {
+                debug_exec_bytecode::<true>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
+                    Some(r) => r.contains(&(mul_offset as isize)),
+                    None => true,
+                });
+            }
             "check_exec_counts" => {
-                let (_, counts) = debug_exec_bytecode(&bytecodes, mul_offset, match offset_ranges.get(&0) {
+                let (_, counts) = debug_exec_bytecode::<false>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
                     Some(r) => r.contains(&(mul_offset as isize)),
                     None => true,
                 });

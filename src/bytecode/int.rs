@@ -18,7 +18,7 @@ impl IndexMut<&i16> for Mem {
     }
 }
 
-pub fn debug_exec_bytecode(bytecodes: &[Bytecode], offset: u8, opt_first: bool) -> (Vec<u8>, Vec<u32>) {
+pub fn debug_exec_bytecode<const OUT: bool>(bytecodes: &[Bytecode], offset: u8, opt_first: bool) -> (Vec<u8>, Vec<u32>) {
     let mut exec_counts = vec![0; bytecodes.len()];
     let mut stdout = vec![];
     let mut pc: usize = 0;
@@ -82,9 +82,15 @@ pub fn debug_exec_bytecode(bytecodes: &[Bytecode], offset: u8, opt_first: bool) 
             }
             Bytecode::Out(p1) => {
                 stdout.push(mem[p1]);
+                if OUT {
+                    print!("{}", mem[p1] as char);
+                }
             }
             Bytecode::OutConst(v1) => {
                 stdout.push(*v1);
+                if OUT {
+                    print!("{}", *v1 as char);
+                }
             }
             Bytecode::Jump(a1) => {
                 pc = pc.wrapping_add_signed(*a1 as isize);
