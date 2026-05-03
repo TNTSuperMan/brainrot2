@@ -60,7 +60,10 @@ fn main() -> ExitCode {
                 }
             }
             "exec_bytecode" => {
-                exec_bytecode::<false>(&bytecodes, mul_offset);
+                exec_bytecode::<false>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
+                    Some(r) => r.contains(&(mul_offset as isize)),
+                    None => true,
+                });
             }
             "dump_offsetrange" => {
                 println!("{:?}", cfg.compute_offset_ranges());

@@ -18,7 +18,7 @@ impl IndexMut<&i16> for Mem {
     }
 }
 
-pub fn exec_bytecode<const FLUSH: bool>(bytecodes: &[Bytecode], offset: u8) {
+pub fn exec_bytecode<const FLUSH: bool>(bytecodes: &[Bytecode], offset: u8, opt_first: bool) {
     let mut pc: usize = 0;
     let mut mem = Mem {
         offset: offset as isize,
@@ -26,6 +26,7 @@ pub fn exec_bytecode<const FLUSH: bool>(bytecodes: &[Bytecode], offset: u8) {
     };
     let mut stdin = stdin().lock();
     let mut stdout = stdout().lock();
+    let mut opt = opt_first;
 
     loop {
         match &bytecodes[pc] {
@@ -110,8 +111,12 @@ pub fn exec_bytecode<const FLUSH: bool>(bytecodes: &[Bytecode], offset: u8) {
             }
             Bytecode::OffsetWithRangeCheck(o1, rb, re) => {
                 mem.offset += *o1 as isize;
-                if mem.offset < (*rb as isize) || (*re as isize) < mem.offset {
-                    eprintln!("\n[maybe] out of range detected");
+                if opt && (mem.offset < (*rb as isize) || (*re as isize) < mem.offset) {
+                    eprintln!("deopt {pc}");
+                    opt = false;
+                } else if !opt {
+                    eprintln!("opt {pc}");
+                    opt = true;
                 }
             }
             Bytecode::End => {
