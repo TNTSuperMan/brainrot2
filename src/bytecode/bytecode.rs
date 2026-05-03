@@ -41,6 +41,7 @@ pub enum Bytecode {
         ptr: i16,
         addr: i32,
     },
+    SetCSetC(i16, u8, i16, u8),
 }
 
 impl Display for Bytecode {
@@ -73,6 +74,7 @@ impl Display for Bytecode {
 
             Self::OffsetRangeJumpZero { offset, rb, re, ptr, addr: jmp } => write!(f, "offset {offset}, rangecheck {rb}..={re}, jrz ${ptr} {jmp}"),
             Self::OffsetRangeJumpNotZero { offset, rb, re, ptr, addr: jmp } => write!(f, "offset {offset}, rangecheck {rb}..={re}, jrnz ${ptr} {jmp}"),
+            Self::SetCSetC(p1, c1, p2, c2) => write!(f, "${p1} = {c1}, ${p2} = {c2}"),
         }
     }
 }

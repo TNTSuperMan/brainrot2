@@ -153,6 +153,10 @@ pub fn debug_exec_bytecode<const OUT: bool>(bytecodes: &[Bytecode], offset: u8, 
                     continue;
                 }
             }
+            Bytecode::SetCSetC(p1, c1, p2, c2) => {
+                mem[p1] = *c1;
+                mem[p2] = *c2;
+            }
         }
 
         pc += 1;

@@ -39,6 +39,38 @@ fn try_into_bytecode(cfgop: &CFGOp) -> Result<Bytecode, TryFromIntError> {
     })
 }
 
+fn cfgops_to_bytecodes(insts: &[CFGOp]) -> Result<Vec<Bytecode>, TryFromIntError> {
+    if insts.is_empty() {
+        return Ok(vec![]);
+    }
+    let mut codes = vec![];
+    let mut i = 0;
+    let len_sub = insts.len() - 1;
+    loop {
+        if i >= len_sub {
+            break;
+        }
+        let curr_op = &insts[i];
+        let next_op = &insts[i + 1];
+        
+        match (curr_op, next_op) {
+            (CFGOp::Assign(p1, CFGExpr::Value(CFGValue::Const(c1))), CFGOp::Assign(p2, CFGExpr::Value(CFGValue::Const(c2)))) => {
+                codes.push(Bytecode::SetCSetC((*p1).try_into()?, *c1, (*p2).try_into()?, *c2));
+                i += 1;
+            }
+            (curr_op, _) => {
+                codes.push(try_into_bytecode(curr_op)?);
+            }
+        }
+
+        i += 1;
+    }
+    if i == len_sub {
+        codes.push(try_into_bytecode(&insts[i])?);
+    }
+    Ok(codes)
+}
+
 pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<isize>>) -> Result<Vec<Bytecode>, TryFromIntError> {
     let mut bytecodes = vec![];
     let order = compute_block_order(cfg);
@@ -49,7 +81,7 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
     for (i, b) in order.iter().enumerate() {
         jumptable[*b] = bytecodes.len().try_into()?;
         let block = &cfg.0[*b];
-        bytecodes.append(&mut block.insts.iter().map(|e| try_into_bytecode(e)).collect::<Result<Vec<_>, _>>()?);
+        bytecodes.append(&mut cfgops_to_bytecodes(&block.insts)?);
 
         if let Some(offset) = block.offset {
             let offset = offset.try_into()?;
