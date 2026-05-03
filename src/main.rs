@@ -1,13 +1,13 @@
 use std::{env::args, fs, process::ExitCode, time::Instant};
 
 use crate::{
-    bytecode::{build::build_bytecode, int::debug_exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg}, int::run, ir::{int::exec_from_ir, ir::IR}
+    bytecode::{build::build_bytecode, int::debug_exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg}, ir::{int::exec_from_ir, ir::IR}
 };
 
 mod cfg;
 mod ir;
 mod bytecode;
-mod int;
+// mod int;
 
 pub const TAPE_LENGTH: usize = 30000;
 
@@ -66,17 +66,11 @@ fn main() -> ExitCode {
                     None => true,
                 });
                 for (i, count) in counts.iter().enumerate() {
-                    println!("{} \t{:?}", count.ilog2(), bytecodes[i]);
+                    println!("{} \t{:?}", (count + 1).ilog2(), bytecodes[i]);
                 }
             }
             "dump_offsetrange" => {
                 println!("{:?}", cfg.compute_offset_ranges());
-            }
-            "exec_int" => {
-                run::<false>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
-                    Some(r) => r.contains(&(mul_offset as isize)),
-                    None => true,
-                }).unwrap();
             }
             _ => {
                 eprintln!("unknown kind");

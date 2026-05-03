@@ -118,6 +118,33 @@ pub fn debug_exec_bytecode(bytecodes: &[Bytecode], offset: u8, opt_first: bool) 
             Bytecode::End => {
                 return (stdout, exec_counts);
             }
+
+            Bytecode::OffsetRangeJumpZero { offset, rb, re, ptr, jmp } => {
+                mem.offset += *offset as isize;
+                if opt && (mem.offset < (*rb as isize) || (*re as isize) < mem.offset) {
+                    eprintln!("deopt {pc}");
+                    opt = false;
+                } else if !opt {
+                    eprintln!("opt {pc}");
+                    opt = true;
+                }
+                if mem[ptr] == 0 {
+                    pc = pc.wrapping_add_signed(*jmp as isize);
+                }
+            }
+            Bytecode::OffsetRangeJumpNotZero { offset, rb, re, ptr, jmp } => {
+                mem.offset += *offset as isize;
+                if opt && (mem.offset < (*rb as isize) || (*re as isize) < mem.offset) {
+                    eprintln!("deopt {pc}");
+                    opt = false;
+                } else if !opt {
+                    eprintln!("opt {pc}");
+                    opt = true;
+                }
+                if mem[ptr] != 0 {
+                    pc = pc.wrapping_add_signed(*jmp as isize);
+                }
+            }
         }
 
         pc += 1;

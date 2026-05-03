@@ -54,11 +54,34 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
         if let Some(offset) = block.offset {
             let offset = offset.try_into()?;
             if let Some(range) = offset_ranges.get(&b) {
-                bytecodes.push(Bytecode::OffsetWithRangeCheck(
-                    offset,
-                    (*range.start()).try_into()?,
-                    (*range.end()).try_into()?,
-                ));
+                let rb = (*range.start()).try_into()?;
+                let re = (*range.end()).try_into()?;
+                if let CFGEdge::Branch { pointer, zero, nonzero } = &block.edge {
+                    if order.get(i + 1).copied() == Some(*nonzero) {
+
+                        bytecodes.push(Bytecode::OffsetRangeJumpZero {
+                            offset,
+                            rb,
+                            re,
+                            ptr: (*pointer).try_into()?,
+                            jmp: (*zero).try_into()?,
+                        });
+
+                        continue;
+                    } else if order.get(i + 1).copied() == Some(*zero) {
+
+                        bytecodes.push(Bytecode::OffsetRangeJumpNotZero {
+                            offset,
+                            rb,
+                            re,
+                            ptr: (*pointer).try_into()?,
+                            jmp: (*nonzero).try_into()?,
+                        });
+                        
+                        continue;
+                    }
+                }
+                bytecodes.push(Bytecode::OffsetWithRangeCheck(offset, rb, re));
             } else {
                 bytecodes.push(Bytecode::Offset(offset));
             }
