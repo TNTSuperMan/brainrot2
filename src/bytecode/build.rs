@@ -53,7 +53,7 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
 
         if let Some(offset) = block.offset {
             let offset = offset.try_into()?;
-            if let Some(range) = offset_ranges.get(&i) {
+            if let Some(range) = offset_ranges.get(&b) {
                 bytecodes.push(Bytecode::OffsetWithRangeCheck(
                     offset,
                     (*range.start()).try_into()?,
