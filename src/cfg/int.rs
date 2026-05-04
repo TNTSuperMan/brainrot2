@@ -19,9 +19,6 @@ fn exec_node_ir(insts: &[CFGOp], mem: &mut Mem) {
     for opcode in insts
     {
         match opcode {
-            CFGOp::Breakpoint(ptr) => {
-                println!("break; $[{ptr} + {}] = {}", mem.offset, mem.get(&CFGValue::Load(*ptr)));
-            }
             CFGOp::Out(val) => {
                 let mut stdout = stdout().lock();
                 let _ = stdout.write(&[mem.get(val)]);

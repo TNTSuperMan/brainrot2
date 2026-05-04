@@ -7,7 +7,6 @@ use crate::{
 
 pub fn ir_to_cfgir(ir: &IR) -> Option<CFGOp> {
     Some(match ir.opcode {
-        IROp::Breakpoint => CFGOp::Breakpoint(ir.pointer),
         IROp::Add(val) => CFGOp::Assign(ir.pointer, CFGExpr::Add(CFGValue::Load(ir.pointer), CFGValue::Const(val))),
         IROp::Set(val) => CFGOp::Assign(ir.pointer, CFGExpr::Value(CFGValue::Const(val))),
         IROp::MulAdd(p, v) => CFGOp::Assign(ir.pointer, CFGExpr::MulAdd(CFGValue::Load(ir.pointer), CFGValue::Load(p), v)),

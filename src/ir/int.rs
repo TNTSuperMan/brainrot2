@@ -20,9 +20,6 @@ pub fn exec_from_ir(ir: &[IR], offset: u8) {
         } = &ir[pc];
         let p = (pointer + offset) as usize;
         match opcode {
-            IROp::Breakpoint => {
-                println!("PC: {pc}, offset: {offset}, final pointer: {}", p);
-            }
             IROp::Add(value) => {
                 memory[p] = memory[p].wrapping_add(*value);
             }

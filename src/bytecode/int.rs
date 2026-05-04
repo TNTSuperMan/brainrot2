@@ -81,10 +81,6 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: u8
                 };
             }
             
-            Bytecode::Breakpoint(p1) => {
-                let p = (*p1 as isize + mem.offset) as usize;
-                println!("break; {}", p);
-            }
             Bytecode::Out(p1) => {
                 if !DEBUG {
                     let _ = stdout.write(&[mem[p1]]);

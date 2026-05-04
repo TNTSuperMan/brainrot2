@@ -5,7 +5,6 @@ impl CFGOp {
         match self {
             Self::Out(CFGValue::Const(_)) => vec![],
             
-            Self::Breakpoint(p) |
             Self::Out(CFGValue::Load(p)) => vec![*p],
 
             Self::Assign(_, expr) => {

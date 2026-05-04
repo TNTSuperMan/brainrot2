@@ -18,7 +18,6 @@ impl Debug for IR {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum IROp {
-    Breakpoint,
     Add(u8),
     Set(u8),
     MulAdd(i16, u8), // [pointer] = [pointer] + [opcode.0] * opcode.1

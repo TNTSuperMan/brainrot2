@@ -81,14 +81,12 @@ impl CFGEdge {
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum CFGOp {
-    Breakpoint(i16),
     Out(CFGValue),
     Assign(i16, CFGExpr)
 }
 impl Debug for CFGOp {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Breakpoint(ptr) => write!(f, "breakpoint ${ptr}"),
             Self::Out(val) => write!(f, "stdout < {val:?}"),
             Self::Assign(ptr, expr) => write!(f, "${ptr} = {expr:?}"),
         }

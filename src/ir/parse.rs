@@ -21,11 +21,6 @@ impl IR {
             match c {
                 '>' => pointer += 1,
                 '<' => pointer -= 1,
-                '#' => insts.push(IR {
-                    pointer,
-                    opcode: IROp::Breakpoint,
-                    loc,
-                }),
                 '.' => insts.push(IR {
                     pointer,
                     opcode: IROp::Out,

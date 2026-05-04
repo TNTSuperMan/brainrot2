@@ -29,7 +29,6 @@ impl CFG {
             
             let mut newop = self.0[block_i].insts[i].clone();
             match &mut newop {
-                CFGOp::Breakpoint(_) => {},
                 CFGOp::Out(val) => {
                     self.internal_simply_fold_const(block_i, i, val);
                 }

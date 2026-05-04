@@ -4,7 +4,6 @@ use crate::{bytecode::{bytecode::Bytecode, order::compute_block_order}, cfg::{cf
 
 fn try_into_bytecode(cfgop: &CFGOp) -> Result<Bytecode, TryFromIntError> {
     Ok(match cfgop {
-        CFGOp::Breakpoint(p1) => Bytecode::Breakpoint(*p1),
         CFGOp::Out(CFGValue::Load(p1)) => Bytecode::Out(*p1),
         CFGOp::Out(CFGValue::Const(c1)) => Bytecode::OutConst(*c1),
         CFGOp::Assign(ptr, expr) => {

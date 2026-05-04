@@ -20,7 +20,6 @@ pub enum Bytecode {
 
     In(i16),
 
-    Breakpoint(i16),
     Out(i16),
     OutConst(u8),
     Jump(i32),
@@ -67,7 +66,6 @@ impl Display for Bytecode {
 
             Self::In(p1) => write!(f, "${p1} = stdin"),
             
-            Self::Breakpoint(p1) => write!(f, "break ${p1}"),
             Self::Out(p1) => write!(f, "stdout < ${p1}"),
             Self::OutConst(v1) => write!(f, "stdout < {v1}"),
             Self::Jump(a1) => write!(f, "jr {a1}"),
