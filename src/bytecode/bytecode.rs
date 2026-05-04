@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use crate::cfg::range::OffsetRange;
+
 #[derive(Debug)]
 pub enum Bytecode {
     SetC(i16, u8),
@@ -25,20 +27,18 @@ pub enum Bytecode {
     JumpIfZero(i16, i32),
     JumpIfNotZero(i16, i32),
     Offset(i16),
-    OffsetWithRangeCheck(i16, i16, i16),
+    OffsetWithRangeCheck(i16, OffsetRange),
     End,
 
     OffsetRangeJumpZero {
         offset: i16,
-        rb: i16,
-        re: i16,
+        range: OffsetRange,
         ptr: i16,
         addr: i32,
     },
     OffsetRangeJumpNotZero {
         offset: i16,
-        rb: i16,
-        re: i16,
+        range: OffsetRange,
         ptr: i16,
         addr: i32,
     },
@@ -74,11 +74,11 @@ impl Display for Bytecode {
             Self::JumpIfZero(p1, a2) => write!(f, "jrz ${p1}, {a2}"),
             Self::JumpIfNotZero(p1, a2) => write!(f, "jrnz ${p1}, {a2}"),
             Self::Offset(o1) => write!(f, "offset {o1}"),
-            Self::OffsetWithRangeCheck(o1, rb, re) => write!(f, "offset {o1}, rangecheck {rb}..={re}"),
+            Self::OffsetWithRangeCheck(o1, range) => write!(f, "offset {o1}, rangecheck {range:?}"),
             Self::End => write!(f, "end"),
 
-            Self::OffsetRangeJumpZero { offset, rb, re, ptr, addr: jmp } => write!(f, "offset {offset}, rangecheck {rb}..={re}, jrz ${ptr} {jmp}"),
-            Self::OffsetRangeJumpNotZero { offset, rb, re, ptr, addr: jmp } => write!(f, "offset {offset}, rangecheck {rb}..={re}, jrnz ${ptr} {jmp}"),
+            Self::OffsetRangeJumpZero { offset, range, ptr, addr: jmp } => write!(f, "offset {offset}, rangecheck {range:?}, jrz ${ptr} {jmp}"),
+            Self::OffsetRangeJumpNotZero { offset,range, ptr, addr: jmp } => write!(f, "offset {offset}, rangecheck {range:?}, jrnz ${ptr} {jmp}"),
             Self::SetCSetC(p1, c1, p2, c2) => write!(f, "${p1} = {c1}, ${p2} = {c2}"),
             Self::AddAdd(p1, c1, p2, c2) => write!(f, "${p1} += {c1}, ${p2} += {c2}"),
             Self::AddSetC(p1, c1, p2, c2) => write!(f, "${p1} += {c1}, ${p2} = {c2}"),

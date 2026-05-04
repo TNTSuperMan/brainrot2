@@ -9,7 +9,7 @@ mod ir;
 mod bytecode;
 // mod int;
 
-pub const TAPE_LENGTH: usize = 30000;
+pub const TAPE_LENGTH: usize = 65536;
 
 fn main() -> ExitCode {
     if let [_, kind, file] = args().collect::<Vec<String>>().as_slice() {
@@ -67,13 +67,13 @@ fn main() -> ExitCode {
             }
             "exec_bytecode" => {
                 debug_exec_bytecode::<false>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
-                    Some(r) => r.contains(&(mul_offset as i16)),
+                    Some(r) => r.contains(mul_offset as i16),
                     None => true,
                 });
             }
             "check_exec_counts" => {
                 let counts = debug_exec_bytecode::<true>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
-                    Some(r) => r.contains(&(mul_offset as i16)),
+                    Some(r) => r.contains(mul_offset as i16),
                     None => true,
                 });
                 for (i, count) in counts.iter().enumerate() {

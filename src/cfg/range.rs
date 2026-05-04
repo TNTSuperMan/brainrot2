@@ -1,6 +1,30 @@
-use std::{cmp::{max, min}, collections::{HashMap, HashSet}, ops::RangeInclusive};
+use std::{cmp::{max, min}, collections::{HashMap, HashSet}, fmt::Debug, ops::RangeInclusive};
 
 use crate::{TAPE_LENGTH, cfg::cfg::{CFG, CFGEdge}};
+
+#[derive(Clone, Copy)]
+pub struct OffsetRange {
+    start: i16,
+    end: u16,
+}
+impl Debug for OffsetRange {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "OffsetRange {}..={}", self.start, self.end)
+    }
+}
+impl From<RangeInclusive<i16>> for OffsetRange {
+    fn from(value: RangeInclusive<i16>) -> Self {
+        OffsetRange {
+            start: 0 - *value.start(),
+            end: ((TAPE_LENGTH - 1) as u16).wrapping_sub_signed(*value.end()),
+        }
+    }
+}
+impl OffsetRange {
+    pub fn contains(&self, offset: i16) -> bool {
+        self.start <= offset && (offset as i32) <= (self.end as i32)
+    }
+}
 
 fn extend_range(range: Option<RangeInclusive<i16>>, point: i16) -> Option<RangeInclusive<i16>> {
     Some(if let Some(r) = range {
@@ -12,14 +36,6 @@ fn extend_range(range: Option<RangeInclusive<i16>>, point: i16) -> Option<RangeI
     } else {
         point..=point
     })
-}
-
-fn accessrange_to_offsetrange(range: RangeInclusive<i16>) -> RangeInclusive<i16> {
-    (
-        0 - range.start()
-    )..=(
-        (TAPE_LENGTH - 1) as i16 - range.end()
-    )
 }
 
 impl CFG {
@@ -75,7 +91,7 @@ impl CFG {
 
         range
     }
-    pub fn compute_offset_ranges(&self) -> HashMap<usize, RangeInclusive<i16>> {
+    pub fn compute_offset_ranges(&self) -> HashMap<usize, OffsetRange> {
         let mut map = HashMap::new();
         let mut visited = HashSet::new();
 
@@ -88,11 +104,11 @@ impl CFG {
             let block = &self.0[b];
             if b == 0 {
                 if let Some(r) = self.compute_access_range(0) {
-                    map.insert(0, accessrange_to_offsetrange(r));
+                    map.insert(0, OffsetRange::from(r));
                 }
             } else if block.offset.is_some() {
                 if let Some(r) = self.compute_access_range_from_edge(b) {
-                    map.insert(b, accessrange_to_offsetrange(r));
+                    map.insert(b, OffsetRange::from(r));
                 }
             }
             dfs_stack.append(&mut block.edge.successor());

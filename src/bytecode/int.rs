@@ -114,9 +114,9 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: u8
             Bytecode::Offset(o1) => {
                 mem.offset += *o1 as isize;
             }
-            Bytecode::OffsetWithRangeCheck(o1, rb, re) => {
+            Bytecode::OffsetWithRangeCheck(o1, range) => {
                 mem.offset += *o1 as isize;
-                if opt && (mem.offset < (*rb as isize) || (*re as isize) < mem.offset) {
+                if opt && !range.contains(mem.offset as i16) {
                     eprintln!("deopt {pc}");
                     opt = false;
                 } else if !opt {
@@ -128,9 +128,9 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: u8
                 return exec_counts;
             }
 
-            Bytecode::OffsetRangeJumpZero { offset, rb, re, ptr, addr: jmp } => {
+            Bytecode::OffsetRangeJumpZero { offset, range, ptr, addr: jmp } => {
                 mem.offset += *offset as isize;
-                if opt && (mem.offset < (*rb as isize) || (*re as isize) < mem.offset) {
+                if opt && !range.contains(mem.offset as i16) {
                     eprintln!("deopt {pc}");
                     opt = false;
                 } else if !opt {
@@ -142,9 +142,9 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: u8
                     continue;
                 }
             }
-            Bytecode::OffsetRangeJumpNotZero { offset, rb, re, ptr, addr: jmp } => {
+            Bytecode::OffsetRangeJumpNotZero { offset, range, ptr, addr: jmp } => {
                 mem.offset += *offset as isize;
-                if opt && (mem.offset < (*rb as isize) || (*re as isize) < mem.offset) {
+                if opt && !range.contains(mem.offset as i16) {
                     eprintln!("deopt {pc}");
                     opt = false;
                 } else if !opt {

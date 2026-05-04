@@ -1,6 +1,6 @@
-use std::{collections::HashMap, num::TryFromIntError, ops::RangeInclusive};
+use std::{collections::HashMap, num::TryFromIntError};
 
-use crate::{bytecode::{bytecode::Bytecode, order::compute_block_order}, cfg::cfg::{CFG, CFGEdge, CFGExpr, CFGOp, CFGValue}};
+use crate::{bytecode::{bytecode::Bytecode, order::compute_block_order}, cfg::{cfg::{CFG, CFGEdge, CFGExpr, CFGOp, CFGValue}, range::OffsetRange}};
 
 fn try_into_bytecode(cfgop: &CFGOp) -> Result<Bytecode, TryFromIntError> {
     Ok(match cfgop {
@@ -97,7 +97,7 @@ fn cfgops_to_bytecodes(insts: &[CFGOp]) -> Result<Vec<Bytecode>, TryFromIntError
     Ok(codes)
 }
 
-pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i16>>) -> Result<Vec<Bytecode>, TryFromIntError> {
+pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, OffsetRange>) -> Result<Vec<Bytecode>, TryFromIntError> {
     let mut bytecodes = vec![];
     let order = compute_block_order(cfg);
 
@@ -111,16 +111,13 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
 
         if let Some(offset) = block.offset {
             let offset = offset;
-            if let Some(range) = offset_ranges.get(&b) {
-                let rb = *range.start();
-                let re = *range.end();
+            if let Some(&range) = offset_ranges.get(&b) {
                 if let CFGEdge::Branch { pointer, zero, nonzero } = &block.edge {
                     if order.get(i + 1).copied() == Some(*nonzero) {
 
                         bytecodes.push(Bytecode::OffsetRangeJumpZero {
                             offset,
-                            rb,
-                            re,
+                            range,
                             ptr: (*pointer),
                             addr: (*zero).try_into()?,
                         });
@@ -130,8 +127,7 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
 
                         bytecodes.push(Bytecode::OffsetRangeJumpNotZero {
                             offset,
-                            rb,
-                            re,
+                            range,
                             ptr: (*pointer),
                             addr: (*nonzero).try_into()?,
                         });
@@ -139,7 +135,7 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
                         continue;
                     }
                 }
-                bytecodes.push(Bytecode::OffsetWithRangeCheck(offset, rb, re));
+                bytecodes.push(Bytecode::OffsetWithRangeCheck(offset, range));
             } else {
                 bytecodes.push(Bytecode::Offset(offset));
             }
