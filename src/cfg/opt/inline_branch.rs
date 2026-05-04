@@ -6,7 +6,8 @@ impl CFG {
 
         let (pointer, zero, nonzero) = match self.0[block_i].edge {
             CFGEdge::Jump(..) => return,
-            CFGEdge::Branch { pointer, zero, nonzero } => (pointer + self.0[block_i].offset.unwrap_or(0), zero, nonzero),
+            CFGEdge::Branch { pointer, zero, nonzero } |
+            CFGEdge::BranchWithIRAt { pointer, zero, nonzero, ir_at: _ } => (pointer + self.0[block_i].offset.unwrap_or(0), zero, nonzero),
             CFGEdge::End => return,
         };
 

@@ -79,10 +79,11 @@ impl CFG {
                 IROp::JumpZero(addr) => {
                     nodes.push(CFGBlock {
                         insts: node_insts,
-                        edge: CFGEdge::Branch {
+                        edge: CFGEdge::BranchWithIRAt {
                             pointer: ir.pointer,
                             zero: addr,
                             nonzero: i + 1,
+                            ir_at: i,
                         },
                         predecessor: vec![],
                         offset: None,
@@ -98,10 +99,11 @@ impl CFG {
                 IROp::JumpNotZero(addr) => {
                     nodes.push(CFGBlock {
                         insts: node_insts,
-                        edge: CFGEdge::Branch {
+                        edge: CFGEdge::BranchWithIRAt {
                             pointer: ir.pointer,
                             zero: i + 1,
                             nonzero: addr,
+                            ir_at: i,
                         },
                         predecessor: vec![],
                         offset: None,
@@ -117,10 +119,11 @@ impl CFG {
                 IROp::JumpNotZeroWithOffset(offset, addr) => {
                     nodes.push(CFGBlock {
                         insts: node_insts,
-                        edge: CFGEdge::Branch {
+                        edge: CFGEdge::BranchWithIRAt {
                             pointer: ir.pointer,
                             zero: i + 1,
                             nonzero: addr,
+                            ir_at: i,
                         },
                         predecessor: vec![],
                         offset: Some(offset),
@@ -163,7 +166,7 @@ impl CFG {
         for (i, node) in nodes.iter().enumerate() {
             idx_map.insert(idx_pc, i);
             idx_pc += node.insts.len();
-            if let CFGEdge::Branch { .. } = node.edge {
+            if let CFGEdge::Branch { .. } | CFGEdge::BranchWithIRAt { .. } = node.edge {
                 idx_pc += 1;
             }
         }
@@ -172,6 +175,11 @@ impl CFG {
                 pointer: _,
                 zero,
                 nonzero,
+            } | CFGEdge::BranchWithIRAt {
+                pointer: _,
+                zero,
+                nonzero,
+                ir_at: _,
             } = &mut nodes[i].edge
             {
                 *zero = *idx_map.get(zero).unwrap();
@@ -189,6 +197,11 @@ impl CFG {
                     pointer: _,
                     zero,
                     nonzero,
+                } | CFGEdge::BranchWithIRAt {
+                    pointer: _,
+                    zero,
+                    nonzero,
+                    ir_at: _
                 } => {
                     nodes[zero].predecessor.push(i);
                     nodes[nonzero].predecessor.push(i);

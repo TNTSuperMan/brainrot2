@@ -96,11 +96,13 @@ fn cfgops_to_bytecodes(insts: &[CFGOp]) -> Result<Vec<Bytecode>, TryFromIntError
     Ok(codes)
 }
 
-pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, OffsetRange>) -> Result<Vec<Bytecode>, TryFromIntError> {
+pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, OffsetRange>) -> Result<(Vec<Bytecode>, HashMap<usize, usize>), TryFromIntError> {
     let mut bytecodes = vec![];
     let order = compute_block_order(cfg);
 
     let mut jumptable = vec![0; cfg.0.len()];
+
+    let mut ir_map = HashMap::new();
 
     // この時点のJump系命令はバイトコードアドレスではなくCFGブロックIDを指す
     for (i, b) in order.iter().enumerate() {
@@ -139,6 +141,10 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, OffsetRange>) ->
                 bytecodes.push(Bytecode::Offset(offset));
             }
         }
+        
+        if let CFGEdge::BranchWithIRAt { ir_at, .. } = &block.edge {
+            ir_map.insert(*ir_at, bytecodes.len());
+        }
 
         match &block.edge {
             CFGEdge::Jump(to) => {
@@ -146,7 +152,8 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, OffsetRange>) ->
                     bytecodes.push(Bytecode::Jump((*to).try_into()?));
                 }
             }
-            CFGEdge::Branch { pointer, zero, nonzero } => {
+            CFGEdge::Branch { pointer, zero, nonzero } |
+            CFGEdge::BranchWithIRAt { pointer, zero, nonzero, ir_at: _ } => {
                 if order.get(i + 1).copied() == Some(*nonzero) {
                     bytecodes.push(Bytecode::JumpIfZero(*pointer, (*zero).try_into()?));
                 } else if order.get(i + 1).copied() == Some(*zero) {
@@ -175,5 +182,5 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, OffsetRange>) ->
         }
     }
 
-    Ok(bytecodes)
+    Ok((bytecodes, ir_map))
 }

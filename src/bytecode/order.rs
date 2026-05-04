@@ -17,7 +17,8 @@ pub fn compute_block_order(cfg: &CFG) -> Vec<usize> {
             CFGEdge::Jump(to) => {
                 queue.push(to);
             }
-            CFGEdge::Branch { pointer: _, zero, nonzero } => {
+            CFGEdge::Branch { pointer: _, zero, nonzero } |
+            CFGEdge::BranchWithIRAt { pointer: _, zero, nonzero, ir_at: _ } => {
                 queue.push(zero);
                 queue.push(nonzero);
             }

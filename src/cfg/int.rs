@@ -67,6 +67,11 @@ pub fn exec_from_cfg(cfg: &CFG, offset: u8) {
                 pointer,
                 zero,
                 nonzero,
+            } | CFGEdge::BranchWithIRAt {
+                pointer,
+                zero,
+                nonzero,
+                ir_at: _
             } => {
                 if mem.get(&CFGValue::Load(*pointer)) == 0 {
                     node_i = *zero;

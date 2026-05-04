@@ -54,6 +54,12 @@ pub enum CFGEdge {
         zero: usize,
         nonzero: usize,
     },
+    BranchWithIRAt {
+        pointer: i16,
+        zero: usize,
+        nonzero: usize,
+        ir_at: usize,
+    },
     End,
 }
 impl Debug for CFGEdge {
@@ -66,6 +72,12 @@ impl Debug for CFGEdge {
                 zero,
                 nonzero,
             } => write!(f, "jump ${pointer} ? n{nonzero} : n{zero}"),
+            CFGEdge::BranchWithIRAt {
+                pointer,
+                zero,
+                nonzero,
+                ir_at,
+            } => write!(f, "jump ${pointer} ? n{nonzero} : n{zero} (ir at {ir_at})"),
         }
     }
 }
@@ -73,7 +85,8 @@ impl CFGEdge {
     pub fn successor(&self) -> Vec<usize> {
         match self {
             Self::Jump(to) => vec![*to],
-            Self::Branch { pointer: _, zero, nonzero } => vec![*zero, *nonzero],
+            Self::Branch { pointer: _, zero, nonzero } |
+            Self::BranchWithIRAt { pointer: _, zero, nonzero, ir_at: _ } => vec![*zero, *nonzero],
             Self::End => vec![],
         }
     }

@@ -29,6 +29,11 @@ pub fn cfg_to_dot(cfg: &CFG) -> String {
                 pointer: _,
                 zero,
                 nonzero,
+            } | CFGEdge::BranchWithIRAt {
+                pointer: _,
+                zero,
+                nonzero,
+                ir_at: _
             } => {
                 dot.push_str(&format!("    n{i} -> n{zero}\n    n{i} -> n{nonzero}\n"));
             }

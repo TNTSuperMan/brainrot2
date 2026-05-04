@@ -31,7 +31,7 @@ fn main() -> ExitCode {
         let opt_end = Instant::now();
         let offset_ranges = cfg.compute_offset_ranges();
         let offset_end = Instant::now();
-        let bytecodes = build_bytecode(&cfg, &offset_ranges).unwrap();
+        let (bytecodes, bytecode_ir_map) = build_bytecode(&cfg, &offset_ranges).unwrap();
         let bytecode_end = Instant::now();
         eprintln!("all: {:?}", bytecode_end - start);
         eprintln!("ir: {:?}", ir_end - start);
@@ -79,6 +79,9 @@ fn main() -> ExitCode {
                 for (i, count) in counts.iter().enumerate() {
                     println!("{} \t{:?}", (count + 1).ilog2(), bytecodes[i]);
                 }
+            }
+            "dump_ir_map" => {
+                println!("{:?}", bytecode_ir_map);
             }
             "dump_offsetrange" => {
                 println!("{:?}", cfg.compute_offset_ranges());
