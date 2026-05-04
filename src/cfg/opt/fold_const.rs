@@ -1,7 +1,7 @@
 use crate::cfg::{cfg::{CFG, CFGExpr, CFGOp, CFGValue}, opt::cellstate::CellState};
 
 impl CFG {
-    fn internal_get_cellstate_inblock(&self, block_i: usize, inst_i: usize, pointer: isize) -> CellState {
+    fn internal_get_cellstate_inblock(&self, block_i: usize, inst_i: usize, pointer: i16) -> CellState {
         let last_assign = self.0[block_i].insts[0..inst_i].iter().rev().find(|&inst| inst.writes() == Some(pointer));
         if let Some(last_assign) = last_assign {
             return if let CFGOp::Assign(_, CFGExpr::Value(CFGValue::Const(c))) = last_assign {

@@ -2,7 +2,7 @@ use std::{fmt::Debug, ops::Range};
 
 #[derive(Clone)]
 pub struct IR {
-    pub pointer: isize,
+    pub pointer: i16,
     pub opcode: IROp,
     pub loc: Range<usize>,
 }
@@ -21,10 +21,10 @@ pub enum IROp {
     Breakpoint,
     Add(u8),
     Set(u8),
-    MulAdd(isize, u8), // [pointer] = [pointer] + [opcode.0] * opcode.1
+    MulAdd(i16, u8), // [pointer] = [pointer] + [opcode.0] * opcode.1
     In,
     Out,
     JumpZero(usize),
     JumpNotZero(usize),
-    JumpNotZeroWithOffset(isize, usize),
+    JumpNotZeroWithOffset(i16, usize),
 }

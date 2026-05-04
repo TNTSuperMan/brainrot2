@@ -2,7 +2,7 @@ use std::{cmp::{max, min}, collections::{HashMap, HashSet}, ops::RangeInclusive}
 
 use crate::{TAPE_LENGTH, cfg::cfg::{CFG, CFGEdge}};
 
-fn extend_range(range: Option<RangeInclusive<isize>>, point: isize) -> Option<RangeInclusive<isize>> {
+fn extend_range(range: Option<RangeInclusive<i16>>, point: i16) -> Option<RangeInclusive<i16>> {
     Some(if let Some(r) = range {
         (
             min(*r.start(), point)
@@ -14,16 +14,16 @@ fn extend_range(range: Option<RangeInclusive<isize>>, point: isize) -> Option<Ra
     })
 }
 
-fn accessrange_to_offsetrange(range: RangeInclusive<isize>) -> RangeInclusive<isize> {
+fn accessrange_to_offsetrange(range: RangeInclusive<i16>) -> RangeInclusive<i16> {
     (
         0 - range.start()
     )..=(
-        (TAPE_LENGTH - 1) as isize - range.end()
+        (TAPE_LENGTH - 1) as i16 - range.end()
     )
 }
 
 impl CFG {
-    fn compute_access_range(&self, block_i: usize) -> Option<RangeInclusive<isize>> {
+    fn compute_access_range(&self, block_i: usize) -> Option<RangeInclusive<i16>> {
         let mut dfs_stack = vec![block_i];
         let mut range = None;
         let mut visited = HashSet::new();
@@ -55,7 +55,7 @@ impl CFG {
 
         range
     }
-    fn compute_access_range_from_edge(&self, block_i: usize) -> Option<RangeInclusive<isize>> {
+    fn compute_access_range_from_edge(&self, block_i: usize) -> Option<RangeInclusive<i16>> {
         let mut range = None;
         let block = &self.0[block_i];
         if let CFGEdge::Branch { pointer, zero: _, nonzero: _ } = &block.edge {
@@ -75,7 +75,7 @@ impl CFG {
 
         range
     }
-    pub fn compute_offset_ranges(&self) -> HashMap<usize, RangeInclusive<isize>> {
+    pub fn compute_offset_ranges(&self) -> HashMap<usize, RangeInclusive<i16>> {
         let mut map = HashMap::new();
         let mut visited = HashSet::new();
 

@@ -1,7 +1,7 @@
 use crate::cfg::cfg::{CFGExpr, CFGOp, CFGValue};
 
 impl CFGOp {
-    pub fn reads(&self) -> Vec<isize> {
+    pub fn reads(&self) -> Vec<i16> {
         match self {
             Self::Out(CFGValue::Const(_)) => vec![],
             
@@ -29,7 +29,7 @@ impl CFGOp {
             }
         }
     }
-    pub fn writes(&self) -> Option<isize> {
+    pub fn writes(&self) -> Option<i16> {
         if let CFGOp::Assign(ptr, _) = self {
             Some(*ptr)
         } else {

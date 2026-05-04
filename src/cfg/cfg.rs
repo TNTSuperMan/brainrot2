@@ -30,7 +30,7 @@ pub struct CFGBlock {
     pub predecessor: Vec<usize>,
     pub edge: CFGEdge,
     pub insts: Vec<CFGOp>,
-    pub offset: Option<isize>,
+    pub offset: Option<i16>,
     pub alive: bool,
 }
 impl Debug for CFGBlock {
@@ -50,7 +50,7 @@ impl Debug for CFGBlock {
 pub enum CFGEdge {
     Jump(usize),
     Branch {
-        pointer: isize,
+        pointer: i16,
         zero: usize,
         nonzero: usize,
     },
@@ -81,9 +81,9 @@ impl CFGEdge {
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum CFGOp {
-    Breakpoint(isize),
+    Breakpoint(i16),
     Out(CFGValue),
-    Assign(isize, CFGExpr)
+    Assign(i16, CFGExpr)
 }
 impl Debug for CFGOp {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -119,7 +119,7 @@ impl Debug for CFGExpr {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum CFGValue {
-    Load(isize),
+    Load(i16),
     Const(u8),
 }
 impl Debug for CFGValue {

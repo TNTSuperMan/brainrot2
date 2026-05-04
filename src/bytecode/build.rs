@@ -4,40 +4,39 @@ use crate::{bytecode::{bytecode::Bytecode, order::compute_block_order}, cfg::cfg
 
 fn try_into_bytecode(cfgop: &CFGOp) -> Result<Bytecode, TryFromIntError> {
     Ok(match cfgop {
-        CFGOp::Breakpoint(p1) => Bytecode::Breakpoint((*p1).try_into()?),
-        CFGOp::Out(CFGValue::Load(p1)) => Bytecode::Out((*p1).try_into()?),
+        CFGOp::Breakpoint(p1) => Bytecode::Breakpoint(*p1),
+        CFGOp::Out(CFGValue::Load(p1)) => Bytecode::Out(*p1),
         CFGOp::Out(CFGValue::Const(c1)) => Bytecode::OutConst(*c1),
         CFGOp::Assign(ptr, expr) => {
-            let ptr = (*ptr).try_into()?;
+            let ptr = *ptr;
             match expr {
                 CFGExpr::Value(CFGValue::Const(c1)) => Bytecode::SetC(ptr, *c1),
-                CFGExpr::Value(CFGValue::Load(p1)) => Bytecode::SetL(ptr, (*p1).try_into()?),
+                CFGExpr::Value(CFGValue::Load(p1)) => Bytecode::SetL(ptr, *p1 ),
 
-                CFGExpr::Add(CFGValue::Load(p1), CFGValue::Load(p2)) => Bytecode::AddL(ptr, (*p1).try_into()?, (*p2).try_into()?),
+                CFGExpr::Add(CFGValue::Load(p1), CFGValue::Load(p2)) => Bytecode::AddL(ptr, *p1, *p2),
                 CFGExpr::Add(CFGValue::Load(p), CFGValue::Const(c)) |
                 CFGExpr::Add(CFGValue::Const(c), CFGValue::Load(p)) => {
-                    let p = (*p).try_into()?;
-                    if ptr == p {
+                    if ptr == *p {
                         Bytecode::Add(ptr, *c)
                     } else {
-                        Bytecode::AddC(ptr, p, *c)
+                        Bytecode::AddC(ptr, *p, *c)
                     }
                 },
                 CFGExpr::Add(CFGValue::Const(c1), CFGValue::Const(c2)) => Bytecode::SetC(ptr, c1.wrapping_add(*c2)),
 
-                CFGExpr::Sub(CFGValue::Load(p1), CFGValue::Load(p2)) => Bytecode::SubLL(ptr, (*p1).try_into()?, (*p2).try_into()?),
-                CFGExpr::Sub(CFGValue::Load(p1), CFGValue::Const(c2)) => Bytecode::SubLC(ptr, (*p1).try_into()?, *c2),
-                CFGExpr::Sub(CFGValue::Const(c1), CFGValue::Load(p2)) => Bytecode::SubCL(ptr, *c1, (*p2).try_into()?),
+                CFGExpr::Sub(CFGValue::Load(p1), CFGValue::Load(p2)) => Bytecode::SubLL(ptr, *p1, *p2 ),
+                CFGExpr::Sub(CFGValue::Load(p1), CFGValue::Const(c2)) => Bytecode::SubLC(ptr, *p1, *c2),
+                CFGExpr::Sub(CFGValue::Const(c1), CFGValue::Load(p2)) => Bytecode::SubCL(ptr, *c1, *p2 ),
                 CFGExpr::Sub(CFGValue::Const(c1), CFGValue::Const(c2)) => Bytecode::SetC(ptr, c1.wrapping_sub(*c2)),
 
-                CFGExpr::Mul(CFGValue::Load(p1), CFGValue::Load(p2)) => Bytecode::MulL(ptr, (*p1).try_into()?, (*p2).try_into()?),
+                CFGExpr::Mul(CFGValue::Load(p1), CFGValue::Load(p2)) => Bytecode::MulL(ptr, *p1 , *p2 ),
                 CFGExpr::Mul(CFGValue::Load(p), CFGValue::Const(c)) |
-                CFGExpr::Mul(CFGValue::Const(c), CFGValue::Load(p)) => Bytecode::MulC(ptr, (*p).try_into()?, *c),
+                CFGExpr::Mul(CFGValue::Const(c), CFGValue::Load(p)) => Bytecode::MulC(ptr, *p, *c),
                 CFGExpr::Mul(CFGValue::Const(c1), CFGValue::Const(c2)) => Bytecode::SetC(ptr, c1.wrapping_mul(*c2)),
 
-                CFGExpr::MulAdd(CFGValue::Load(p1), CFGValue::Load(p2), c3) => Bytecode::MulAddL(ptr, (*p1).try_into()?, (*p2).try_into()?, *c3),
-                CFGExpr::MulAdd(CFGValue::Load(p1), CFGValue::Const(c2), c3) => Bytecode::AddC(ptr, (*p1).try_into()?, c2.wrapping_mul(*c3)),
-                CFGExpr::MulAdd(CFGValue::Const(c1), CFGValue::Load(p2), c3) => Bytecode::MulAddC(ptr, *c1, (*p2).try_into()?, *c3),
+                CFGExpr::MulAdd(CFGValue::Load(p1), CFGValue::Load(p2), c3) => Bytecode::MulAddL(ptr, *p1, *p2, *c3),
+                CFGExpr::MulAdd(CFGValue::Load(p1), CFGValue::Const(c2), c3) => Bytecode::AddC(ptr, *p1, c2.wrapping_mul(*c3)),
+                CFGExpr::MulAdd(CFGValue::Const(c1), CFGValue::Load(p2), c3) => Bytecode::MulAddC(ptr, *c1, *p2, *c3),
                 CFGExpr::MulAdd(CFGValue::Const(c1), CFGValue::Const(c2), c3) => Bytecode::SetC(ptr, c1.wrapping_add(c2.wrapping_mul(*c3))),
 
                 CFGExpr::In => Bytecode::In(ptr),
@@ -62,19 +61,19 @@ fn cfgops_to_bytecodes(insts: &[CFGOp]) -> Result<Vec<Bytecode>, TryFromIntError
         
         match (curr_op, next_op) {
             (Bytecode::SetC(p1, c1), Bytecode::SetC(p2, c2)) => {
-                codes.push(Bytecode::SetCSetC(p1.try_into()?, c1, p2.try_into()?, c2));
+                codes.push(Bytecode::SetCSetC(p1, c1, p2, c2));
                 i += 2;
                 continue;
             }
             (Bytecode::Add(p1, c1), Bytecode::Add(p2, c2)) => {
-                codes.push(Bytecode::AddAdd(p1.try_into()?, c1, p2.try_into()?, c2));
+                codes.push(Bytecode::AddAdd(p1, c1, p2, c2));
                 i += 2;
                 continue;
             }
             (Bytecode::Add(p1, c1), Bytecode::SetC(p2, c2)) |
             (Bytecode::SetC(p2, c2), Bytecode::Add(p1, c1)) => {
                 if p1 != p2 {
-                    codes.push(Bytecode::AddSetC(p1.try_into()?, c1, p2.try_into()?, c2));
+                    codes.push(Bytecode::AddSetC(p1, c1, p2, c2));
                     i += 2;
                     continue;
                 }
@@ -82,7 +81,7 @@ fn cfgops_to_bytecodes(insts: &[CFGOp]) -> Result<Vec<Bytecode>, TryFromIntError
             (Bytecode::AddL(p1, p2, p3), Bytecode::SetC(p4, c5)) |
             (Bytecode::SetC(p4, c5), Bytecode::AddL(p1, p2, p3)) => {
                 if p1 != p4 {
-                    codes.push(Bytecode::AddLSetC(p1.try_into()?, p2.try_into()?, p3.try_into()?, p4.try_into()?, c5));
+                    codes.push(Bytecode::AddLSetC(p1, p2, p3, p4, c5));
                     i += 2;
                     continue;
                 }
@@ -98,7 +97,7 @@ fn cfgops_to_bytecodes(insts: &[CFGOp]) -> Result<Vec<Bytecode>, TryFromIntError
     Ok(codes)
 }
 
-pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<isize>>) -> Result<Vec<Bytecode>, TryFromIntError> {
+pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i16>>) -> Result<Vec<Bytecode>, TryFromIntError> {
     let mut bytecodes = vec![];
     let order = compute_block_order(cfg);
 
@@ -111,10 +110,10 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
         bytecodes.append(&mut cfgops_to_bytecodes(&block.insts)?);
 
         if let Some(offset) = block.offset {
-            let offset = offset.try_into()?;
+            let offset = offset;
             if let Some(range) = offset_ranges.get(&b) {
-                let rb = (*range.start()).try_into()?;
-                let re = (*range.end()).try_into()?;
+                let rb = *range.start();
+                let re = *range.end();
                 if let CFGEdge::Branch { pointer, zero, nonzero } = &block.edge {
                     if order.get(i + 1).copied() == Some(*nonzero) {
 
@@ -122,7 +121,7 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
                             offset,
                             rb,
                             re,
-                            ptr: (*pointer).try_into()?,
+                            ptr: (*pointer),
                             addr: (*zero).try_into()?,
                         });
 
@@ -133,7 +132,7 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
                             offset,
                             rb,
                             re,
-                            ptr: (*pointer).try_into()?,
+                            ptr: (*pointer),
                             addr: (*nonzero).try_into()?,
                         });
                         
@@ -154,11 +153,11 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, RangeInclusive<i
             }
             CFGEdge::Branch { pointer, zero, nonzero } => {
                 if order.get(i + 1).copied() == Some(*nonzero) {
-                    bytecodes.push(Bytecode::JumpIfZero((*pointer).try_into()?, (*zero).try_into()?));
+                    bytecodes.push(Bytecode::JumpIfZero(*pointer, (*zero).try_into()?));
                 } else if order.get(i + 1).copied() == Some(*zero) {
-                    bytecodes.push(Bytecode::JumpIfNotZero((*pointer).try_into()?, (*nonzero).try_into()?));
+                    bytecodes.push(Bytecode::JumpIfNotZero(*pointer, (*nonzero).try_into()?));
                 } else {
-                    bytecodes.push(Bytecode::JumpIfZero((*pointer).try_into()?, (*zero).try_into()?));
+                    bytecodes.push(Bytecode::JumpIfZero(*pointer, (*zero).try_into()?));
                     bytecodes.push(Bytecode::Jump((*nonzero).try_into()?));
                 }
             }

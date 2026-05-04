@@ -13,7 +13,7 @@ impl IR {
         let mut mul_offset = 0;
         let mut insts = vec![];
         let mut loop_stack = vec![];
-        let mut pointer = 0isize;
+        let mut pointer = 0;
         let mut split = false;
 
         for (i, c) in code.chars().enumerate() {
@@ -111,7 +111,7 @@ impl IR {
                                 }
                                 _ => None,
                             })
-                            .collect::<Option<Vec<(SimpleOp, isize, u8, Range<usize>)>>>()
+                            .collect::<Option<Vec<(SimpleOp, i16, u8, Range<usize>)>>>()
                             .as_mut()
                         {
                             if let Some(p) = muls.iter().position(|op| {

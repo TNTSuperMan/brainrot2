@@ -8,7 +8,7 @@ pub enum CellState {
 }
 
 impl CFG {
-    fn internal_get_cellstate(&self, from: usize, block_i: usize, pointer: isize, recursive_count: u8) -> CellState {
+    fn internal_get_cellstate(&self, from: usize, block_i: usize, pointer: i16, recursive_count: u8) -> CellState {
         if recursive_count > 5 {
             return CellState::Unknown;
         }
@@ -47,7 +47,7 @@ impl CFG {
         }
     }
 
-    fn internal_cellstate_recurse(&self, block_i: usize, pointer: isize, recursive_count: u8) -> CellState {
+    fn internal_cellstate_recurse(&self, block_i: usize, pointer: i16, recursive_count: u8) -> CellState {
         match self.0[block_i].predecessor.as_slice() {
             [] => {
                 CellState::Const(0)
@@ -67,7 +67,7 @@ impl CFG {
         }
     }
 
-    pub fn get_cellstate(&self, block_i: usize, pointer: isize) -> CellState {
+    pub fn get_cellstate(&self, block_i: usize, pointer: i16) -> CellState {
         self.internal_cellstate_recurse(block_i, pointer, 0)
     }
 }

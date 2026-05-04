@@ -3,7 +3,7 @@ use std::io::{Read, Write, stdin, stdout};
 use crate::{TAPE_LENGTH, cfg::cfg::{CFG, CFGEdge, CFGExpr, CFGOp, CFGValue}};
 
 struct Mem {
-    offset: isize,
+    offset: i16,
     memory: [u8; TAPE_LENGTH],
 }
 impl Mem {
@@ -52,7 +52,7 @@ fn exec_node_ir(insts: &[CFGOp], mem: &mut Mem) {
 
 pub fn exec_from_cfg(cfg: &CFG, offset: u8) {
     let mut mem = Mem {
-        offset: offset as isize,
+        offset: offset as i16,
         memory: [0; TAPE_LENGTH],
     };
     let mut node_i = 0;
