@@ -10,14 +10,14 @@ pub fn exec_from_ir(ir: &[IR], offset: u8) {
     let mut stdout = stdout().lock();
 
     loop {
-        if pc >= ir.len() {
-            return;
-        }
         let IR {
             pointer,
             opcode,
             loc: _,
-        } = &ir[pc];
+        } = match ir.get(pc) {
+            Some(ir) => ir,
+            None => return,
+        };
         let p = (pointer + offset) as usize;
         match opcode {
             IROp::Add(value) => {
