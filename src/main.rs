@@ -1,13 +1,14 @@
 use std::{collections::HashMap, env::args, fs, process::ExitCode};
 
 use crate::{
-    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, range::OffsetRange}, exec::exec, ir::ir::IR
+    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, range::OffsetRange}, exec::exec, ir::ir::IR, log::start
 };
 
 mod cfg;
 mod ir;
 mod bytecode;
 mod exec;
+mod log;
 // mod int;
 
 pub const TAPE_LENGTH: usize = 65536;
@@ -21,6 +22,7 @@ fn gen_bytecode(code: &str) -> ((Vec<Bytecode>, HashMap<usize, usize>), HashMap<
 }
 
 fn main() -> ExitCode {
+    start();
     if let [_, kind, file] = args().collect::<Vec<String>>().as_slice() {
         let code = fs::read_to_string(&file).unwrap();
         match kind.as_str() {

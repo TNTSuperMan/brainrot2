@@ -1,6 +1,6 @@
 use std::{io::{Read, Write, stdin, stdout}, ops::{Index, IndexMut}};
 
-use crate::{TAPE_LENGTH, bytecode::bytecode::Bytecode};
+use crate::{TAPE_LENGTH, bytecode::bytecode::Bytecode, log};
 
 struct Mem {
     offset: isize,
@@ -113,10 +113,10 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: i1
             Bytecode::OffsetWithRangeCheck(o1, range) => {
                 mem.offset += *o1 as isize;
                 if opt && !range.contains(mem.offset as i16) {
-                    eprintln!("deopt at {pc}");
+                    log!("deopt {pc}");
                     opt = false;
                 } else if !opt {
-                    eprintln!("opt at {pc}");
+                    log!("opt {pc}");
                     opt = true;
                 }
             }
@@ -127,10 +127,10 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: i1
             Bytecode::OffsetRangeJumpZero { offset, range, ptr, addr: jmp } => {
                 mem.offset += *offset as isize;
                 if opt && !range.contains(mem.offset as i16) {
-                    eprintln!("deopt {pc}");
+                    log!("deopt {pc}");
                     opt = false;
                 } else if !opt {
-                    eprintln!("opt {pc}");
+                    log!("opt {pc}");
                     opt = true;
                 }
                 if mem[ptr] == 0 {
@@ -141,10 +141,10 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: i1
             Bytecode::OffsetRangeJumpNotZero { offset, range, ptr, addr: jmp } => {
                 mem.offset += *offset as isize;
                 if opt && !range.contains(mem.offset as i16) {
-                    eprintln!("deopt {pc}");
+                    log!("deopt {pc}");
                     opt = false;
                 } else if !opt {
-                    eprintln!("opt {pc}");
+                    log!("opt {pc}");
                     opt = true;
                 }
                 if mem[ptr] != 0 {

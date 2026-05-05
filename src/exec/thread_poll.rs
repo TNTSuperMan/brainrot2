@@ -1,6 +1,6 @@
 use std::{collections::HashMap, num::TryFromIntError, sync::{Arc, mpsc::{self, Receiver}}, thread::{self, JoinHandle}};
 
-use crate::{bytecode::{build::build_bytecode, bytecode::Bytecode}, cfg::cfg::CFG, ir::ir::IR};
+use crate::{bytecode::{build::build_bytecode, bytecode::Bytecode}, cfg::cfg::CFG, ir::ir::IR, timeline};
 
 pub struct BytecodeComputePoller {
     join_handle: JoinHandle<()>,
@@ -14,12 +14,19 @@ impl BytecodeComputePoller {
         let (tx, rx) = mpsc::channel();
 
         let join_handle = thread::spawn(move || {
+            timeline!("building cfg");
+
             let mut cfg = CFG::new(&ir_arc);
+            timeline!("cfg builded, optimizing");
+
             cfg.optimize_heavy();
+            timeline!("optimized, computing range");
 
             let offset_ranges = cfg.compute_offset_ranges();
+            timeline!("range computed, building bytecode");
             
             let bytecode_result = build_bytecode(&cfg, &offset_ranges);
+            timeline!("bytecode builded");
 
             tx.send(bytecode_result).unwrap();
         });
