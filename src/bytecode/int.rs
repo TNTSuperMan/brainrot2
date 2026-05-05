@@ -18,16 +18,16 @@ impl IndexMut<&i16> for Mem {
     }
 }
 
-pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: u8, opt_first: bool) -> Vec<u32> {
+pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: i16, mem: [u8; TAPE_LENGTH], pc: usize) -> Vec<u32> {
     let mut exec_counts = if DEBUG { vec![0; bytecodes.len()] } else { vec![] };
-    let mut pc: usize = 0;
+    let mut pc: usize = pc;
     let mut mem = Mem {
         offset: offset as isize,
-        memory: [0u8; TAPE_LENGTH],
+        memory: mem,
     };
     let mut stdin = stdin().lock();
     let mut stdout = stdout().lock();
-    let mut opt = opt_first;
+    let mut opt = false;
 
     loop {
         if DEBUG {
@@ -113,10 +113,10 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: u8
             Bytecode::OffsetWithRangeCheck(o1, range) => {
                 mem.offset += *o1 as isize;
                 if opt && !range.contains(mem.offset as i16) {
-                    eprintln!("deopt {pc}");
+                    eprintln!("deopt at {pc}");
                     opt = false;
                 } else if !opt {
-                    eprintln!("opt {pc}");
+                    eprintln!("opt at {pc}");
                     opt = true;
                 }
             }

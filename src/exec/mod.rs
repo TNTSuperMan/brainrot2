@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{TAPE_LENGTH, exec::{ir::exec_ir_with_poll, thread_poll::BytecodeComputePoller}, ir::{error::SyntaxError, ir::IR}};
+use crate::{TAPE_LENGTH, bytecode::int::debug_exec_bytecode, exec::{ir::exec_ir_with_poll, thread_poll::BytecodeComputePoller}, ir::{error::SyntaxError, ir::IR}};
 
 mod thread_poll;
 mod ir;
@@ -24,8 +24,8 @@ pub fn exec(code: &str) -> Result<(), BrainrotError> {
     let mut offset = mul_offset.into();
 
     match exec_ir_with_poll(&ir_arc, &mut memory, &mut offset, &mut poller) {
-        Some((bytecode, pc)) => {
-            todo!();
+        Some((bytecodes, pc)) => {
+            debug_exec_bytecode::<false>(&bytecodes, offset, memory, pc);
             Ok(())
         }
         None => {

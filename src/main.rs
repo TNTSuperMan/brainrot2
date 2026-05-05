@@ -20,13 +20,6 @@ fn gen_bytecode(code: &str) -> ((Vec<Bytecode>, HashMap<usize, usize>), HashMap<
     (build_bytecode(&cfg, &offset_ranges).unwrap(), offset_ranges, mul_offset)
 }
 
-fn opt_first(offset_ranges: &HashMap<usize, OffsetRange>, mul_offset: u8) -> bool {
-    match offset_ranges.get(&0) {
-        Some(r) => r.contains(mul_offset as i16),
-        None => true,
-    }
-}
-
 fn main() -> ExitCode {
     if let [_, kind, file] = args().collect::<Vec<String>>().as_slice() {
         let code = fs::read_to_string(&file).unwrap();
@@ -68,12 +61,12 @@ fn main() -> ExitCode {
                 }
             }
             "exec_bytecode" => {
-                let ((bytecodes, _), offset_ranges, mul_offset) = gen_bytecode(&code);
-                debug_exec_bytecode::<false>(&bytecodes, mul_offset, opt_first(&offset_ranges, mul_offset));
+                let ((bytecodes, _), _, mul_offset) = gen_bytecode(&code);
+                debug_exec_bytecode::<false>(&bytecodes, mul_offset as i16, [0; TAPE_LENGTH], 0);
             }
             "check_exec_counts" => {
-                let ((bytecodes, _), offset_ranges, mul_offset) = gen_bytecode(&code);
-                let counts = debug_exec_bytecode::<true>(&bytecodes, mul_offset, opt_first(&offset_ranges, mul_offset));
+                let ((bytecodes, _), _, mul_offset) = gen_bytecode(&code);
+                let counts = debug_exec_bytecode::<true>(&bytecodes, mul_offset as i16, [0; TAPE_LENGTH], 0);
                 for (i, count) in counts.iter().enumerate() {
                     println!("{} \t{:?}", (count + 1).ilog2(), bytecodes[i]);
                 }
