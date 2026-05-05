@@ -1,7 +1,7 @@
 use std::{collections::HashMap, env::args, fs, process::ExitCode};
 
 use crate::{
-    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, range::OffsetRange}, ir::ir::IR
+    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, range::OffsetRange}, exec::exec, ir::ir::IR
 };
 
 mod cfg;
@@ -85,6 +85,9 @@ fn main() -> ExitCode {
             "dump_offsetrange" => {
                 let (_, offset_ranges, ..) = gen_bytecode(&code);
                 println!("{:?}", offset_ranges);
+            }
+            "run" => {
+                exec(&code).unwrap();
             }
             _ => {
                 eprintln!("unknown kind");

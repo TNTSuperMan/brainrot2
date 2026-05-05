@@ -5,6 +5,7 @@ use crate::{TAPE_LENGTH, exec::{ir::exec_ir_with_poll, thread_poll::BytecodeComp
 mod thread_poll;
 mod ir;
 
+#[derive(Debug)]
 pub enum BrainrotError {
     SyntaxError(SyntaxError),
 }
