@@ -7,6 +7,7 @@ use crate::{
 mod cfg;
 mod ir;
 mod bytecode;
+mod exec;
 // mod int;
 
 pub const TAPE_LENGTH: usize = 65536;
@@ -19,15 +20,7 @@ fn main() -> ExitCode {
         let ir_end = Instant::now();
         let mut cfg = CFG::new(&ir);
         let cfg_end = Instant::now();
-        for _ in 0..3 {
-            cfg.inline_branch();
-            cfg.inline_flow();
-            cfg.fold_jump();
-            cfg.fold_ref();
-            cfg.fold_const();
-            cfg.eliminate_dead_code();
-            cfg.eliminate_dead_instruction();
-        }
+        cfg.optimize_heavy();
         let opt_end = Instant::now();
         let offset_ranges = cfg.compute_offset_ranges();
         let offset_end = Instant::now();
