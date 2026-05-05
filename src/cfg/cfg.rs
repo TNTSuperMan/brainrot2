@@ -35,14 +35,18 @@ pub struct CFGBlock {
 }
 impl Debug for CFGBlock {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "CFGBlock pred: {:?} {{\n", self.predecessor)?;
-        for inst in &self.insts {
-            write!(f, "    {inst:?}\n")?;
+        if self.alive {
+            write!(f, "CFGBlock pred: {:?} {{\n", self.predecessor)?;
+            for inst in &self.insts {
+                write!(f, "    {inst:?}\n")?;
+            }
+            if let Some(offset) = self.offset {
+                write!(f, "    offset {offset}\n")?;
+            }
+            write!(f, "    {:?}\n}}", self.edge)
+        } else {
+            write!(f, "CFGBlock [dead]")
         }
-        if let Some(offset) = self.offset {
-            write!(f, "    offset {offset}\n")?;
-        }
-        write!(f, "    {:?}\n}}", self.edge)
     }
 }
 
