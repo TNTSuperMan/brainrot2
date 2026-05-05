@@ -1,7 +1,7 @@
-use std::{env::args, fs, process::ExitCode, time::Instant};
+use std::{collections::HashMap, env::args, fs, process::ExitCode};
 
 use crate::{
-    bytecode::{build::build_bytecode, int::debug_exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, int::exec_from_cfg}, ir::{int::exec_from_ir, ir::IR}
+    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, range::OffsetRange}, ir::ir::IR
 };
 
 mod cfg;
@@ -12,72 +12,79 @@ mod exec;
 
 pub const TAPE_LENGTH: usize = 65536;
 
+fn gen_bytecode(code: &str) -> ((Vec<Bytecode>, HashMap<usize, usize>), HashMap<usize, OffsetRange>, u8) {
+    let (ir, mul_offset) = IR::parse(&code).unwrap();
+    let mut cfg = CFG::new(&ir);
+    cfg.optimize_heavy();
+    let offset_ranges = cfg.compute_offset_ranges();
+    (build_bytecode(&cfg, &offset_ranges).unwrap(), offset_ranges, mul_offset)
+}
+
+fn opt_first(offset_ranges: &HashMap<usize, OffsetRange>, mul_offset: u8) -> bool {
+    match offset_ranges.get(&0) {
+        Some(r) => r.contains(mul_offset as i16),
+        None => true,
+    }
+}
+
 fn main() -> ExitCode {
     if let [_, kind, file] = args().collect::<Vec<String>>().as_slice() {
         let code = fs::read_to_string(&file).unwrap();
-        let start = Instant::now();
-        let (ir, mul_offset) = IR::parse(&code).unwrap();
-        let ir_end = Instant::now();
-        let mut cfg = CFG::new(&ir);
-        let cfg_end = Instant::now();
-        cfg.optimize_heavy();
-        let opt_end = Instant::now();
-        let offset_ranges = cfg.compute_offset_ranges();
-        let offset_end = Instant::now();
-        let (bytecodes, bytecode_ir_map) = build_bytecode(&cfg, &offset_ranges).unwrap();
-        let bytecode_end = Instant::now();
-        eprintln!("all: {:?}", bytecode_end - start);
-        eprintln!("ir: {:?}", ir_end - start);
-        eprintln!("cfg: {:?}", cfg_end - ir_end);
-        eprintln!("opt: {:?}", opt_end - cfg_end);
-        eprintln!("ofs: {:?}", offset_end - opt_end);
-        eprintln!("byt: {:?}", bytecode_end - offset_end);
         match kind.as_str() {
-            "exec_ir" => {
-                exec_from_ir(&ir, mul_offset);
-            }
-            "exec_cfg" => {
-                exec_from_cfg(&cfg, mul_offset);
-            }
             "dump_ir" => {
+                let (ir, _) = IR::parse(&code).unwrap();
                 println!("{ir:?}");
             }
             "dump_cfg" => {
+                let (ir, _) = IR::parse(&code).unwrap();
+                let cfg = CFG::new(&ir);
                 println!("{cfg:?}");
             }
-            "print_cfg_dot" => {
+            "dump_opt_cfg" => {
+                let (ir, _) = IR::parse(&code).unwrap();
+                let mut cfg = CFG::new(&ir);
+                cfg.optimize_heavy();
+                println!("{cfg:?}");
+            }
+            "dot_cfg" => {
+                let (ir, _) = IR::parse(&code).unwrap();
+                let cfg = CFG::new(&ir);
+                println!("{}", cfg_to_dot(&cfg));
+            }
+            "dot_opt_cfg" => {
+                let (ir, _) = IR::parse(&code).unwrap();
+                let mut cfg = CFG::new(&ir);
+                cfg.optimize_heavy();
                 println!("{}", cfg_to_dot(&cfg));
             }
             "dump_bytecode" => {
-                for (i, c) in bytecodes.iter().enumerate() {
+                for (i, c) in gen_bytecode(&code).0.0.iter().enumerate() {
                     println!("%{i}  \t{c}");
                 }
             }
             "dump_classic_bytecode" => {
-                for c in bytecodes {
+                for c in gen_bytecode(&code).0.0 {
                     println!("{c:?}");
                 }
             }
             "exec_bytecode" => {
-                debug_exec_bytecode::<false>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
-                    Some(r) => r.contains(mul_offset as i16),
-                    None => true,
-                });
+                let ((bytecodes, _), offset_ranges, mul_offset) = gen_bytecode(&code);
+                debug_exec_bytecode::<false>(&bytecodes, mul_offset, opt_first(&offset_ranges, mul_offset));
             }
             "check_exec_counts" => {
-                let counts = debug_exec_bytecode::<true>(&bytecodes, mul_offset, match offset_ranges.get(&0) {
-                    Some(r) => r.contains(mul_offset as i16),
-                    None => true,
-                });
+                let ((bytecodes, _), offset_ranges, mul_offset) = gen_bytecode(&code);
+                let counts = debug_exec_bytecode::<true>(&bytecodes, mul_offset, opt_first(&offset_ranges, mul_offset));
                 for (i, count) in counts.iter().enumerate() {
                     println!("{} \t{:?}", (count + 1).ilog2(), bytecodes[i]);
                 }
             }
             "dump_ir_map" => {
-                println!("{:?}", bytecode_ir_map);
+                let ((_, ir_map), ..) = gen_bytecode(&code);
+                println!("{:?}", ir_map);
             }
             "dump_offsetrange" => {
-                println!("{:?}", cfg.compute_offset_ranges());
+                let (_, offset_ranges, ..) = gen_bytecode(&code);
+                println!("{:?}", offset_ranges);
             }
             _ => {
                 eprintln!("unknown kind");
