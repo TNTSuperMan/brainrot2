@@ -31,9 +31,11 @@ pub fn exec(code: &str) -> Result<(), BrainrotError> {
         Some((bytecodes, pc)) => {
             timeline!("osr bytecode executing: {pc}");
             debug_exec_bytecode::<false>(&bytecodes, offset, memory, pc);
+            timeline!("program ended");
             Ok(())
         }
         None => {
+            timeline!("program ended");
             Ok(())
         }
     }
