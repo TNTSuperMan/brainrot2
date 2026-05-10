@@ -9,6 +9,7 @@ mod ir;
 mod bytecode;
 mod exec;
 mod log;
+mod ssa;
 // mod int;
 
 pub const TAPE_LENGTH: usize = 65536;
