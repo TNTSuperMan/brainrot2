@@ -11,7 +11,7 @@ pub fn ssa_to_dot(ssa: &SSAProgram) -> String {
         dot.push_str(&format!("    n{i} [\n        label=\"n{i}\\l"));
         for (ptr, (ver, args)) in &block.phis {
             dot.push_str(&format!(
-                "${ptr}#{ver} = φ({})",
+                "${ptr}#{ver} = φ({})\\l",
                 args.iter()
                     .map(|a| format!("{a}"))
                     .collect::<Vec<String>>()
