@@ -17,30 +17,8 @@ impl<'a, 'b> Finder<'a, 'b> {
         }
     }
     pub fn find(&mut self, block_i: usize, inst_i: usize, pointer: i16) -> SSAValue {
-        let insts = &self.blocks[block_i].insts[..inst_i];
-
-        for (i, inst) in insts.iter().enumerate().rev() {
-            match inst {
-                SSAOp::Out(_) => {}
-                SSAOp::In(ver) | SSAOp::Assign(ver, _) => {
-                    if ver.pointer == pointer {
-                        return SSAValue::Version(*ver);
-                    }
-                }
-                SSAOp::Hint(ver, val) => {
-                    if ver.pointer == pointer {
-                        return if let SSAValue::Version(SSAVersion {
-                            pointer,
-                            version: u32::MAX,
-                        }) = val
-                        {
-                            self.find(block_i, i, *pointer)
-                        } else {
-                            *val
-                        };
-                    }
-                }
-            }
+        if let Some(version) = self.blocks[block_i].find_def_from(pointer, inst_i) {
+            return SSAValue::Version(version);
         }
 
         let preds = self.blocks[block_i].predecessor.clone();
