@@ -20,8 +20,8 @@ impl<'a, 'b> Finder<'a, 'b> {
         self.find_from(block_i, self.blocks[block_i].insts.len(), pointer)
     }
     pub fn find_from(&mut self, block_i: usize, inst_i: usize, pointer: i16) -> SSAValue {
-        if let Some(version) = self.blocks[block_i].find_def_from(pointer, inst_i) {
-            return SSAValue::Version(version);
+        if let Some(value) = self.blocks[block_i].find_def_from(pointer, inst_i) {
+            return value;
         }
 
         let preds = self.blocks[block_i].predecessor.clone();
