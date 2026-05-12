@@ -6,7 +6,7 @@ use crate::{
     exec::exec,
     ir::ir::IR,
     log::start,
-    ssa::build::build_ssa,
+    ssa::{build::build_ssa, dot::ssa_to_dot},
 };
 
 mod bytecode;
@@ -104,6 +104,13 @@ fn main() -> ExitCode {
                 cfg.optimize_heavy();
                 let ssa = build_ssa(&cfg);
                 println!("{ssa}");
+            }
+            "dot_ssa" => {
+                let (ir, _) = IR::parse(&code).unwrap();
+                let mut cfg = CFG::new(&ir);
+                cfg.optimize_heavy();
+                let ssa = build_ssa(&cfg);
+                println!("{}", ssa_to_dot(&ssa));
             }
             "run" => {
                 exec(&code).unwrap();
