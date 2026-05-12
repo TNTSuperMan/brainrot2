@@ -1,12 +1,15 @@
 use std::collections::HashMap;
 
-use crate::ssa::defines::{op::SSAOp, value::SSAVersion};
+use crate::ssa::defines::{
+    op::SSAOp,
+    value::{SSAValue, SSAVersion},
+};
 
 #[derive(Clone, Debug)]
 pub struct SSABlock {
     pub alive: bool,
     pub predecessor: Vec<usize>,
-    pub phis: HashMap<i16, (u32, Vec<SSAVersion>)>,
+    pub phis: HashMap<i16, (u32, Vec<SSAValue>)>,
     pub insts: Vec<SSAOp>,
     pub offset: Option<i16>,
     pub edge: SSAEdge,
