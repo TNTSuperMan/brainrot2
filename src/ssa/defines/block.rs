@@ -26,7 +26,10 @@ pub enum SSAEdge {
 
 impl SSABlock {
     pub fn find_def(&self, pointer: i16) -> Option<SSAVersion> {
-        for inst in self.insts.iter().rev() {
+        self.find_def_from(pointer, self.insts.len())
+    }
+    pub fn find_def_from(&self, pointer: i16, inst_i: usize) -> Option<SSAVersion> {
+        for inst in self.insts[..inst_i].iter().rev() {
             match inst {
                 SSAOp::Out(_) => {}
                 SSAOp::In(ver) | SSAOp::Hint(ver, _) | SSAOp::Assign(ver, _) => {
