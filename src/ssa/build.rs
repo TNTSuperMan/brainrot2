@@ -2,11 +2,14 @@ use std::collections::HashMap;
 
 use crate::{
     cfg::cfg::{CFG, CFGEdge, CFGExpr, CFGOp, CFGValue},
-    ssa::defines::{
-        block::{SSABlock, SSAEdge},
-        op::{SSAExpr, SSAOp},
-        program::SSAProgram,
-        value::{SSAValue, SSAVersion},
+    ssa::{
+        defines::{
+            block::{SSABlock, SSAEdge},
+            op::{SSAExpr, SSAOp},
+            program::SSAProgram,
+            value::{SSAValue, SSAVersion},
+        },
+        impls::finder::Finder,
     },
 };
 
@@ -17,64 +20,6 @@ fn cv2sv(cv: &CFGValue) -> SSAValue {
             pointer: *ptr,
             version: u32::MAX,
         }),
-    }
-}
-
-fn find(
-    v: &mut u32,
-    blocks: &mut [SSABlock],
-    block_i: usize,
-    inst_i: usize,
-    pointer: i16,
-) -> SSAValue {
-    let insts = &blocks[block_i].insts[..inst_i];
-
-    for (i, inst) in insts.iter().enumerate().rev() {
-        match inst {
-            SSAOp::Out(_) => {}
-            SSAOp::In(ver) | SSAOp::Assign(ver, _) => {
-                if ver.pointer == pointer {
-                    return SSAValue::Version(*ver);
-                }
-            }
-            SSAOp::Hint(ver, val) => {
-                if ver.pointer == pointer {
-                    return if let SSAValue::Version(SSAVersion {
-                        pointer,
-                        version: u32::MAX,
-                    }) = val
-                    {
-                        find(v, blocks, block_i, i, *pointer)
-                    } else {
-                        *val
-                    };
-                }
-            }
-        }
-    }
-
-    let preds = blocks[block_i].predecessor.clone();
-    match preds.as_slice() {
-        [] => SSAValue::Const(0),
-        [p] => find(v, blocks, *p, blocks[*p].insts.len(), pointer),
-        preds => {
-            let phi = SSAExpr::Phi(
-                preds
-                    .iter()
-                    .map(|p| find(v, blocks, *p, blocks[*p].insts.len(), pointer))
-                    .collect(),
-            );
-            let version = SSAVersion {
-                pointer,
-                version: *v,
-            };
-
-            blocks[block_i].insts.insert(0, SSAOp::Assign(version, phi));
-
-            *v += 1;
-
-            SSAValue::Version(version)
-        }
     }
 }
 
@@ -158,8 +103,10 @@ pub fn build_ssa(cfg: &CFG) -> SSAProgram {
             let reads = blocks[block_i].insts[inst_i].reads();
             let mut vals = HashMap::new();
             for read in reads {
-                let val = find(&mut ver, &mut blocks, block_i, inst_i, read);
+                let mut finder = Finder::new(&mut blocks, &mut ver);
+                let val = finder.find(block_i, inst_i, read);
                 vals.insert(read, val);
+                finder.solve();
             }
             for val in blocks[block_i].insts[inst_i].get_values_mut() {
                 if let SSAValue::Version(ver) = *val {
