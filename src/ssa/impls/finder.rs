@@ -41,9 +41,17 @@ impl<'a, 'b> Finder<'a, 'b> {
 
                 let actual_args: Vec<SSAValue> =
                     preds.iter().map(|p| self.find(*p, pointer)).collect();
-                self.blocks[block_i]
-                    .phis
-                    .insert(pointer, (version.version, actual_args));
+
+                if actual_args.iter().all(|e| &actual_args[0] == e) {
+                    self.blocks[block_i].phis.remove(&pointer);
+                    self.blocks[block_i]
+                        .insts
+                        .insert(0, SSAOp::Hint(version, actual_args[0]));
+                } else {
+                    self.blocks[block_i]
+                        .phis
+                        .insert(pointer, (version.version, actual_args));
+                }
 
                 SSAValue::Version(version)
             }
