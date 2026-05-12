@@ -32,37 +32,7 @@ pub fn build_ssa(cfg: &CFG) -> SSAProgram {
         .map(|block| SSABlock {
             alive: block.alive,
             predecessor: block.predecessor.clone(),
-            edge: match block.edge {
-                CFGEdge::Jump(to) => SSAEdge::Jump(to),
-                CFGEdge::Branch {
-                    pointer,
-                    zero,
-                    nonzero,
-                } => SSAEdge::Branch {
-                    version: SSAVersion {
-                        pointer,
-                        version: u32::MAX,
-                    },
-                    zero,
-                    nonzero,
-                    ir_at: None,
-                },
-                CFGEdge::BranchWithIRAt {
-                    pointer,
-                    zero,
-                    nonzero,
-                    ir_at,
-                } => SSAEdge::Branch {
-                    version: SSAVersion {
-                        pointer,
-                        version: u32::MAX,
-                    },
-                    zero,
-                    nonzero,
-                    ir_at: Some(ir_at),
-                },
-                CFGEdge::End => SSAEdge::End,
-            },
+            phis: HashMap::new(),
             insts: block
                 .insts
                 .iter()
@@ -95,6 +65,37 @@ pub fn build_ssa(cfg: &CFG) -> SSAProgram {
                 })
                 .collect(),
             offset: block.offset,
+            edge: match block.edge {
+                CFGEdge::Jump(to) => SSAEdge::Jump(to),
+                CFGEdge::Branch {
+                    pointer,
+                    zero,
+                    nonzero,
+                } => SSAEdge::Branch {
+                    version: SSAVersion {
+                        pointer,
+                        version: u32::MAX,
+                    },
+                    zero,
+                    nonzero,
+                    ir_at: None,
+                },
+                CFGEdge::BranchWithIRAt {
+                    pointer,
+                    zero,
+                    nonzero,
+                    ir_at,
+                } => SSAEdge::Branch {
+                    version: SSAVersion {
+                        pointer,
+                        version: u32::MAX,
+                    },
+                    zero,
+                    nonzero,
+                    ir_at: Some(ir_at),
+                },
+                CFGEdge::End => SSAEdge::End,
+            },
         })
         .collect();
 
@@ -104,7 +105,7 @@ pub fn build_ssa(cfg: &CFG) -> SSAProgram {
             let mut vals = HashMap::new();
             for read in reads {
                 let mut finder = Finder::new(&mut blocks, &mut ver);
-                let val = finder.find(block_i, inst_i, read);
+                let val = finder.find_from(block_i, inst_i, read);
                 vals.insert(read, val);
             }
             for val in blocks[block_i].insts[inst_i].get_values_mut() {
