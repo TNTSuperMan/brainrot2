@@ -1,6 +1,7 @@
 use crate::ssa::defines::{op::SSAOp, value::SSAVersion};
 
 pub struct SSABlock {
+    pub predecessor: Vec<usize>,
     pub edge: SSAEdge,
     pub insts: Vec<SSAOp>,
     pub offset: Option<i16>,
