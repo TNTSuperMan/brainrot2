@@ -103,7 +103,7 @@ fn main() -> ExitCode {
                 let mut cfg = CFG::new(&ir);
                 cfg.optimize_heavy();
                 let ssa = build_ssa(&cfg);
-                println!("{ssa:?}");
+                println!("{ssa}");
             }
             "run" => {
                 exec(&code).unwrap();
