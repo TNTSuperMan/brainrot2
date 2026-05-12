@@ -23,6 +23,16 @@ impl Display for SSABlock {
             write!(f, "SSABlock <dead>")
         } else {
             write!(f, "SSABlock preds: {:?} {{\n", self.predecessor)?;
+            for (ptr, (ver, args)) in &self.phis {
+                write!(
+                    f,
+                    "    ${ptr}#{ver} = φ({})\n",
+                    args.iter()
+                        .map(|a| format!("{a}"))
+                        .collect::<Vec<String>>()
+                        .join(", ")
+                )?;
+            }
             for inst in &self.insts {
                 write!(f, "    {inst}\n")?;
             }
