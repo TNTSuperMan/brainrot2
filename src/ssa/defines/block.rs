@@ -1,14 +1,15 @@
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 
 use crate::ssa::defines::{op::SSAOp, value::SSAVersion};
 
 #[derive(Clone, Debug)]
 pub struct SSABlock {
+    pub alive: bool,
     pub predecessor: Vec<usize>,
-    pub edge: SSAEdge,
+    pub phis: HashMap<i16, (usize, Vec<SSAVersion>)>,
     pub insts: Vec<SSAOp>,
     pub offset: Option<i16>,
-    pub alive: bool,
+    pub edge: SSAEdge,
 }
 
 impl Display for SSABlock {

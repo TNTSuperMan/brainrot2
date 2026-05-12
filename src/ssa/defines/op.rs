@@ -27,7 +27,6 @@ impl SSAOp {
             SSAOp::In(_) => vec![],
             SSAOp::Out(val) | SSAOp::Hint(_, val) => vec![val],
             SSAOp::Assign(_, expr) => match expr {
-                SSAExpr::Phi(vals) => vals.iter().collect(),
                 SSAExpr::Add(v1, v2)
                 | SSAExpr::Sub(v1, v2)
                 | SSAExpr::Mul(v1, v2)
@@ -51,7 +50,6 @@ impl SSAOp {
             SSAOp::In(_) => vec![],
             SSAOp::Out(val) | SSAOp::Hint(_, val) => vec![val],
             SSAOp::Assign(_, expr) => match expr {
-                SSAExpr::Phi(vals) => vals.iter_mut().collect(),
                 SSAExpr::Add(v1, v2)
                 | SSAExpr::Sub(v1, v2)
                 | SSAExpr::Mul(v1, v2)
@@ -63,7 +61,6 @@ impl SSAOp {
 
 #[derive(Clone, Debug)]
 pub enum SSAExpr {
-    Phi(Vec<SSAValue>),
     Add(SSAValue, SSAValue),
     Sub(SSAValue, SSAValue),
     Mul(SSAValue, SSAValue),
@@ -73,16 +70,6 @@ pub enum SSAExpr {
 impl Display for SSAExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SSAExpr::Phi(vals) => {
-                write!(
-                    f,
-                    "φ({})",
-                    vals.iter()
-                        .map(|v| format!("{v}"))
-                        .collect::<Vec<String>>()
-                        .join(", ")
-                )
-            }
             SSAExpr::Add(v1, v2) => write!(f, "{v1} + {v2}"),
             SSAExpr::Sub(v1, v2) => write!(f, "{v1} - {v2}"),
             SSAExpr::Mul(v1, v2) => write!(f, "{v1} * {v2}"),
