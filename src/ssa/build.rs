@@ -119,6 +119,30 @@ pub fn build_ssa(cfg: &CFG) -> SSAProgram {
                 }
             }
         }
+        if let SSAEdge::Branch {
+            version:
+                SSAVersion {
+                    pointer,
+                    version: u32::MAX,
+                },
+            nonzero,
+            zero,
+            ir_at,
+        } = blocks[block_i].edge
+        {
+            let mut finder = Finder::new(&mut blocks, &mut ver);
+            let val = finder.find(block_i, pointer);
+            blocks[block_i].edge = match val {
+                SSAValue::Const(0) => SSAEdge::Jump(zero),
+                SSAValue::Const(_) => SSAEdge::Jump(nonzero),
+                SSAValue::Version(version) => SSAEdge::Branch {
+                    version,
+                    zero,
+                    nonzero,
+                    ir_at,
+                },
+            }
+        }
     }
 
     SSAProgram(blocks)
