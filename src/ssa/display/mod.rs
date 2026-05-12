@@ -60,6 +60,19 @@ impl Display for SSAEdge {
                     Ok(())
                 }
             }
+            SSAEdge::BranchLoad {
+                pointer,
+                zero,
+                nonzero,
+                ir_at,
+            } => {
+                write!(f, "branch load {pointer} ? n{nonzero} : n{zero}")?;
+                if let Some(ir) = ir_at {
+                    write!(f, " (ir at {ir})")
+                } else {
+                    Ok(())
+                }
+            }
             SSAEdge::End => write!(f, "end"),
         }
     }
@@ -91,6 +104,7 @@ impl Display for SSAValue {
         match self {
             SSAValue::Version(ver) => write!(f, "{ver}"),
             SSAValue::Const(val) => write!(f, "{val}"),
+            SSAValue::Load(ptr) => write!(f, "load ${ptr}"),
         }
     }
 }

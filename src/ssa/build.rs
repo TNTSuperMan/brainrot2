@@ -141,6 +141,12 @@ pub fn build_ssa(cfg: &CFG) -> SSAProgram {
                     nonzero,
                     ir_at,
                 },
+                SSAValue::Load(pointer) => SSAEdge::BranchLoad {
+                    pointer,
+                    zero,
+                    nonzero,
+                    ir_at,
+                },
             }
         }
     }

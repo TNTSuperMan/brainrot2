@@ -24,6 +24,12 @@ pub enum SSAEdge {
         nonzero: usize,
         ir_at: Option<usize>,
     },
+    BranchLoad {
+        pointer: i16,
+        zero: usize,
+        nonzero: usize,
+        ir_at: Option<usize>,
+    },
     End,
 }
 

@@ -8,4 +8,5 @@ pub struct SSAVersion {
 pub enum SSAValue {
     Version(SSAVersion),
     Const(u8),
+    Load(i16),
 }
