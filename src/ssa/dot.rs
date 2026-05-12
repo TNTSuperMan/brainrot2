@@ -1,54 +1,77 @@
-use crate::ssa::defines::{block::SSAEdge, program::SSAProgram};
+use crate::ssa::defines::{block::SSAEdge, op::SSAOp, program::SSAProgram, value::SSAValue};
 
 pub fn ssa_to_dot(ssa: &SSAProgram) -> String {
     let mut dot = String::new();
     dot.push_str("digraph {\n");
 
-    for (i, block) in ssa.0.iter().enumerate() {
+    let mut id = 0;
+
+    macro_rules! d {
+        ($($arg:tt)*) => {
+            dot.push_str(&format!($($arg)*))
+        };
+    }
+
+    for block in &ssa.0 {
         if !block.alive {
             continue;
         }
-        dot.push_str(&format!("    n{i} [\n        label=\"n{i}\\l"));
         for (ptr, (ver, args)) in &block.phis {
-            dot.push_str(&format!(
-                "${ptr}#{ver} = φ({})\\l",
-                args.iter()
-                    .map(|a| format!("{a}"))
-                    .collect::<Vec<String>>()
-                    .join(", ")
-            ));
+            let args_str = args
+                .iter()
+                .map(|a| format!("{a}"))
+                .collect::<Vec<String>>()
+                .join(", ");
+            d!("v{ver} [ shape=box label=\"${ptr}#{ver} = φ({args_str})\" ]\n");
+            for arg in args {
+                if let SSAValue::Version(v) = arg {
+                    d!("v{} -> v{}\n", v.version, ver);
+                }
+            }
         }
         for inst in &block.insts {
-            dot.push_str(&format!("{inst}\\l"));
+            match inst {
+                SSAOp::Out(val) => {
+                    if let SSAValue::Version(ver) = val {
+                        d!("o{id} [ shape=box label=\"stdout < {ver}\" ]\n");
+                        d!("v{} -> o{id}\n", ver.version);
+                        id += 1;
+                    }
+                }
+                SSAOp::In(ver) => {
+                    d!("v{} [ shape=box label=\"{ver} < stdin\" ]\n", ver.version);
+                }
+                SSAOp::Assign(ver, expr) => {
+                    d!("v{} [ shape=box label=\"{ver} = {expr}\" ]\n", ver.version);
+                    for read in inst.reads() {
+                        d!("v{} -> v{}\n", read.version, ver.version);
+                    }
+                }
+                SSAOp::Hint(ver, val) => {
+                    d!(
+                        "v{} [ shape=box label=\"{ver} = {val} (hint)\" ]\n",
+                        ver.version
+                    );
+                    if let SSAValue::Version(v) = val {
+                        d!("v{} -> v{}\n", v.version, ver.version);
+                    }
+                }
+            }
         }
-        if let Some(offset) = block.offset {
-            dot.push_str(&format!("offset {offset}\\l"));
+        if let SSAEdge::Branch {
+            version,
+            zero,
+            nonzero,
+            ..
+        } = &block.edge
+        {
+            d!("o{id} [ shape=box label=\"branch {} ? {nonzero} : {zero}\" ]\n");
+            d!("v{} -> o{id}\n", version.version);
+            id += 1;
         }
-        dot.push_str(&format!("{}\\l\"\n", block.edge));
-
-        if block.offset.is_some() {
-            dot.push_str(&format!("        shape=octagon\n"));
-        } else if block.insts.len() != 0 || block.offset.is_some() {
-            dot.push_str(&format!("        shape=box\n"));
-        }
-        dot.push_str(&format!("    ]\n"));
     }
 
-    for (i, node) in ssa.0.iter().enumerate() {
-        if !node.alive {
-            continue;
-        }
-        match node.edge {
-            SSAEdge::Branch { zero, nonzero, .. } | SSAEdge::BranchLoad { zero, nonzero, .. } => {
-                dot.push_str(&format!("    n{i} -> n{zero}\n    n{i} -> n{nonzero}\n"));
-            }
-            SSAEdge::Jump(addr) => {
-                dot.push_str(&format!("    n{i} -> n{addr}\n"));
-            }
-            SSAEdge::End => {}
-        }
-    }
+    dot.push('}');
 
-    dot.push_str("}\n");
     dot
 }

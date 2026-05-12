@@ -9,7 +9,7 @@ pub enum SSAOp {
 }
 
 impl SSAOp {
-    pub fn reads(&self) -> Vec<i16> {
+    pub fn reads(&self) -> Vec<SSAVersion> {
         let values = match self {
             SSAOp::In(_) => vec![],
             SSAOp::Out(val) | SSAOp::Hint(_, val) => vec![val],
@@ -22,12 +22,8 @@ impl SSAOp {
         };
         let mut reads = vec![];
         for value in values {
-            if let SSAValue::Version(SSAVersion {
-                pointer,
-                version: _,
-            }) = value
-            {
-                reads.push(*pointer);
+            if let SSAValue::Version(ver) = value {
+                reads.push(*ver);
             }
         }
         reads
