@@ -106,7 +106,6 @@ pub fn build_ssa(cfg: &CFG) -> SSAProgram {
                 let mut finder = Finder::new(&mut blocks, &mut ver);
                 let val = finder.find(block_i, inst_i, read);
                 vals.insert(read, val);
-                finder.solve();
             }
             for val in blocks[block_i].insts[inst_i].get_values_mut() {
                 if let SSAValue::Version(ver) = *val {

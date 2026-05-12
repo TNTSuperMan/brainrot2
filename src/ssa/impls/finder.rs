@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use crate::ssa::defines::{
     block::SSABlock,
     op::{SSAExpr, SSAOp},
@@ -9,8 +7,6 @@ use crate::ssa::defines::{
 pub struct Finder<'a, 'b> {
     blocks: &'a mut [SSABlock],
     last_version: &'b mut u32,
-    visited: HashSet<usize>,
-    unresolves: HashSet<(usize, i16)>,
 }
 
 impl<'a, 'b> Finder<'a, 'b> {
@@ -18,20 +14,9 @@ impl<'a, 'b> Finder<'a, 'b> {
         Self {
             blocks,
             last_version: ver,
-            visited: HashSet::new(),
-            unresolves: HashSet::new(),
         }
     }
     pub fn find(&mut self, block_i: usize, inst_i: usize, pointer: i16) -> SSAValue {
-        if self.visited.contains(&block_i) {
-            self.unresolves.insert((block_i, pointer));
-            return SSAValue::Version(SSAVersion {
-                pointer,
-                version: u32::MAX,
-            });
-        }
-        self.visited.insert(block_i);
-
         let insts = &self.blocks[block_i].insts[..inst_i];
 
         for (i, inst) in insts.iter().enumerate().rev() {
@@ -63,33 +48,31 @@ impl<'a, 'b> Finder<'a, 'b> {
             [] => SSAValue::Const(0),
             [p] => self.find(*p, self.blocks[*p].insts.len(), pointer),
             preds => {
-                let phi = SSAExpr::Phi(
-                    preds
-                        .iter()
-                        .map(|p| self.find(*p, self.blocks[*p].insts.len(), pointer))
-                        .collect(),
-                );
                 let version = SSAVersion {
                     pointer,
                     version: *self.last_version,
                 };
-
-                self.blocks[block_i]
-                    .insts
-                    .insert(0, SSAOp::Assign(version, phi));
-
                 *self.last_version += 1;
+
+                self.blocks[block_i].insts.insert(
+                    0,
+                    SSAOp::Assign(
+                        version,
+                        SSAExpr::Phi(
+                            (0..preds.len())
+                                .map(|_| {
+                                    SSAValue::Version(SSAVersion {
+                                        pointer,
+                                        version: u32::MAX,
+                                    })
+                                })
+                                .collect(),
+                        ),
+                    ),
+                );
 
                 SSAValue::Version(version)
             }
-        }
-    }
-    pub fn solve(&mut self) {
-        let unresolves = self.unresolves.clone();
-        self.unresolves = HashSet::new();
-        self.visited = HashSet::new();
-        for (b, i) in unresolves {
-            self.find(b, self.blocks[b].insts.len(), i);
         }
     }
 }
