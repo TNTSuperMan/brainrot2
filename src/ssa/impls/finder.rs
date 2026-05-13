@@ -1,6 +1,6 @@
 use crate::ssa::defines::{
     block::SSABlock,
-    op::{SSAExpr, SSAOp},
+    op::SSAOp,
     value::{SSAValue, SSAVersion},
 };
 
