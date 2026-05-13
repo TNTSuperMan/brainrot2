@@ -65,7 +65,7 @@ pub fn ssa_to_dot(ssa: &SSAProgram) -> String {
             ..
         } = &block.edge
         {
-            d!("o{id} [ shape=box label=\"branch {} ? {nonzero} : {zero}\" ]\n");
+            d!("o{id} [ shape=box label=\"branch {version} ? {nonzero} : {zero}\" ]\n");
             d!("v{} -> o{id}\n", version.version);
             id += 1;
         }
