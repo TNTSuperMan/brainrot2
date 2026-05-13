@@ -17,13 +17,13 @@ impl<'a, 'b> Finder<'a, 'b> {
         }
     }
     pub fn find(&mut self, block_i: usize, pointer: i16) -> SSAValue {
-        self.find_from(block_i, self.blocks[block_i].insts.len(), pointer)
+        if self.blocks[block_i].offset.is_some() {
+            SSAValue::Load(pointer)
+        } else {
+            self.find_from(block_i, self.blocks[block_i].insts.len(), pointer)
+        }
     }
     pub fn find_from(&mut self, block_i: usize, inst_i: usize, pointer: i16) -> SSAValue {
-        if self.blocks[block_i].offset.is_some() {
-            return SSAValue::Load(pointer);
-        }
-
         if let Some(value) = self.blocks[block_i].find_def_from(pointer, inst_i) {
             return value;
         }
