@@ -48,7 +48,7 @@ impl SSABlock {
                 }
                 SSAOp::Hint(ver, val) => {
                     if ver.pointer == pointer {
-                        return Some(if ver.version == u32::MAX {
+                        return Some(if let SSAValue::Version(SSAVersion { version: u32::MAX, .. }) = val {
                             SSAValue::Version(*ver)
                         } else {
                             *val
