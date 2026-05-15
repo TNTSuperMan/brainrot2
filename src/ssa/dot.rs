@@ -12,7 +12,7 @@ pub fn ssa_to_dot(ssa: &SSAProgram) -> String {
         };
     }
 
-    for block in &ssa.0 {
+    for (i, block) in ssa.0.iter().enumerate() {
         if !block.alive {
             continue;
         }
@@ -58,16 +58,21 @@ pub fn ssa_to_dot(ssa: &SSAProgram) -> String {
                 }
             }
         }
-        if let SSAEdge::Branch {
-            version,
-            zero,
-            nonzero,
-            ..
-        } = &block.edge
-        {
-            d!("o{id} [ shape=box label=\"branch {version} ? {nonzero} : {zero}\" ]\n");
-            d!("v{} -> o{id}\n", version.version);
-            id += 1;
+        d!("e{i} [ shape=cds label=\"{}\" ]\n", block.edge);
+        match &block.edge {
+            SSAEdge::Jump(to) => {
+                d!("e{i} -> e{to}\n");
+            }
+            SSAEdge::Branch { version, zero, nonzero, .. } => {
+                d!("v{} -> e{i}\n", version.version);
+                d!("e{i} -> e{nonzero}\n");
+                d!("e{i} -> e{zero}\n");
+            }
+            SSAEdge::BranchLoad { zero, nonzero, .. } => {
+                d!("e{i} -> e{nonzero}\n");
+                d!("e{i} -> e{zero}\n");
+            }
+            SSAEdge::End => {}
         }
     }
 
