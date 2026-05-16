@@ -151,5 +151,23 @@ pub fn build_ssa(cfg: &CFG) -> SSAProgram {
         }
     }
 
+    for block in &mut blocks {
+        let mut hints = vec![];
+        for (ptr, (ver, args)) in &block.phis {
+            if args.iter().all(|arg| &args[0] == arg) {
+                hints.push((*ptr, *ver, args[0]));
+            }
+        }
+        for (ptr, ..) in &hints {
+            block.phis.remove(ptr);
+        }
+        let mut hint_insts: Vec<SSAOp> = hints.into_iter().map(|(ptr, ver, arg)| SSAOp::Hint(
+            SSAVersion { pointer: ptr, version: ver },
+            arg
+        )).collect();
+        hint_insts.extend(std::mem::take(&mut block.insts).into_iter());
+        block.insts = hint_insts;
+    }
+
     SSAProgram(blocks)
 }
