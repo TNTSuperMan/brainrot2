@@ -26,4 +26,5 @@ pub enum IROp {
     JumpZero(usize),
     JumpNotZero(usize),
     JumpNotZeroWithOffset(i16, usize),
+    FindZero(i16),
 }

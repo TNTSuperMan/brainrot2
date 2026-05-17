@@ -64,6 +64,11 @@ pub enum CFGEdge {
         nonzero: usize,
         ir_at: usize,
     },
+    FindZeroAndJump {
+        pointer: i16,
+        delta: i16,
+        jumpto: usize,
+    },
     End,
 }
 impl Debug for CFGEdge {
@@ -82,6 +87,7 @@ impl Debug for CFGEdge {
                 nonzero,
                 ir_at,
             } => write!(f, "jump ${pointer} ? n{nonzero} : n{zero} (ir at {ir_at})"),
+            CFGEdge::FindZeroAndJump { pointer, delta, jumpto } => write!(f, "findzero {pointer} {delta}, jump {jumpto}"),
         }
     }
 }
@@ -91,6 +97,7 @@ impl CFGEdge {
             Self::Jump(to) => vec![*to],
             Self::Branch { pointer: _, zero, nonzero } |
             Self::BranchWithIRAt { pointer: _, zero, nonzero, ir_at: _ } => vec![*zero, *nonzero],
+            Self::FindZeroAndJump { jumpto, .. } => vec![*jumpto],
             Self::End => vec![],
         }
     }

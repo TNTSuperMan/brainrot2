@@ -70,12 +70,21 @@ impl IR {
 
                     if start_ptr != end_ptr {
                         pointer = start_ptr;
-                        insts.push(IR {
-                            pointer,
-                            opcode: IROp::JumpNotZeroWithOffset(end_ptr - start_ptr, start_at + 1),
-                            loc,
-                        });
-                        insts[start_at].opcode = IROp::JumpZero(insts.len());
+                        if children.is_empty() {
+                            insts.truncate(start_at);
+                            insts.push(IR {
+                                pointer,
+                                opcode: IROp::FindZero(end_ptr - start_ptr),
+                                loc,
+                            });
+                        } else {
+                            insts.push(IR {
+                                pointer,
+                                opcode: IROp::JumpNotZeroWithOffset(end_ptr - start_ptr, start_at + 1),
+                                loc,
+                            });
+                            insts[start_at].opcode = IROp::JumpZero(insts.len());
+                        }
                     } else {
                         if children.len() == 0 {
                             insts.pop();

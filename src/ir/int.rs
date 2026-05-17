@@ -60,6 +60,11 @@ pub fn exec_from_ir(ir: &[IR], offset: u8) {
                     continue;
                 }
             }
+            IROp::FindZero(delta) => {
+                while memory[(pointer + offset) as usize] != 0 {
+                    offset += delta;
+                }
+            }
         }
         pc += 1;
     }

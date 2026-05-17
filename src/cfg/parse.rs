@@ -12,7 +12,7 @@ pub fn ir_to_cfgir(ir: &IR) -> Option<CFGOp> {
         IROp::MulAdd(p, v) => CFGOp::Assign(ir.pointer, CFGExpr::MulAdd(CFGValue::Load(ir.pointer), CFGValue::Load(p), v)),
         IROp::In => CFGOp::Assign(ir.pointer, CFGExpr::In),
         IROp::Out => CFGOp::Out(CFGValue::Load(ir.pointer)),
-        IROp::JumpZero(..) | IROp::JumpNotZero(..) | IROp::JumpNotZeroWithOffset(..) => {
+        IROp::JumpZero(..) | IROp::JumpNotZero(..) | IROp::JumpNotZeroWithOffset(..) | IROp::FindZero(..) => {
             return None;
         }
     })
@@ -136,6 +136,20 @@ impl CFG {
                     }
                     node_insts = vec![];
                 }
+                IROp::FindZero(delta) => {
+                    nodes.push(CFGBlock {
+                        insts: node_insts,
+                        edge: CFGEdge::FindZeroAndJump {
+                            pointer: ir.pointer,
+                            delta,
+                            jumpto: i + 1,
+                        },
+                        predecessor: vec![],
+                        offset: None,
+                        alive: true,
+                    });
+                    node_insts = vec![];
+                }
                 _ => node_insts.push(ir_to_cfgir(ir).unwrap()),
             }
         }
@@ -166,30 +180,26 @@ impl CFG {
         for (i, node) in nodes.iter().enumerate() {
             idx_map.insert(idx_pc, i);
             idx_pc += node.insts.len();
-            if let CFGEdge::Branch { .. } | CFGEdge::BranchWithIRAt { .. } = node.edge {
+            if let CFGEdge::Branch { .. } | CFGEdge::BranchWithIRAt { .. } | CFGEdge::FindZeroAndJump { .. } = node.edge {
                 idx_pc += 1;
             }
         }
         for i in 0..nodes.len() {
-            if let CFGEdge::Branch {
-                pointer: _,
-                zero,
-                nonzero,
-            } | CFGEdge::BranchWithIRAt {
-                pointer: _,
-                zero,
-                nonzero,
-                ir_at: _,
-            } = &mut nodes[i].edge
-            {
-                *zero = *idx_map.get(zero).unwrap();
-                *nonzero = *idx_map.get(nonzero).unwrap();
+            if let CFGEdge::Jump(addr) = &mut nodes[i].edge {
+                *addr = i + 1;
+            } else {
+                let addrs: Vec<&mut usize> = match &mut nodes[i].edge {
+                    CFGEdge::Jump(..) => unreachable!(),
+                    CFGEdge::Branch { zero, nonzero, .. } |
+                    CFGEdge::BranchWithIRAt { zero, nonzero, .. } => vec![zero, nonzero],
+                    CFGEdge::FindZeroAndJump { jumpto, .. } => vec![jumpto],
+                    CFGEdge::End => vec![],
+                };
+                for addr in addrs {
+                    *addr = *idx_map.get(addr).unwrap();
+                }
             }
             match nodes[i].edge {
-                CFGEdge::Jump(usize::MAX) => {
-                    nodes[i].edge = CFGEdge::Jump(i + 1);
-                    nodes[i + 1].predecessor.push(i);
-                }
                 CFGEdge::Jump(addr) => {
                     nodes[addr].predecessor.push(i);
                 }
@@ -205,6 +215,9 @@ impl CFG {
                 } => {
                     nodes[zero].predecessor.push(i);
                     nodes[nonzero].predecessor.push(i);
+                }
+                CFGEdge::FindZeroAndJump { jumpto, .. } => {
+                    nodes[jumpto].predecessor.push(i);
                 }
                 CFGEdge::End => {}
             }

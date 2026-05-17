@@ -79,6 +79,12 @@ pub fn exec_from_cfg(cfg: &CFG, offset: u8) {
                     node_i = *nonzero;
                 }
             }
+            CFGEdge::FindZeroAndJump { pointer, delta, jumpto } => {
+                while mem.get(&CFGValue::Load(*pointer)) != 0 {
+                    mem.offset += delta;
+                }
+                node_i = *jumpto;
+            }
             CFGEdge::End => {
                 return;
             }

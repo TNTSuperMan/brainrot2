@@ -22,6 +22,9 @@ pub fn compute_block_order(cfg: &CFG) -> Vec<usize> {
                 queue.push(zero);
                 queue.push(nonzero);
             }
+            CFGEdge::FindZeroAndJump { jumpto, .. } => {
+                queue.push(jumpto);
+            }
             CFGEdge::End => {}
         }
     }

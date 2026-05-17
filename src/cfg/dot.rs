@@ -37,7 +37,7 @@ pub fn cfg_to_dot(cfg: &CFG) -> String {
             } => {
                 dot.push_str(&format!("    n{i} -> n{zero}\n    n{i} -> n{nonzero}\n"));
             }
-            CFGEdge::Jump(addr) => {
+            CFGEdge::Jump(addr) | CFGEdge::FindZeroAndJump { jumpto: addr, .. } => {
                 dot.push_str(&format!("    n{i} -> n{addr}\n"));
             }
             CFGEdge::End => {}

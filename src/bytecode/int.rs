@@ -120,6 +120,11 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: i1
                     opt = true;
                 }
             }
+            Bytecode::FindZero(ptr, delta) => {
+                while mem[ptr] != 0 {
+                    mem.offset += *delta as isize;
+                }
+            }
             Bytecode::End => {
                 return exec_counts;
             }

@@ -61,6 +61,11 @@ pub fn exec_ir_with_poll(ir: &[IR], memory: &mut [u8; TAPE_LENGTH], offset: &mut
                     continue;
                 }
             }
+            IROp::FindZero(delta) => {
+                while memory[(pointer + *offset) as usize] != 0 {
+                    *offset += delta;
+                }
+            }
         }
         pc += 1;
     }

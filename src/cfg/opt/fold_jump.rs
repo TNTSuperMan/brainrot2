@@ -27,6 +27,7 @@ impl CFG {
                                 self.update_edge(block_i, CFGEdge::Branch { pointer, zero, nonzero })
                             }
                         }
+                        CFGEdge::FindZeroAndJump { .. } => {}
                         CFGEdge::End => {}
                     }
                 }
@@ -39,8 +40,16 @@ impl CFG {
                                 self.update_edge(block_i, CFGEdge::Branch { pointer, zero, nonzero })
                             }
                     }
+                        CFGEdge::FindZeroAndJump { .. } => {}
                         CFGEdge::End => {}
                     }
+                }
+            }
+            CFGEdge::FindZeroAndJump { pointer, delta, jumpto } => {
+                if let Some(CFGEdge::Jump(to)) = self.internal_try_fold_info(jumpto) {
+                    self.update_edge(block_i, CFGEdge::FindZeroAndJump {
+                        pointer, delta, jumpto: to,
+                    });
                 }
             }
             CFGEdge::End => {}

@@ -27,6 +27,7 @@ pub enum Bytecode {
     JumpIfNotZero(i16, i32),
     Offset(i16),
     OffsetWithRangeCheck(i16, OffsetRange),
+    FindZero(i16, i16),
     End,
 
     OffsetRangeJumpZero {
@@ -73,6 +74,7 @@ impl Display for Bytecode {
             Self::JumpIfNotZero(p1, a2) => write!(f, "jrnz ${p1}, {a2}"),
             Self::Offset(o1) => write!(f, "offset {o1}"),
             Self::OffsetWithRangeCheck(o1, range) => write!(f, "offset {o1}, rangecheck {range:?}"),
+            Self::FindZero(ptr, delta) => write!(f, "findzero {ptr} {delta}"),
             Self::End => write!(f, "end"),
 
             Self::OffsetRangeJumpZero { offset, range, ptr, addr: jmp } => write!(f, "offset {offset}, rangecheck {range:?}, jrz ${ptr} {jmp}"),
