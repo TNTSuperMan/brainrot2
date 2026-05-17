@@ -27,26 +27,13 @@ pub enum Bytecode {
     JumpIfNotZero(i16, i32),
     Offset(i16),
     OffsetWithRangeCheck(i16, OffsetRange),
+    RangeCheck(OffsetRange),
     FindZero(i16, i16),
-    FindZeroWithRangeCheck(i16, i16, OffsetRange),
     End,
 
-    OffsetRangeJumpZero {
-        offset: i16,
-        range: OffsetRange,
-        ptr: i16,
-        addr: i32,
-    },
-    OffsetRangeJumpNotZero {
-        offset: i16,
-        range: OffsetRange,
-        ptr: i16,
-        addr: i32,
-    },
     SetCSetC(i16, u8, i16, u8),
     AddAdd(i16, u8, i16, u8),
     AddSetC(i16, u8, i16, u8),
-    AddLSetC(i16, i16, i16, i16, u8),
 }
 
 impl Display for Bytecode {
@@ -75,31 +62,13 @@ impl Display for Bytecode {
             Self::JumpIfNotZero(p1, a2) => write!(f, "jrnz ${p1}, {a2}"),
             Self::Offset(o1) => write!(f, "offset {o1}"),
             Self::OffsetWithRangeCheck(o1, range) => write!(f, "offset {o1}, rangecheck {range:?}"),
+            Self::RangeCheck(range) => write!(f, "rangecheck {range:?}"),
             Self::FindZero(ptr, delta) => write!(f, "findzero {ptr} {delta}"),
-            Self::FindZeroWithRangeCheck(ptr, delta, range) => {
-                write!(f, "findzero {ptr} {delta}, rangecheck {range:?}")
-            }
             Self::End => write!(f, "end"),
 
-            Self::OffsetRangeJumpZero {
-                offset,
-                range,
-                ptr,
-                addr: jmp,
-            } => write!(f, "offset {offset}, rangecheck {range:?}, jrz ${ptr} {jmp}"),
-            Self::OffsetRangeJumpNotZero {
-                offset,
-                range,
-                ptr,
-                addr: jmp,
-            } => write!(
-                f,
-                "offset {offset}, rangecheck {range:?}, jrnz ${ptr} {jmp}"
-            ),
             Self::SetCSetC(p1, c1, p2, c2) => write!(f, "${p1} = {c1}, ${p2} = {c2}"),
             Self::AddAdd(p1, c1, p2, c2) => write!(f, "${p1} += {c1}, ${p2} += {c2}"),
             Self::AddSetC(p1, c1, p2, c2) => write!(f, "${p1} += {c1}, ${p2} = {c2}"),
-            Self::AddLSetC(p1, p2, p3, p4, c5) => write!(f, "${p1} = ${p2} + ${p3}, ${p4} = {c5}"),
         }
     }
 }

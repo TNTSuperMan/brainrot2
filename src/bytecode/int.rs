@@ -132,65 +132,24 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(
                     opt = true;
                 }
             }
-            Bytecode::FindZero(ptr, delta) => {
-                while mem[ptr] != 0 {
-                    mem.offset += *delta as isize;
-                }
-            }
-            Bytecode::FindZeroWithRangeCheck(ptr, delta, range) => {
-                while mem[ptr] != 0 {
-                    mem.offset += *delta as isize;
-                }
+            Bytecode::RangeCheck(range) => {
                 if opt && !range.contains(mem.offset as i16) {
                     log!("deopt {pc}");
                     opt = false;
                 } else if !opt {
                     log!("opt {pc}");
                     opt = true;
+                }
+            }
+            Bytecode::FindZero(ptr, delta) => {
+                while mem[ptr] != 0 {
+                    mem.offset += *delta as isize;
                 }
             }
             Bytecode::End => {
                 return exec_counts;
             }
 
-            Bytecode::OffsetRangeJumpZero {
-                offset,
-                range,
-                ptr,
-                addr: jmp,
-            } => {
-                mem.offset += *offset as isize;
-                if opt && !range.contains(mem.offset as i16) {
-                    log!("deopt {pc}");
-                    opt = false;
-                } else if !opt {
-                    log!("opt {pc}");
-                    opt = true;
-                }
-                if mem[ptr] == 0 {
-                    pc = pc.wrapping_add_signed(*jmp as isize);
-                    continue;
-                }
-            }
-            Bytecode::OffsetRangeJumpNotZero {
-                offset,
-                range,
-                ptr,
-                addr: jmp,
-            } => {
-                mem.offset += *offset as isize;
-                if opt && !range.contains(mem.offset as i16) {
-                    log!("deopt {pc}");
-                    opt = false;
-                } else if !opt {
-                    log!("opt {pc}");
-                    opt = true;
-                }
-                if mem[ptr] != 0 {
-                    pc = pc.wrapping_add_signed(*jmp as isize);
-                    continue;
-                }
-            }
             Bytecode::SetCSetC(p1, c1, p2, c2) => {
                 mem[p1] = *c1;
                 mem[p2] = *c2;
@@ -202,10 +161,6 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(
             Bytecode::AddSetC(p1, c1, p2, c2) => {
                 mem[p1] = mem[p1].wrapping_add(*c1);
                 mem[p2] = *c2;
-            }
-            Bytecode::AddLSetC(p1, p2, p3, p4, c5) => {
-                mem[p1] = mem[p2].wrapping_add(mem[p3]);
-                mem[p4] = *c5;
             }
         }
 

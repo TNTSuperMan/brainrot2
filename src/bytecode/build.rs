@@ -109,14 +109,6 @@ fn cfgops_to_bytecodes(insts: &[CFGOp]) -> Result<Vec<Bytecode>, TryFromIntError
                     continue;
                 }
             }
-            (Bytecode::AddL(p1, p2, p3), Bytecode::SetC(p4, c5))
-            | (Bytecode::SetC(p4, c5), Bytecode::AddL(p1, p2, p3)) => {
-                if p1 != p4 {
-                    codes.push(Bytecode::AddLSetC(p1, p2, p3, p4, c5));
-                    i += 2;
-                    continue;
-                }
-            }
             _ => {}
         }
         codes.push(try_into_bytecode(&insts[i])?);
@@ -145,39 +137,21 @@ pub fn build_bytecode(
         let block = &cfg.0[*b];
         bytecodes.append(&mut cfgops_to_bytecodes(&block.insts)?);
 
-        if let Some(offset) = block.offset {
-            let offset = offset;
-            if let Some(&range) = offset_ranges.get(&b) {
-                if let CFGEdge::Branch {
-                    pointer,
-                    zero,
-                    nonzero,
-                } = &block.edge
-                {
-                    if order.get(i + 1).copied() == Some(*nonzero) {
-                        bytecodes.push(Bytecode::OffsetRangeJumpZero {
-                            offset,
-                            range,
-                            ptr: (*pointer),
-                            addr: (*zero).try_into()?,
-                        });
-
-                        continue;
-                    } else if order.get(i + 1).copied() == Some(*zero) {
-                        bytecodes.push(Bytecode::OffsetRangeJumpNotZero {
-                            offset,
-                            range,
-                            ptr: (*pointer),
-                            addr: (*nonzero).try_into()?,
-                        });
-
-                        continue;
+        macro_rules! offset_range {
+            () => {
+                match (&block.offset, offset_ranges.get(&b)) {
+                    (None, None) => {}
+                    (Some(offset), None) => {
+                        bytecodes.push(Bytecode::Offset(*offset));
+                    }
+                    (None, Some(&range)) => {
+                        bytecodes.push(Bytecode::RangeCheck(range));
+                    }
+                    (Some(offset), Some(&range)) => {
+                        bytecodes.push(Bytecode::OffsetWithRangeCheck(*offset, range));
                     }
                 }
-                bytecodes.push(Bytecode::OffsetWithRangeCheck(offset, range));
-            } else {
-                bytecodes.push(Bytecode::Offset(offset));
-            }
+            };
         }
 
         if let CFGEdge::BranchWithIRAt { ir_at, .. } = &block.edge {
@@ -186,6 +160,7 @@ pub fn build_bytecode(
 
         match &block.edge {
             CFGEdge::Jump(to) => {
+                offset_range!();
                 if order.get(i + 1).copied() != Some(*to) {
                     bytecodes.push(Bytecode::Jump((*to).try_into()?));
                 }
@@ -201,6 +176,7 @@ pub fn build_bytecode(
                 nonzero,
                 ir_at: _,
             } => {
+                offset_range!();
                 if order.get(i + 1).copied() == Some(*nonzero) {
                     bytecodes.push(Bytecode::JumpIfZero(*pointer, (*zero).try_into()?));
                 } else if order.get(i + 1).copied() == Some(*zero) {
@@ -215,10 +191,14 @@ pub fn build_bytecode(
                 delta,
                 jumpto,
             } => {
-                if let Some(&range) = offset_ranges.get(&i) {
-                    bytecodes.push(Bytecode::FindZeroWithRangeCheck(*pointer, *delta, range));
-                } else {
-                    bytecodes.push(Bytecode::FindZero(*pointer, *delta));
+                if let Some(offset) = &block.offset {
+                    bytecodes.push(Bytecode::Offset(*offset));
+                }
+
+                bytecodes.push(Bytecode::FindZero(*pointer, *delta));
+
+                if let Some(&range) = offset_ranges.get(&b) {
+                    bytecodes.push(Bytecode::RangeCheck(range));
                 }
 
                 if order.get(i + 1).copied() != Some(*jumpto) {
@@ -235,9 +215,7 @@ pub fn build_bytecode(
         match code {
             Bytecode::Jump(addr)
             | Bytecode::JumpIfZero(_, addr)
-            | Bytecode::JumpIfNotZero(_, addr)
-            | Bytecode::OffsetRangeJumpZero { addr, .. }
-            | Bytecode::OffsetRangeJumpNotZero { addr, .. } => {
+            | Bytecode::JumpIfNotZero(_, addr) => {
                 *addr = jumptable[*addr as usize] - (i as i32);
             }
             _ => {}
