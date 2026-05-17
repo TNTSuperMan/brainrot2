@@ -36,10 +36,10 @@ impl<'a> Program<'a> {
         let a4 = self.program[self.counter+3] as u32;
         self.counter += 4;
         
-        a4 |
-        (a3 << 8) |
-        (a2 << 16) |
-        (a1 << 24)
+        a1 |
+        (a2 << 8) |
+        (a3 << 16) |
+        (a4 << 24)
     }
 
     #[inline(always)]
