@@ -1,14 +1,11 @@
-use std::{collections::HashMap, env::args, fs, process::ExitCode};
+use std::{collections::HashMap, env::args, fs, io::{Write, stdout}, process::ExitCode};
 
 use crate::{
-    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode},
-    cfg::{cfg::CFG, dot::cfg_to_dot, range::OffsetRange},
-    exec::exec,
-    ir::ir::IR,
-    log::start,
+    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode}, bytecode2::build::build_bytecode2, cfg::{cfg::CFG, dot::cfg_to_dot, range::OffsetRange}, exec::exec, ir::ir::IR, log::start
 };
 
 mod bytecode;
+mod bytecode2;
 mod cfg;
 mod exec;
 mod ir;
@@ -95,6 +92,13 @@ fn main() -> ExitCode {
             "dump_offsetrange" => {
                 let (_, offset_ranges, ..) = gen_bytecode(&code);
                 println!("{:?}", offset_ranges);
+            }
+            "dump_bytecode2" => {
+                let (ir, mul_offset) = IR::parse(&code).unwrap();
+                let mut cfg = CFG::new(&ir);
+                cfg.optimize_heavy();
+                let offset_ranges = cfg.compute_offset_ranges();
+                stdout().write(&build_bytecode2(&cfg, &offset_ranges).unwrap()).unwrap();
             }
             "run" => {
                 exec(&code).unwrap();

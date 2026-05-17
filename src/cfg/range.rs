@@ -12,8 +12,8 @@ use crate::{
 
 #[derive(Clone, Copy)]
 pub struct OffsetRange {
-    start: i16,
-    end: u16,
+    pub start: i16,
+    pub end: u16,
 }
 impl Debug for OffsetRange {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
