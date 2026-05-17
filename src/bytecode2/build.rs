@@ -48,6 +48,13 @@ pub fn build_bytecode2(cfg: &CFG, ranges: &HashMap<usize, OffsetRange>) -> Resul
                         continue;
                     }
                 }
+                bytecodes.push(op::OP_OFFSETWITHRANGECHECK);
+                bytecodes.append(&mut offset.to_le_bytes().to_vec());
+                bytecodes.append(&mut range.start.to_le_bytes().to_vec());
+                bytecodes.append(&mut range.end.to_le_bytes().to_vec());
+            } else {
+                bytecodes.push(op::OP_OFFSET);
+                bytecodes.append(&mut offset.to_le_bytes().to_vec());
             }
         }
 
