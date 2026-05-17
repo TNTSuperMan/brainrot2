@@ -1,7 +1,7 @@
 use std::{collections::HashMap, env::args, fs, io::{Write, stdout}, process::ExitCode};
 
 use crate::{
-    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode}, bytecode2::build::build_bytecode2, cfg::{cfg::CFG, dot::cfg_to_dot, range::OffsetRange}, exec::exec, ir::ir::IR, log::start
+    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode}, bytecode2::{build::build_bytecode2, int::interpret_bytecode, structs::{Memory, Program}}, cfg::{cfg::CFG, dot::cfg_to_dot, range::OffsetRange}, exec::exec, ir::ir::IR, log::start
 };
 
 mod bytecode;
@@ -99,6 +99,14 @@ fn main() -> ExitCode {
                 cfg.optimize_heavy();
                 let offset_ranges = cfg.compute_offset_ranges();
                 stdout().write(&build_bytecode2(&cfg, &offset_ranges).unwrap()).unwrap();
+            }
+            "exec_bytecode2" => {
+                let (ir, mul_offset) = IR::parse(&code).unwrap();
+                let mut cfg = CFG::new(&ir);
+                cfg.optimize_heavy();
+                let offset_ranges = cfg.compute_offset_ranges();
+                let bytecode = build_bytecode2(&cfg, &offset_ranges).unwrap();
+                interpret_bytecode(&mut Program::new(&bytecode, 0), &mut Memory::new(&mut [0; 65536], mul_offset as isize));
             }
             "run" => {
                 exec(&code).unwrap();
