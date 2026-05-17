@@ -59,7 +59,7 @@ impl CFG {
                     range = extend_range(range, write);
                 }
             }
-            if block.offset.is_some() {
+            if block.offset.is_some() || matches!(block.edge, CFGEdge::FindZeroAndJump { .. }) {
                 continue;
             }
             if let CFGEdge::Branch { pointer, zero: _, nonzero: _ } = &block.edge {
