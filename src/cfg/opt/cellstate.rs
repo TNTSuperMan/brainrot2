@@ -31,6 +31,9 @@ impl CFG {
         if block.offset.is_some() {
             return fallback;
         }
+        if matches!(block.edge, CFGEdge::FindZeroAndJump { .. }) {
+            return fallback;
+        }
 
         let last_assign = block.insts.iter().rev().find(|&inst| inst.writes() == Some(pointer));
         if let Some(last_assign) = last_assign {
