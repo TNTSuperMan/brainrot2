@@ -164,7 +164,11 @@ pub fn build_bytecode(cfg: &CFG, offset_ranges: &HashMap<usize, OffsetRange>) ->
                 }
             }
             CFGEdge::FindZeroAndJump { pointer, delta, jumpto } => {
-                bytecodes.push(Bytecode::FindZero(*pointer, *delta));
+                if let Some(&range) = offset_ranges.get(&i) {
+                    bytecodes.push(Bytecode::FindZeroWithRangeCheck(*pointer, *delta, range));
+                } else {
+                    bytecodes.push(Bytecode::FindZero(*pointer, *delta));
+                }
 
                 if order.get(i + 1).copied() != Some(*jumpto) {
                     bytecodes.push(Bytecode::Jump((*jumpto).try_into()?));

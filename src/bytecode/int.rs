@@ -125,6 +125,18 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: i1
                     mem.offset += *delta as isize;
                 }
             }
+            Bytecode::FindZeroWithRangeCheck(ptr, delta, range) => {
+                while mem[ptr] != 0 {
+                    mem.offset += *delta as isize;
+                }
+                if opt && !range.contains(mem.offset as i16) {
+                    log!("deopt {pc}");
+                    opt = false;
+                } else if !opt {
+                    log!("opt {pc}");
+                    opt = true;
+                }
+            }
             Bytecode::End => {
                 return exec_counts;
             }

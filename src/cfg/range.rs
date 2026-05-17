@@ -106,7 +106,7 @@ impl CFG {
                 if let Some(r) = self.compute_access_range(0) {
                     map.insert(0, OffsetRange::from(r));
                 }
-            } else if block.offset.is_some() {
+            } else if block.offset.is_some() || matches!(block.edge, CFGEdge::FindZeroAndJump { .. }) {
                 if let Some(r) = self.compute_access_range_from_edge(b) {
                     map.insert(b, OffsetRange::from(r));
                 }
