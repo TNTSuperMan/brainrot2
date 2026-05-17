@@ -1,4 +1,4 @@
-pub mod bytecode;
 pub mod build;
-pub mod order;
+pub mod bytecode;
 pub mod int;
+pub mod order;

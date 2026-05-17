@@ -15,7 +15,7 @@ pub enum Bytecode {
     MulC(i16, i16, u8),
     MulL(i16, i16, i16),
 
-    MulAddC(i16, u8,  i16, u8),
+    MulAddC(i16, u8, i16, u8),
     MulAddL(i16, i16, i16, u8),
 
     In(i16),
@@ -43,9 +43,9 @@ pub enum Bytecode {
         ptr: i16,
         addr: i32,
     },
-    SetCSetC(i16, u8,       i16, u8),
-    AddAdd  (i16, u8,       i16, u8),
-    AddSetC (i16, u8,       i16, u8),
+    SetCSetC(i16, u8, i16, u8),
+    AddAdd(i16, u8, i16, u8),
+    AddSetC(i16, u8, i16, u8),
     AddLSetC(i16, i16, i16, i16, u8),
 }
 
@@ -67,7 +67,7 @@ impl Display for Bytecode {
             Self::MulAddL(p1, p2, p3, c4) => write!(f, "${p1} = ${p2} + ${p3} * {c4}"),
 
             Self::In(p1) => write!(f, "${p1} = stdin"),
-            
+
             Self::Out(p1) => write!(f, "stdout < ${p1}"),
             Self::OutConst(v1) => write!(f, "stdout < {v1}"),
             Self::Jump(a1) => write!(f, "jr {a1}"),
@@ -76,11 +76,26 @@ impl Display for Bytecode {
             Self::Offset(o1) => write!(f, "offset {o1}"),
             Self::OffsetWithRangeCheck(o1, range) => write!(f, "offset {o1}, rangecheck {range:?}"),
             Self::FindZero(ptr, delta) => write!(f, "findzero {ptr} {delta}"),
-            Self::FindZeroWithRangeCheck(ptr, delta, range) => write!(f, "findzero {ptr} {delta}, rangecheck {range:?}"),
+            Self::FindZeroWithRangeCheck(ptr, delta, range) => {
+                write!(f, "findzero {ptr} {delta}, rangecheck {range:?}")
+            }
             Self::End => write!(f, "end"),
 
-            Self::OffsetRangeJumpZero { offset, range, ptr, addr: jmp } => write!(f, "offset {offset}, rangecheck {range:?}, jrz ${ptr} {jmp}"),
-            Self::OffsetRangeJumpNotZero { offset,range, ptr, addr: jmp } => write!(f, "offset {offset}, rangecheck {range:?}, jrnz ${ptr} {jmp}"),
+            Self::OffsetRangeJumpZero {
+                offset,
+                range,
+                ptr,
+                addr: jmp,
+            } => write!(f, "offset {offset}, rangecheck {range:?}, jrz ${ptr} {jmp}"),
+            Self::OffsetRangeJumpNotZero {
+                offset,
+                range,
+                ptr,
+                addr: jmp,
+            } => write!(
+                f,
+                "offset {offset}, rangecheck {range:?}, jrnz ${ptr} {jmp}"
+            ),
             Self::SetCSetC(p1, c1, p2, c2) => write!(f, "${p1} = {c1}, ${p2} = {c2}"),
             Self::AddAdd(p1, c1, p2, c2) => write!(f, "${p1} += {c1}, ${p2} += {c2}"),
             Self::AddSetC(p1, c1, p2, c2) => write!(f, "${p1} += {c1}, ${p2} = {c2}"),

@@ -87,7 +87,11 @@ impl Debug for CFGEdge {
                 nonzero,
                 ir_at,
             } => write!(f, "jump ${pointer} ? n{nonzero} : n{zero} (ir at {ir_at})"),
-            CFGEdge::FindZeroAndJump { pointer, delta, jumpto } => write!(f, "findzero {pointer} {delta}, jump {jumpto}"),
+            CFGEdge::FindZeroAndJump {
+                pointer,
+                delta,
+                jumpto,
+            } => write!(f, "findzero {pointer} {delta}, jump {jumpto}"),
         }
     }
 }
@@ -95,8 +99,17 @@ impl CFGEdge {
     pub fn successor(&self) -> Vec<usize> {
         match self {
             Self::Jump(to) => vec![*to],
-            Self::Branch { pointer: _, zero, nonzero } |
-            Self::BranchWithIRAt { pointer: _, zero, nonzero, ir_at: _ } => vec![*zero, *nonzero],
+            Self::Branch {
+                pointer: _,
+                zero,
+                nonzero,
+            }
+            | Self::BranchWithIRAt {
+                pointer: _,
+                zero,
+                nonzero,
+                ir_at: _,
+            } => vec![*zero, *nonzero],
             Self::FindZeroAndJump { jumpto, .. } => vec![*jumpto],
             Self::End => vec![],
         }
@@ -106,7 +119,7 @@ impl CFGEdge {
 #[derive(Clone, PartialEq, Eq)]
 pub enum CFGOp {
     Out(CFGValue),
-    Assign(i16, CFGExpr)
+    Assign(i16, CFGExpr),
 }
 impl Debug for CFGOp {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

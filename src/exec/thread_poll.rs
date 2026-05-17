@@ -1,6 +1,19 @@
-use std::{collections::HashMap, num::TryFromIntError, sync::{Arc, mpsc::{self, Receiver}}, thread::{self, JoinHandle}};
+use std::{
+    collections::HashMap,
+    num::TryFromIntError,
+    sync::{
+        Arc,
+        mpsc::{self, Receiver},
+    },
+    thread::{self, JoinHandle},
+};
 
-use crate::{bytecode::{build::build_bytecode, bytecode::Bytecode}, cfg::cfg::CFG, ir::ir::IR, timeline};
+use crate::{
+    bytecode::{build::build_bytecode, bytecode::Bytecode},
+    cfg::cfg::CFG,
+    ir::ir::IR,
+    timeline,
+};
 
 pub struct BytecodeComputePoller {
     join_handle: JoinHandle<()>,
@@ -10,7 +23,6 @@ pub struct BytecodeComputePoller {
 }
 impl BytecodeComputePoller {
     pub fn init(ir_arc: Arc<Vec<IR>>) -> Self {
-        
         let (tx, rx) = mpsc::channel();
 
         let join_handle = thread::spawn(move || {
@@ -24,7 +36,7 @@ impl BytecodeComputePoller {
 
             let offset_ranges = cfg.compute_offset_ranges();
             timeline!("range computed, building bytecode");
-            
+
             let bytecode_result = build_bytecode(&cfg, &offset_ranges);
             timeline!("bytecode builded");
 
@@ -32,7 +44,10 @@ impl BytecodeComputePoller {
         });
 
         Self {
-            join_handle, rx, ended: false, result: None,
+            join_handle,
+            rx,
+            ended: false,
+            result: None,
         }
     }
     pub fn poll(&mut self, pc: usize) -> Option<(Vec<Bytecode>, usize)> {

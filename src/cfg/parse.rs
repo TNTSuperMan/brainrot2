@@ -7,12 +7,21 @@ use crate::{
 
 pub fn ir_to_cfgir(ir: &IR) -> Option<CFGOp> {
     Some(match ir.opcode {
-        IROp::Add(val) => CFGOp::Assign(ir.pointer, CFGExpr::Add(CFGValue::Load(ir.pointer), CFGValue::Const(val))),
+        IROp::Add(val) => CFGOp::Assign(
+            ir.pointer,
+            CFGExpr::Add(CFGValue::Load(ir.pointer), CFGValue::Const(val)),
+        ),
         IROp::Set(val) => CFGOp::Assign(ir.pointer, CFGExpr::Value(CFGValue::Const(val))),
-        IROp::MulAdd(p, v) => CFGOp::Assign(ir.pointer, CFGExpr::MulAdd(CFGValue::Load(ir.pointer), CFGValue::Load(p), v)),
+        IROp::MulAdd(p, v) => CFGOp::Assign(
+            ir.pointer,
+            CFGExpr::MulAdd(CFGValue::Load(ir.pointer), CFGValue::Load(p), v),
+        ),
         IROp::In => CFGOp::Assign(ir.pointer, CFGExpr::In),
         IROp::Out => CFGOp::Out(CFGValue::Load(ir.pointer)),
-        IROp::JumpZero(..) | IROp::JumpNotZero(..) | IROp::JumpNotZeroWithOffset(..) | IROp::FindZero(..) => {
+        IROp::JumpZero(..)
+        | IROp::JumpNotZero(..)
+        | IROp::JumpNotZeroWithOffset(..)
+        | IROp::FindZero(..) => {
             return None;
         }
     })
@@ -180,7 +189,10 @@ impl CFG {
         for (i, node) in nodes.iter().enumerate() {
             idx_map.insert(idx_pc, i);
             idx_pc += node.insts.len();
-            if let CFGEdge::Branch { .. } | CFGEdge::BranchWithIRAt { .. } | CFGEdge::FindZeroAndJump { .. } = node.edge {
+            if let CFGEdge::Branch { .. }
+            | CFGEdge::BranchWithIRAt { .. }
+            | CFGEdge::FindZeroAndJump { .. } = node.edge
+            {
                 idx_pc += 1;
             }
         }
@@ -190,8 +202,8 @@ impl CFG {
             } else {
                 let addrs: Vec<&mut usize> = match &mut nodes[i].edge {
                     CFGEdge::Jump(..) => unreachable!(),
-                    CFGEdge::Branch { zero, nonzero, .. } |
-                    CFGEdge::BranchWithIRAt { zero, nonzero, .. } => vec![zero, nonzero],
+                    CFGEdge::Branch { zero, nonzero, .. }
+                    | CFGEdge::BranchWithIRAt { zero, nonzero, .. } => vec![zero, nonzero],
                     CFGEdge::FindZeroAndJump { jumpto, .. } => vec![jumpto],
                     CFGEdge::End => vec![],
                 };
@@ -207,11 +219,12 @@ impl CFG {
                     pointer: _,
                     zero,
                     nonzero,
-                } | CFGEdge::BranchWithIRAt {
+                }
+                | CFGEdge::BranchWithIRAt {
                     pointer: _,
                     zero,
                     nonzero,
-                    ir_at: _
+                    ir_at: _,
                 } => {
                     nodes[zero].predecessor.push(i);
                     nodes[nonzero].predecessor.push(i);

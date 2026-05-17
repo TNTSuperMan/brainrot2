@@ -1,9 +1,15 @@
 use std::sync::Arc;
 
-use crate::{TAPE_LENGTH, bytecode::int::debug_exec_bytecode, exec::{ir::exec_ir_with_poll, thread_poll::BytecodeComputePoller}, ir::{error::SyntaxError, ir::IR}, timeline};
+use crate::{
+    TAPE_LENGTH,
+    bytecode::int::debug_exec_bytecode,
+    exec::{ir::exec_ir_with_poll, thread_poll::BytecodeComputePoller},
+    ir::{error::SyntaxError, ir::IR},
+    timeline,
+};
 
-mod thread_poll;
 mod ir;
+mod thread_poll;
 
 #[derive(Debug)]
 pub enum BrainrotError {
@@ -24,7 +30,7 @@ pub fn exec(code: &str) -> Result<(), BrainrotError> {
 
     let mut memory = [0; TAPE_LENGTH];
     let mut offset = mul_offset.into();
-    
+
     timeline!("ir executing");
 
     match exec_ir_with_poll(&ir_arc, &mut memory, &mut offset, &mut poller) {

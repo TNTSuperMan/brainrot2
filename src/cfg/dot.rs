@@ -5,7 +5,9 @@ pub fn cfg_to_dot(cfg: &CFG) -> String {
     dot.push_str("digraph {\n");
 
     for (i, node) in cfg.0.iter().enumerate() {
-        if !node.alive { continue }
+        if !node.alive {
+            continue;
+        }
         dot.push_str(&format!("    n{i} [\n        label=\"n{i}\\l"));
         for inst in &node.insts {
             dot.push_str(&format!("{inst:?}\\l"));
@@ -23,17 +25,20 @@ pub fn cfg_to_dot(cfg: &CFG) -> String {
     }
 
     for (i, node) in cfg.0.iter().enumerate() {
-        if !node.alive { continue }
+        if !node.alive {
+            continue;
+        }
         match node.edge {
             CFGEdge::Branch {
                 pointer: _,
                 zero,
                 nonzero,
-            } | CFGEdge::BranchWithIRAt {
+            }
+            | CFGEdge::BranchWithIRAt {
                 pointer: _,
                 zero,
                 nonzero,
-                ir_at: _
+                ir_at: _,
             } => {
                 dot.push_str(&format!("    n{i} -> n{zero}\n    n{i} -> n{nonzero}\n"));
             }

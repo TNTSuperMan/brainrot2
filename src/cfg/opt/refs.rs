@@ -4,7 +4,7 @@ impl CFGOp {
     pub fn reads(&self) -> Vec<i16> {
         match self {
             Self::Out(CFGValue::Const(_)) => vec![],
-            
+
             Self::Out(CFGValue::Load(p)) => vec![*p],
 
             Self::Assign(_, expr) => {
@@ -13,10 +13,10 @@ impl CFGOp {
 
                     CFGExpr::Value(v) => &[v],
 
-                    CFGExpr::Add(v1, v2) |
-                    CFGExpr::Sub(v1, v2) |
-                    CFGExpr::Mul(v1, v2) |
-                    CFGExpr::MulAdd(v1, v2, _) => &[v1, v2],
+                    CFGExpr::Add(v1, v2)
+                    | CFGExpr::Sub(v1, v2)
+                    | CFGExpr::Mul(v1, v2)
+                    | CFGExpr::MulAdd(v1, v2, _) => &[v1, v2],
                 };
                 let mut refs = vec![];
                 for val in values {

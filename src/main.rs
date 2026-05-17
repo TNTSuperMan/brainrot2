@@ -1,24 +1,38 @@
 use std::{collections::HashMap, env::args, fs, process::ExitCode};
 
 use crate::{
-    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode}, cfg::{cfg::CFG, dot::cfg_to_dot, range::OffsetRange}, exec::exec, ir::ir::IR, log::start
+    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode},
+    cfg::{cfg::CFG, dot::cfg_to_dot, range::OffsetRange},
+    exec::exec,
+    ir::ir::IR,
+    log::start,
 };
 
-mod cfg;
-mod ir;
 mod bytecode;
+mod cfg;
 mod exec;
+mod ir;
 mod log;
 // mod int;
 
 pub const TAPE_LENGTH: usize = 65536;
 
-fn gen_bytecode(code: &str) -> ((Vec<Bytecode>, HashMap<usize, usize>), HashMap<usize, OffsetRange>, u8) {
+fn gen_bytecode(
+    code: &str,
+) -> (
+    (Vec<Bytecode>, HashMap<usize, usize>),
+    HashMap<usize, OffsetRange>,
+    u8,
+) {
     let (ir, mul_offset) = IR::parse(&code).unwrap();
     let mut cfg = CFG::new(&ir);
     cfg.optimize_heavy();
     let offset_ranges = cfg.compute_offset_ranges();
-    (build_bytecode(&cfg, &offset_ranges).unwrap(), offset_ranges, mul_offset)
+    (
+        build_bytecode(&cfg, &offset_ranges).unwrap(),
+        offset_ranges,
+        mul_offset,
+    )
 }
 
 fn main() -> ExitCode {
@@ -68,7 +82,8 @@ fn main() -> ExitCode {
             }
             "check_exec_counts" => {
                 let ((bytecodes, _), _, mul_offset) = gen_bytecode(&code);
-                let counts = debug_exec_bytecode::<true>(&bytecodes, mul_offset as i16, [0; TAPE_LENGTH], 0);
+                let counts =
+                    debug_exec_bytecode::<true>(&bytecodes, mul_offset as i16, [0; TAPE_LENGTH], 0);
                 for (i, count) in counts.iter().enumerate() {
                     println!("{} \t{:?}", (count + 1).ilog2(), bytecodes[i]);
                 }

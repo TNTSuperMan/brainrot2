@@ -1,4 +1,7 @@
-use std::{io::{Read, Write, stdin, stdout}, ops::{Index, IndexMut}};
+use std::{
+    io::{Read, Write, stdin, stdout},
+    ops::{Index, IndexMut},
+};
 
 use crate::{TAPE_LENGTH, bytecode::bytecode::Bytecode, log};
 
@@ -18,8 +21,17 @@ impl IndexMut<&i16> for Mem {
     }
 }
 
-pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: i16, mem: [u8; TAPE_LENGTH], pc: usize) -> Vec<u32> {
-    let mut exec_counts = if DEBUG { vec![0; bytecodes.len()] } else { vec![] };
+pub fn debug_exec_bytecode<const DEBUG: bool>(
+    bytecodes: &[Bytecode],
+    offset: i16,
+    mem: [u8; TAPE_LENGTH],
+    pc: usize,
+) -> Vec<u32> {
+    let mut exec_counts = if DEBUG {
+        vec![0; bytecodes.len()]
+    } else {
+        vec![]
+    };
     let mut pc: usize = pc;
     let mut mem = Mem {
         offset: offset as isize,
@@ -80,7 +92,7 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: i1
                     0
                 };
             }
-            
+
             Bytecode::Out(p1) => {
                 if !DEBUG {
                     let _ = stdout.write(&[mem[p1]]);
@@ -141,7 +153,12 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: i1
                 return exec_counts;
             }
 
-            Bytecode::OffsetRangeJumpZero { offset, range, ptr, addr: jmp } => {
+            Bytecode::OffsetRangeJumpZero {
+                offset,
+                range,
+                ptr,
+                addr: jmp,
+            } => {
                 mem.offset += *offset as isize;
                 if opt && !range.contains(mem.offset as i16) {
                     log!("deopt {pc}");
@@ -155,7 +172,12 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(bytecodes: &[Bytecode], offset: i1
                     continue;
                 }
             }
-            Bytecode::OffsetRangeJumpNotZero { offset, range, ptr, addr: jmp } => {
+            Bytecode::OffsetRangeJumpNotZero {
+                offset,
+                range,
+                ptr,
+                addr: jmp,
+            } => {
                 mem.offset += *offset as isize;
                 if opt && !range.contains(mem.offset as i16) {
                     log!("deopt {pc}");

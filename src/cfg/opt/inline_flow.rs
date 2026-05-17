@@ -2,7 +2,9 @@ use crate::cfg::cfg::{CFG, CFGEdge};
 
 impl CFG {
     fn internal_inline(&mut self, block_i: usize) {
-        if !self.0[block_i].alive { return }
+        if !self.0[block_i].alive {
+            return;
+        }
         if self.0[block_i].offset.is_some() {
             return;
         }

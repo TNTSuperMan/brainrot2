@@ -1,6 +1,14 @@
-use std::{cmp::{max, min}, collections::{HashMap, HashSet}, fmt::Debug, ops::RangeInclusive};
+use std::{
+    cmp::{max, min},
+    collections::{HashMap, HashSet},
+    fmt::Debug,
+    ops::RangeInclusive,
+};
 
-use crate::{TAPE_LENGTH, cfg::cfg::{CFG, CFGEdge}};
+use crate::{
+    TAPE_LENGTH,
+    cfg::cfg::{CFG, CFGEdge},
+};
 
 #[derive(Clone, Copy)]
 pub struct OffsetRange {
@@ -28,11 +36,7 @@ impl OffsetRange {
 
 fn extend_range(range: Option<RangeInclusive<i16>>, point: i16) -> Option<RangeInclusive<i16>> {
     Some(if let Some(r) = range {
-        (
-            min(*r.start(), point)
-        )..=(
-            max(*r.end(), point)
-        )
+        (min(*r.start(), point))..=(max(*r.end(), point))
     } else {
         point..=point
     })
@@ -62,7 +66,12 @@ impl CFG {
             if block.offset.is_some() || matches!(block.edge, CFGEdge::FindZeroAndJump { .. }) {
                 continue;
             }
-            if let CFGEdge::Branch { pointer, zero: _, nonzero: _ } = &block.edge {
+            if let CFGEdge::Branch {
+                pointer,
+                zero: _,
+                nonzero: _,
+            } = &block.edge
+            {
                 range = extend_range(range, *pointer);
             }
 
@@ -74,7 +83,12 @@ impl CFG {
     fn compute_access_range_from_edge(&self, block_i: usize) -> Option<RangeInclusive<i16>> {
         let mut range = None;
         let block = &self.0[block_i];
-        if let CFGEdge::Branch { pointer, zero: _, nonzero: _ } = &block.edge {
+        if let CFGEdge::Branch {
+            pointer,
+            zero: _,
+            nonzero: _,
+        } = &block.edge
+        {
             range = extend_range(range, *pointer);
         }
 
@@ -106,7 +120,9 @@ impl CFG {
                 if let Some(r) = self.compute_access_range(0) {
                     map.insert(0, OffsetRange::from(r));
                 }
-            } else if block.offset.is_some() || matches!(block.edge, CFGEdge::FindZeroAndJump { .. }) {
+            } else if block.offset.is_some()
+                || matches!(block.edge, CFGEdge::FindZeroAndJump { .. })
+            {
                 if let Some(r) = self.compute_access_range_from_edge(b) {
                     map.insert(b, OffsetRange::from(r));
                 }

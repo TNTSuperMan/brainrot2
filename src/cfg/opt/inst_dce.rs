@@ -3,7 +3,9 @@ use crate::cfg::cfg::{CFG, CFGExpr, CFGOp};
 impl CFG {
     fn internal_dce_inst(&mut self, block_i: usize) {
         let block = &mut self.0[block_i];
-        if !block.alive { return }
+        if !block.alive {
+            return;
+        }
 
         let mut i = 0usize;
         loop {
@@ -20,15 +22,23 @@ impl CFG {
                 i += 1;
                 continue;
             }
-            let next_assign = i + 1 + match block.insts[(i+1)..].iter().position(|inst| inst.writes() == Some(ptr)) {
-                Some(n) => n,
-                None => {
-                    i += 1;
-                    continue;
-                }
-            };
+            let next_assign = i
+                + 1
+                + match block.insts[(i + 1)..]
+                    .iter()
+                    .position(|inst| inst.writes() == Some(ptr))
+                {
+                    Some(n) => n,
+                    None => {
+                        i += 1;
+                        continue;
+                    }
+                };
 
-            if block.insts[(i+1)..=next_assign].iter().all(|inst| !inst.reads().contains(&ptr)) {
+            if block.insts[(i + 1)..=next_assign]
+                .iter()
+                .all(|inst| !inst.reads().contains(&ptr))
+            {
                 block.insts.remove(i);
                 continue;
             }

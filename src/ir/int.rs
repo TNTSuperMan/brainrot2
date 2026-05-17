@@ -1,6 +1,9 @@
 use std::io::{Read, Write, stdin, stdout};
 
-use crate::{TAPE_LENGTH, ir::ir::{IR, IROp}};
+use crate::{
+    TAPE_LENGTH,
+    ir::ir::{IR, IROp},
+};
 
 pub fn exec_from_ir(ir: &[IR], offset: u8) {
     let mut pc = 0;

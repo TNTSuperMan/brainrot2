@@ -1,8 +1,18 @@
 use std::io::{Read, Write, stdin, stdout};
 
-use crate::{TAPE_LENGTH, bytecode::bytecode::Bytecode, exec::thread_poll::BytecodeComputePoller, ir::ir::{IR, IROp}};
+use crate::{
+    TAPE_LENGTH,
+    bytecode::bytecode::Bytecode,
+    exec::thread_poll::BytecodeComputePoller,
+    ir::ir::{IR, IROp},
+};
 
-pub fn exec_ir_with_poll(ir: &[IR], memory: &mut [u8; TAPE_LENGTH], offset: &mut i16, poller: &mut BytecodeComputePoller) -> Option<(Vec<Bytecode>, usize)> {
+pub fn exec_ir_with_poll(
+    ir: &[IR],
+    memory: &mut [u8; TAPE_LENGTH],
+    offset: &mut i16,
+    poller: &mut BytecodeComputePoller,
+) -> Option<(Vec<Bytecode>, usize)> {
     let mut pc = 0;
     let mut stdin = stdin().lock();
     let mut stdout = stdout().lock();
@@ -40,21 +50,27 @@ pub fn exec_ir_with_poll(ir: &[IR], memory: &mut [u8; TAPE_LENGTH], offset: &mut
                 stdout.write(&[memory[p]]).unwrap();
             }
             IROp::JumpZero(addr) => {
-                if let Some(p) = poller.poll(pc) { return Some(p) }
+                if let Some(p) = poller.poll(pc) {
+                    return Some(p);
+                }
                 if memory[p] == 0 {
                     pc = *addr;
                     continue;
                 }
             }
             IROp::JumpNotZero(addr) => {
-                if let Some(p) = poller.poll(pc) { return Some(p) }
+                if let Some(p) = poller.poll(pc) {
+                    return Some(p);
+                }
                 if memory[p] != 0 {
                     pc = *addr;
                     continue;
                 }
             }
             IROp::JumpNotZeroWithOffset(step, addr) => {
-                if let Some(p) = poller.poll(pc) { return Some(p) }
+                if let Some(p) = poller.poll(pc) {
+                    return Some(p);
+                }
                 *offset += step;
                 if memory[(pointer + *offset) as usize] != 0 {
                     pc = *addr;

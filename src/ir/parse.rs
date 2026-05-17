@@ -1,6 +1,9 @@
 use std::{cmp::max, ops::Range};
 
-use crate::ir::{error::SyntaxError, ir::{IR, IROp}};
+use crate::ir::{
+    error::SyntaxError,
+    ir::{IR, IROp},
+};
 
 #[derive(PartialEq, Eq)]
 enum SimpleOp {
@@ -80,7 +83,10 @@ impl IR {
                         } else {
                             insts.push(IR {
                                 pointer,
-                                opcode: IROp::JumpNotZeroWithOffset(end_ptr - start_ptr, start_at + 1),
+                                opcode: IROp::JumpNotZeroWithOffset(
+                                    end_ptr - start_ptr,
+                                    start_at + 1,
+                                ),
                                 loc,
                             });
                             insts[start_at].opcode = IROp::JumpZero(insts.len());
@@ -144,7 +150,8 @@ impl IR {
                                         insts[start_at].opcode = IROp::JumpZero(insts.len());
                                         split = true;
                                     } else {
-                                        let offset = muls.iter().fold(0, |m, f| max(m, pointer - f.1));
+                                        let offset =
+                                            muls.iter().fold(0, |m, f| max(m, pointer - f.1));
                                         mul_offset = max(mul_offset, offset as u8);
                                         insts.remove(start_at);
                                     }
