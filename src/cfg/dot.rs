@@ -14,7 +14,7 @@ pub fn cfg_to_dot(cfg: &CFG) -> String {
             dot.push_str(&format!("offset {offset}\\l"));
         }
         dot.push_str(&format!("{:?}\\l\"\n", node.edge));
-        if node.offset.is_some() {
+        if node.offset.is_some() || matches!(node.edge, CFGEdge::FindZeroAndJump { .. }) {
             dot.push_str(&format!("        shape=octagon\n"));
         } else if node.insts.len() != 0 || node.offset.is_some() {
             dot.push_str(&format!("        shape=box\n"));
