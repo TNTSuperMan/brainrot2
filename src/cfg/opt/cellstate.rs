@@ -15,7 +15,7 @@ impl CFG {
 
         let block = &self.0[block_i];
 
-        let fallback = if let CFGEdge::Branch { pointer: b_pointer, zero, nonzero: _ } = &block.edge {
+        let fallback = if let CFGEdge::Branch { pointer: b_pointer, zero, .. } | CFGEdge::BranchWithIRAt { pointer: b_pointer, zero, .. } = &block.edge {
             if *b_pointer == pointer {
                 if *zero == from {
                     return CellState::Const(0);
@@ -24,14 +24,17 @@ impl CFG {
             } else {
                 CellState::Unknown
             }
+        } else if let CFGEdge::FindZeroAndJump { pointer: b_pointer, jumpto, .. } = &block.edge {
+            return if *b_pointer == pointer && *jumpto == from {
+                CellState::Const(0)
+            } else {
+                CellState::Unknown
+            }
         } else {
             CellState::Unknown
         };
 
         if block.offset.is_some() {
-            return fallback;
-        }
-        if matches!(block.edge, CFGEdge::FindZeroAndJump { .. }) {
             return fallback;
         }
 
