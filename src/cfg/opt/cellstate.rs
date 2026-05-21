@@ -8,7 +8,7 @@ pub enum CellState {
 }
 
 impl CFG {
-    fn internal_get_cellstate(
+    pub fn internal_get_cellstate(
         &self,
         from: usize,
         block_i: usize,

@@ -7,3 +7,4 @@ pub mod inline_branch;
 pub mod inline_flow;
 pub mod inst_dce;
 pub mod refs;
+pub mod inline_deepbranch;
