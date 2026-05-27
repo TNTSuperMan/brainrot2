@@ -7,8 +7,8 @@ pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafePro
     let mut stdout = stdout().lock();
 
     macro_rules! rangecheck {
-        ($range: expr) => {
-            if USE_OPT && $range.contains(tape.get_offset()) {
+        ($offset: expr, $range: expr) => {
+            if USE_OPT && $range.contains($offset) {
                 timeline!("opt");
                 return Ok(InterpretResult::ToggleOpt(true));
             }
@@ -107,11 +107,11 @@ pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafePro
                 tape.offset(*o1);
             }
             Bytecode::OffsetWithRangeCheck(o1, range) => {
+                rangecheck!(tape.get_offset() + o1, range);
                 tape.offset(*o1);
-                rangecheck!(range);
             }
             Bytecode::RangeCheck(range) => {
-                rangecheck!(range);
+                rangecheck!(tape.get_offset(), range);
             }
             Bytecode::FindZero(ptr, delta) => {
                 while tape.get(*ptr)? != 0 {
