@@ -1,6 +1,6 @@
 use std::io::{Read, Write, stdin, stdout};
 
-use crate::{bytecode::bytecode::Bytecode, exec::{bytecode::{InterpretResult, program::UnsafeProgram}, tape::{OutOfRangeError, Tape}}};
+use crate::{bytecode::bytecode::Bytecode, exec::{bytecode::{InterpretResult, program::UnsafeProgram}, tape::{OutOfRangeError, Tape}}, timeline};
 
 pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafeProgram, tape: &mut Tape) -> Result<InterpretResult, OutOfRangeError> {
     let mut stdin = stdin().lock();
@@ -9,6 +9,7 @@ pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafePro
     macro_rules! rangecheck {
         ($range: expr) => {
             if USE_OPT && $range.contains(tape.get_offset()) {
+                timeline!("opt");
                 return Ok(InterpretResult::ToggleOpt(true));
             }
         };
