@@ -96,6 +96,9 @@ fn main() -> ExitCode {
                 println!("{:?}", offset_ranges);
             }
             "run" => {
+                exec::<false>(&code).unwrap();
+            }
+            "run_flush" => {
                 exec::<true>(&code).unwrap();
             }
             _ => {
