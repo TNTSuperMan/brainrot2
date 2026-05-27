@@ -1,46 +1,17 @@
 use std::{
     cmp::{max, min},
     collections::{HashMap, HashSet},
-    fmt::Debug,
     ops::RangeInclusive,
 };
 
 use crate::{
-    TAPE_LENGTH,
-    cfg::cfg::{CFG, CFGEdge},
+    cfg::{cfg::{CFG, CFGEdge}, range::range::extend_range},
 };
 
-#[derive(Clone, Copy)]
-pub struct OffsetRange {
-    start: i16,
-    end: u16,
-}
-impl Debug for OffsetRange {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}..={}", self.start, self.end)
-    }
-}
-impl From<RangeInclusive<i16>> for OffsetRange {
-    fn from(value: RangeInclusive<i16>) -> Self {
-        OffsetRange {
-            start: 0 - *value.start(),
-            end: ((TAPE_LENGTH - 1) as u16).wrapping_sub_signed(*value.end()),
-        }
-    }
-}
-impl OffsetRange {
-    pub fn contains(&self, offset: i16) -> bool {
-        self.start <= offset && (offset as i32) <= (self.end as i32)
-    }
-}
+mod block;
+mod range;
 
-fn extend_range(range: Option<RangeInclusive<i16>>, point: i16) -> Option<RangeInclusive<i16>> {
-    Some(if let Some(r) = range {
-        (min(*r.start(), point))..=(max(*r.end(), point))
-    } else {
-        point..=point
-    })
-}
+pub use range::OffsetRange;
 
 impl CFG {
     fn compute_access_range(&self, block_i: usize) -> Option<RangeInclusive<i16>> {
@@ -54,28 +25,12 @@ impl CFG {
             }
             visited.insert(b);
             let block = &self.0[b];
+            
+            block.extend_access_range(&mut range);
 
-            for inst in &block.insts {
-                for read in inst.reads() {
-                    range = extend_range(range, read);
-                }
-                if let Some(write) = inst.writes() {
-                    range = extend_range(range, write);
-                }
+            if !block.has_offset() {
+                dfs_stack.append(&mut block.edge.successor());
             }
-            if block.offset.is_some() || matches!(block.edge, CFGEdge::FindZeroAndJump { .. }) {
-                continue;
-            }
-            if let CFGEdge::Branch {
-            pointer, ..
-            } | CFGEdge::BranchWithIRAt {
-                pointer, ..
-            } = &block.edge
-            {
-                range = extend_range(range, *pointer);
-            }
-
-            dfs_stack.append(&mut block.edge.successor());
         }
 
         range
@@ -89,7 +44,7 @@ impl CFG {
             pointer, ..
         } = &block.edge
         {
-            range = extend_range(range, *pointer);
+            range = extend_range(&range, *pointer);
         }
 
         for succ in block.edge.successor() {
