@@ -1,6 +1,5 @@
-use crate::{bytecode::bytecode::Bytecode, int::{program::UnsafeProgram, run_deopt::run_deopt, run_opt::run_opt, tape::{OutOfRangeError, Tape, UnsafeTape}}};
+use crate::{bytecode::bytecode::Bytecode, exec::{bytecode::{program::UnsafeProgram, run_deopt::run_deopt, run_opt::run_opt}, tape::{OutOfRangeError, Tape, UnsafeTape}}};
 
-pub mod tape;
 mod program;
 mod run_deopt;
 mod run_opt;

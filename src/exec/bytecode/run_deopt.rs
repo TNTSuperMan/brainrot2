@@ -1,6 +1,6 @@
 use std::io::{Read, Write, stdin, stdout};
 
-use crate::{bytecode::bytecode::Bytecode, int::{InterpretResult, program::UnsafeProgram, tape::{OutOfRangeError, Tape}}};
+use crate::{bytecode::bytecode::Bytecode, exec::{bytecode::{InterpretResult, program::UnsafeProgram}, tape::{OutOfRangeError, Tape}}};
 
 pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafeProgram, tape: &mut Tape) -> Result<InterpretResult, OutOfRangeError> {
     let mut stdin = stdin().lock();

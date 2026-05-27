@@ -1,9 +1,11 @@
 use std::{fmt::Debug, sync::Arc};
 
 use crate::{
-    exec::{ir::exec_ir_with_poll, thread_poll::BytecodeComputePoller}, int::{run, tape::{OutOfRangeError, Tape}}, ir::{error::SyntaxError, ir::IR}, timeline
+    exec::{bytecode::run, ir::exec_ir_with_poll, tape::{OutOfRangeError, Tape}, thread_poll::BytecodeComputePoller}, ir::{error::SyntaxError, ir::IR}, timeline
 };
 
+mod tape;
+mod bytecode;
 mod ir;
 mod thread_poll;
 

@@ -1,6 +1,6 @@
 use std::io::{Read, Write, stdin, stdout};
 
-use crate::{bytecode::bytecode::Bytecode, int::{InterpretResult, program::UnsafeProgram, tape::UnsafeTape}};
+use crate::{bytecode::bytecode::Bytecode, exec::{bytecode::{InterpretResult, program::UnsafeProgram}, tape::UnsafeTape}};
 
 #[allow(unsafe_op_in_unsafe_fn)]
 pub unsafe fn run_opt<const FLUSH: bool>(program: &mut UnsafeProgram, tape: &mut UnsafeTape) -> InterpretResult {

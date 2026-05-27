@@ -1,7 +1,7 @@
 use std::io::{Read, Write, stdin, stdout};
 
 use crate::{
-    bytecode::bytecode::Bytecode, exec::thread_poll::BytecodeComputePoller, int::tape::{OutOfRangeError, Tape}, ir::ir::{IR, IROp}
+    bytecode::bytecode::Bytecode, exec::{tape::{OutOfRangeError, Tape}, thread_poll::BytecodeComputePoller}, ir::ir::{IR, IROp}
 };
 
 pub fn exec_ir_with_poll(
