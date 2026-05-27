@@ -39,7 +39,7 @@ impl BytecodeComputePoller {
             let bytecode_result = build_bytecode(&cfg, &offset_ranges);
             timeline!("bytecode builded");
 
-            tx.send(bytecode_result).unwrap();
+            let _ = tx.send(bytecode_result);
         });
 
         Self {
