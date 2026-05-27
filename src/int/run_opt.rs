@@ -7,6 +7,14 @@ pub unsafe fn run_opt<const FLUSH: bool>(program: &mut UnsafeProgram, tape: &mut
     let mut stdin = stdin().lock();
     let mut stdout = stdout().lock();
 
+    macro_rules! rangecheck {
+        ($range: expr) => {
+            if !$range.contains(tape.get_offset()) {
+                return InterpretResult::ToggleOpt(false);
+            }
+        };
+    }
+
     loop {
         match program.get_op() {
             Bytecode::SetC(p1, value) => {
@@ -15,6 +23,10 @@ pub unsafe fn run_opt<const FLUSH: bool>(program: &mut UnsafeProgram, tape: &mut
             Bytecode::SetL(p1, p2) => {
                 let v = tape.get(*p2);
                 *tape.get_mut(*p1) = v;
+            }
+            Bytecode::Add(ptr, val) => {
+                let v = tape.get(*ptr).wrapping_add(*val);
+                *tape.get_mut(*ptr) = v;
             }
             Bytecode::AddC(p1, p2, value) => {
                 let v = tape.get(*p2).wrapping_add(*value);
@@ -63,9 +75,6 @@ pub unsafe fn run_opt<const FLUSH: bool>(program: &mut UnsafeProgram, tape: &mut
                 };
             }
             
-            Bytecode::Breakpoint(p1) => {
-                eprintln!("\nbreak; ${p1}, offset: {}", tape.get_offset());
-            }
             Bytecode::Out(p1) => {
                 let _ = stdout.write(&[tape.get(*p1)]);
                 if FLUSH {
@@ -97,15 +106,38 @@ pub unsafe fn run_opt<const FLUSH: bool>(program: &mut UnsafeProgram, tape: &mut
             Bytecode::Offset(o1) => {
                 tape.offset(*o1);
             }
-            Bytecode::OffsetWithRangeCheck(o1, rb, re) => {
+            Bytecode::OffsetWithRangeCheck(o1, range) => {
                 tape.offset(*o1);
-                let offset = tape.get_offset();
-                if offset < *rb || *re < offset {
-                    return InterpretResult::ToggleOpt(false);
+                rangecheck!(range);
+            }
+            Bytecode::RangeCheck(range) => {
+                rangecheck!(range);
+            }
+            Bytecode::FindZero(ptr, delta) => {
+                while tape.get(*ptr) != 0 {
+                    tape.offset(*delta);
                 }
             }
             Bytecode::End => {
                 return InterpretResult::End;
+            }
+            
+            Bytecode::SetCSetC(p1, c1, p2, c2) => {
+                *tape.get_mut(*p1) = *c1;
+                *tape.get_mut(*p2) = *c2;
+            }
+            Bytecode::AddAdd(p1, c1, p2, c2) => {
+                let v = tape.get(*p1).wrapping_add(*c1);
+                *tape.get_mut(*p1) = v;
+
+                let v = tape.get(*p2).wrapping_add(*c2);
+                *tape.get_mut(*p2) = v;
+            }
+            Bytecode::AddSetC(p1, c1, p2, c2) => {
+                let v = tape.get(*p1).wrapping_add(*c1);
+                *tape.get_mut(*p1) = v;
+
+                *tape.get_mut(*p2) = *c2;
             }
         }
 

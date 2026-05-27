@@ -1,18 +1,14 @@
 use std::io::{Read, Write, stdin, stdout};
 
 use crate::{
-    TAPE_LENGTH,
-    bytecode::bytecode::Bytecode,
-    exec::thread_poll::BytecodeComputePoller,
-    ir::ir::{IR, IROp},
+    bytecode::bytecode::Bytecode, exec::thread_poll::BytecodeComputePoller, int::tape::{OutOfRangeError, Tape}, ir::ir::{IR, IROp}
 };
 
 pub fn exec_ir_with_poll(
     ir: &[IR],
-    memory: &mut [u8; TAPE_LENGTH],
-    offset: &mut i16,
+    tape: &mut Tape,
     poller: &mut BytecodeComputePoller,
-) -> Option<(Vec<Bytecode>, usize)> {
+) -> Result<Option<(Vec<Bytecode>, usize)>, OutOfRangeError> {
     let mut pc = 0;
     let mut stdin = stdin().lock();
     let mut stdout = stdout().lock();
@@ -24,62 +20,67 @@ pub fn exec_ir_with_poll(
             loc: _,
         } = match ir.get(pc) {
             Some(ir) => ir,
-            None => return None,
+            None => return Ok(None),
         };
-        let p = (pointer + *offset) as usize;
+        
         match opcode {
             IROp::Add(value) => {
-                memory[p] = memory[p].wrapping_add(*value);
+                let current = tape.get(*pointer)?;
+                *tape.get_mut(*pointer)? = current.wrapping_add(*value);
             }
             IROp::Set(value) => {
-                memory[p] = *value;
+                *tape.get_mut(*pointer)? = *value;
             }
             IROp::MulAdd(p2, val) => {
-                memory[p] =
-                    memory[p].wrapping_add(memory[(*offset + p2) as usize].wrapping_mul(*val));
+                let current = tape.get(*pointer)?;
+                let p2_val = tape.get(*p2)?;
+                *tape.get_mut(*pointer)? = current.wrapping_add(p2_val.wrapping_mul(*val));
             }
             IROp::In => {
                 let mut buf = [0u8; 1];
-                memory[p] = if stdin.read_exact(&mut buf).is_ok() {
+                *tape.get_mut(*pointer)? = if stdin.read_exact(&mut buf).is_ok() {
                     buf[0]
                 } else {
                     0
                 };
             }
             IROp::Out => {
-                stdout.write(&[memory[p]]).unwrap();
+                let _ = stdout.write(&[tape.get(*pointer)?]);
             }
             IROp::JumpZero(addr) => {
-                if let Some(p) = poller.poll(pc) {
-                    return Some(p);
+                if let Some(p_ret) = poller.poll(pc) {
+                    return Ok(Some(p_ret));
                 }
-                if memory[p] == 0 {
+                if tape.get(*pointer)? == 0 {
                     pc = *addr;
                     continue;
                 }
             }
             IROp::JumpNotZero(addr) => {
-                if let Some(p) = poller.poll(pc) {
-                    return Some(p);
+                if let Some(p_ret) = poller.poll(pc) {
+                    return Ok(Some(p_ret));
                 }
-                if memory[p] != 0 {
+                if tape.get(*pointer)? != 0 {
                     pc = *addr;
                     continue;
                 }
             }
             IROp::JumpNotZeroWithOffset(step, addr) => {
-                if let Some(p) = poller.poll(pc) {
-                    return Some(p);
+                if let Some(p_ret) = poller.poll(pc) {
+                    return Ok(Some(p_ret));
                 }
-                *offset += step;
-                if memory[(pointer + *offset) as usize] != 0 {
+                tape.offset(*step);
+                if tape.get(*pointer)? != 0 {
                     pc = *addr;
                     continue;
                 }
             }
             IROp::FindZero(delta) => {
-                while memory[(pointer + *offset) as usize] != 0 {
-                    *offset += delta;
+                loop {
+                    if tape.get(*pointer)? == 0 {
+                        break;
+                    }
+                    tape.offset(*delta);
                 }
             }
         }

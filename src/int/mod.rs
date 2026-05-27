@@ -1,6 +1,6 @@
 use crate::{bytecode::bytecode::Bytecode, int::{program::UnsafeProgram, run_deopt::run_deopt, run_opt::run_opt, tape::{OutOfRangeError, Tape, UnsafeTape}}};
 
-mod tape;
+pub mod tape;
 mod program;
 mod run_deopt;
 mod run_opt;
@@ -10,19 +10,18 @@ enum InterpretResult {
     ToggleOpt(bool),
 }
 
-pub fn run<const FLUSH: bool>(bytecodes: &[Bytecode], mul_offset: u8, opt_first: bool) -> Result<(), OutOfRangeError> {
-    let mut program = UnsafeProgram::new(bytecodes);
-    let mut tape = Tape::new(mul_offset);
+pub fn run<const FLUSH: bool>(bytecodes: &[Bytecode], pc: usize, tape: &mut Tape, opt_first: bool) -> Result<(), OutOfRangeError> {
+    let mut program = UnsafeProgram::new(bytecodes, pc);
 
     let mut opt = opt_first;
 
     loop {
         let result = match opt {
             true => {
-                let mut unsafe_tape = UnsafeTape::new(&mut tape);
+                let mut unsafe_tape = UnsafeTape::new(tape);
                 unsafe { run_opt::<FLUSH>(&mut program, &mut unsafe_tape) }
             },
-            false => run_deopt::<FLUSH, true>(&mut program, &mut tape)?,
+            false => run_deopt::<FLUSH, true>(&mut program, tape)?,
         };
         match result {
             InterpretResult::End => {

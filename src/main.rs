@@ -13,7 +13,7 @@ mod cfg;
 mod exec;
 mod ir;
 mod log;
-// mod int;
+mod int;
 
 pub const TAPE_LENGTH: usize = 65536;
 

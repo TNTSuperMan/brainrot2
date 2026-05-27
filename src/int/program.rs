@@ -8,9 +8,9 @@ pub struct UnsafeProgram<'a> {
 }
 
 impl<'a> UnsafeProgram<'a> {
-    pub fn new(bytecodes: &[Bytecode]) -> Self {
+    pub fn new(bytecodes: &[Bytecode], pc: usize) -> Self {
         Self {
-            ptr: bytecodes.as_ptr(),
+            ptr: unsafe { bytecodes.as_ptr().add(pc) },
             _marker: PhantomData,
         }
     }
