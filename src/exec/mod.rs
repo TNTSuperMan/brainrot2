@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{fmt::Debug, sync::Arc};
 
 use crate::{
     TAPE_LENGTH,
@@ -11,9 +11,16 @@ use crate::{
 mod ir;
 mod thread_poll;
 
-#[derive(Debug)]
 pub enum BrainrotError {
     SyntaxError(SyntaxError),
+}
+impl Debug for BrainrotError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::SyntaxError(SyntaxError::UnmatchedOpeningBracket) => write!(f, "SyntaxError: Unmatched opening bracket"),
+            Self::SyntaxError(SyntaxError::UnmatchedClosingBracket) => write!(f, "SyntaxError: Unmatched closing bracket"),
+        }
+    }
 }
 
 pub fn exec(code: &str) -> Result<(), BrainrotError> {
