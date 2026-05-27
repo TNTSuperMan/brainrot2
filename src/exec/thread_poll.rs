@@ -5,7 +5,7 @@ use std::{
         Arc,
         mpsc::{self, Receiver},
     },
-    thread::{self, JoinHandle},
+    thread,
 };
 
 use crate::{
@@ -16,7 +16,6 @@ use crate::{
 };
 
 pub struct BytecodeComputePoller {
-    join_handle: JoinHandle<()>,
     rx: Receiver<Result<(Vec<Bytecode>, HashMap<usize, usize>), TryFromIntError>>,
     ended: bool,
     result: Option<(Vec<Bytecode>, HashMap<usize, usize>)>,
@@ -25,7 +24,7 @@ impl BytecodeComputePoller {
     pub fn init(ir_arc: Arc<Vec<IR>>) -> Self {
         let (tx, rx) = mpsc::channel();
 
-        let join_handle = thread::spawn(move || {
+        thread::spawn(move || {
             timeline!("building cfg");
 
             let mut cfg = CFG::new(&ir_arc);
@@ -44,7 +43,6 @@ impl BytecodeComputePoller {
         });
 
         Self {
-            join_handle,
             rx,
             ended: false,
             result: None,
