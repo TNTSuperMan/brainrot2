@@ -2,7 +2,6 @@ use crate::cfg::cfg::CFG;
 
 pub mod cfg;
 pub mod dot;
-pub mod int;
 pub mod opt;
 pub mod parse;
 pub mod range;
