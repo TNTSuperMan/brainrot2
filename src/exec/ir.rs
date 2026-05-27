@@ -4,7 +4,7 @@ use crate::{
     bytecode::bytecode::Bytecode, exec::{tape::{OutOfRangeError, Tape}, thread_poll::BytecodeComputePoller}, ir::ir::{IR, IROp}
 };
 
-pub fn exec_ir_with_poll(
+pub fn exec_ir_with_poll<const FLUSH: bool>(
     ir: &[IR],
     tape: &mut Tape,
     poller: &mut BytecodeComputePoller,
@@ -46,6 +46,9 @@ pub fn exec_ir_with_poll(
             }
             IROp::Out => {
                 let _ = stdout.write(&[tape.get(*pointer)?]);
+                if FLUSH {
+                    let _ = stdout.flush();
+                }
             }
             IROp::JumpZero(addr) => {
                 if let Some(p_ret) = poller.poll(pc) {

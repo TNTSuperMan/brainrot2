@@ -96,7 +96,7 @@ fn main() -> ExitCode {
                 println!("{:?}", offset_ranges);
             }
             "run" => {
-                exec(&code).unwrap();
+                exec::<true>(&code).unwrap();
             }
             _ => {
                 eprintln!("unknown kind");

@@ -23,7 +23,7 @@ impl Debug for BrainrotError {
     }
 }
 
-pub fn exec(code: &str) -> Result<(), BrainrotError> {
+pub fn exec<const FLUSH: bool>(code: &str) -> Result<(), BrainrotError> {
     timeline!("parsing ir");
     let (ir, mul_offset) = match IR::parse(code) {
         Ok(ir) => ir,
@@ -39,10 +39,10 @@ pub fn exec(code: &str) -> Result<(), BrainrotError> {
 
     timeline!("ir executing");
 
-    match exec_ir_with_poll(&ir_arc, &mut tape, &mut poller) {
+    match exec_ir_with_poll::<FLUSH>(&ir_arc, &mut tape, &mut poller) {
         Ok(Some((bytecodes, pc))) => {
             timeline!("osr bytecode executing: {pc}");
-            match run::<true>(&bytecodes, pc, &mut tape, false) {
+            match run::<FLUSH>(&bytecodes, pc, &mut tape, false) {
                 Ok(()) => {
                     timeline!("program ended");
                     Ok(())
