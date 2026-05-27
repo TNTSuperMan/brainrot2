@@ -1,4 +1,4 @@
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Range};
 
 use crate::TAPE_LENGTH;
 
@@ -46,6 +46,8 @@ impl Tape {
     }
 }
 
+const TAPE_RANGE: Range<isize> = 0..65536;
+
 pub struct UnsafeTape<'a> {
     root: *const u8,
     curr: *mut u8,
@@ -63,11 +65,40 @@ impl<'a> UnsafeTape<'a> {
             inner_offset: &mut tape.offset,
         }
     }
+
+    fn ptr(&self, ptr: *const u8) -> isize {
+        unsafe { ptr.offset_from(self.root) }
+    }
+
+    pub fn get_safe(&self, index: i16) -> Result<u8, OutOfRangeError> {
+        let ptr = unsafe { self.curr.offset(index as isize) };
+        if TAPE_RANGE.contains(&self.ptr(ptr)) {
+            Ok(unsafe { *ptr })
+        } else {
+            Err(OutOfRangeError {
+                index,
+                offset: self.get_offset(),
+                kind: "reading".to_string(),
+            })
+        }
+    }
     pub unsafe fn get(&self, index: i16) -> u8 {
-        unsafe { *self.curr.offset(index as isize) }
+        let ptr = unsafe { self.curr.offset(index as isize) };
+        if cfg!(feature = "debug") {
+            if !TAPE_RANGE.contains(&self.ptr(ptr)) {
+                panic!("[UNSAFE!!]: OUT OF RANGE AT UNSAFE CODE, ptr: {}", self.ptr(ptr));
+            }
+        }
+        unsafe { *ptr }
     }
     pub unsafe fn get_mut(&mut self, index: i16) -> &mut u8 {
-        unsafe { &mut *self.curr.offset(index as isize) }
+        let ptr = unsafe { self.curr.offset(index as isize) };
+        if cfg!(feature = "debug") {
+            if !TAPE_RANGE.contains(&self.ptr(ptr)) {
+                panic!("[UNSAFE!!]: OUT OF RANGE AT UNSAFE CODE, ptr: {}", self.ptr(ptr));
+            }
+        }
+        unsafe { &mut *ptr }
     }
     pub fn get_offset(&self) -> i16 {
         unsafe { self.curr.offset_from(self.root) as i16 }

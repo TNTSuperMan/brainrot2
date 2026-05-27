@@ -18,7 +18,7 @@ pub fn run<const FLUSH: bool>(bytecodes: &[Bytecode], pc: usize, tape: &mut Tape
         let result = match opt {
             true => {
                 let mut unsafe_tape = UnsafeTape::new(tape);
-                unsafe { run_opt::<FLUSH>(&mut program, &mut unsafe_tape) }
+                unsafe { run_opt::<FLUSH>(&mut program, &mut unsafe_tape)? }
             },
             false => run_deopt::<FLUSH, true>(&mut program, tape)?,
         };

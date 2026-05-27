@@ -1,9 +1,9 @@
 use std::io::{Read, Write, stdin, stdout};
 
-use crate::{bytecode::bytecode::Bytecode, exec::{bytecode::{InterpretResult, program::UnsafeProgram}, tape::UnsafeTape}, timeline};
+use crate::{bytecode::bytecode::Bytecode, exec::{bytecode::{InterpretResult, program::UnsafeProgram}, tape::{OutOfRangeError, UnsafeTape}}, timeline};
 
 #[allow(unsafe_op_in_unsafe_fn)]
-pub unsafe fn run_opt<const FLUSH: bool>(program: &mut UnsafeProgram, tape: &mut UnsafeTape) -> InterpretResult {
+pub unsafe fn run_opt<const FLUSH: bool>(program: &mut UnsafeProgram, tape: &mut UnsafeTape) -> Result<InterpretResult, OutOfRangeError> {
     let mut stdin = stdin().lock();
     let mut stdout = stdout().lock();
 
@@ -11,7 +11,7 @@ pub unsafe fn run_opt<const FLUSH: bool>(program: &mut UnsafeProgram, tape: &mut
         ($range: expr) => {
             if !$range.contains(tape.get_offset()) {
                 timeline!("deopt");
-                return InterpretResult::ToggleOpt(false);
+                return Ok(InterpretResult::ToggleOpt(false));
             }
         };
     }
@@ -115,12 +115,12 @@ pub unsafe fn run_opt<const FLUSH: bool>(program: &mut UnsafeProgram, tape: &mut
                 rangecheck!(range);
             }
             Bytecode::FindZero(ptr, delta) => {
-                while tape.get(*ptr) != 0 {
+                while tape.get_safe(*ptr)? != 0 {
                     tape.offset(*delta);
                 }
             }
             Bytecode::End => {
-                return InterpretResult::End;
+                return Ok(InterpretResult::End);
             }
             
             Bytecode::SetCSetC(p1, c1, p2, c2) => {
