@@ -67,9 +67,9 @@ impl CFG {
                 continue;
             }
             if let CFGEdge::Branch {
-                pointer,
-                zero: _,
-                nonzero: _,
+            pointer, ..
+            } | CFGEdge::BranchWithIRAt {
+                pointer, ..
             } = &block.edge
             {
                 range = extend_range(range, *pointer);
@@ -84,9 +84,9 @@ impl CFG {
         let mut range = None;
         let block = &self.0[block_i];
         if let CFGEdge::Branch {
-            pointer,
-            zero: _,
-            nonzero: _,
+            pointer, ..
+        } | CFGEdge::BranchWithIRAt {
+            pointer, ..
         } = &block.edge
         {
             range = extend_range(range, *pointer);
