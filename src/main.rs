@@ -96,10 +96,22 @@ fn main() -> ExitCode {
                 println!("{:?}", offset_ranges);
             }
             "run" => {
-                exec::<false>(&code).unwrap();
+                match exec::<false>(&code) {
+                    Ok(()) => {},
+                    Err(e) => {
+                        eprintln!("{e:?}");
+                        return ExitCode::FAILURE;
+                    }
+                }
             }
             "run_flush" => {
-                exec::<true>(&code).unwrap();
+                match exec::<true>(&code) {
+                    Ok(()) => {},
+                    Err(e) => {
+                        eprintln!("{e:?}");
+                        return ExitCode::FAILURE;
+                    }
+                }
             }
             _ => {
                 eprintln!("unknown kind");
