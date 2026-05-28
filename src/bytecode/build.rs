@@ -19,7 +19,11 @@ fn try_into_bytecode(cfgop: &CFGOp) -> Result<Bytecode, TryFromIntError> {
                 CFGExpr::Value(CFGValue::Load(p1)) => Bytecode::SetL(ptr, *p1),
 
                 CFGExpr::Add(CFGValue::Load(p1), CFGValue::Load(p2)) => {
-                    Bytecode::AddL(ptr, *p1, *p2)
+                    if ptr == *p1 {
+                        Bytecode::AddLA(*p1, *p2)
+                    } else {
+                        Bytecode::AddL(ptr, *p1, *p2)
+                    }
                 }
                 CFGExpr::Add(CFGValue::Load(p), CFGValue::Const(c))
                 | CFGExpr::Add(CFGValue::Const(c), CFGValue::Load(p)) => {

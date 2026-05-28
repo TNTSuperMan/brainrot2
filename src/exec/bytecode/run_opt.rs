@@ -37,6 +37,10 @@ pub unsafe fn run_opt<const FLUSH: bool>(program: &mut UnsafeProgram, tape: &mut
                 let v = tape.get(*p2).wrapping_add(tape.get(*p3));
                 *tape.get_mut(*p1) = v;
             }
+            Bytecode::AddLA(p1, p2) => {
+                let v = tape.get(*p1).wrapping_add(tape.get(*p2));
+                *tape.get_mut(*p1) = v;
+            }
             Bytecode::SubLC(p1, p2, value) => {
                 let v = tape.get(*p2).wrapping_sub(*value);
                 *tape.get_mut(*p1) = v;

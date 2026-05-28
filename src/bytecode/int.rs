@@ -61,6 +61,9 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(
             Bytecode::AddL(p1, p2, p3) => {
                 mem[p1] = mem[p2].wrapping_add(mem[p3]);
             }
+            Bytecode::AddLA(p1, p2) => {
+                mem[p1] = mem[p1].wrapping_add(mem[p2]);
+            }
             Bytecode::SubLC(p1, p2, value) => {
                 mem[p1] = mem[p2].wrapping_sub(*value);
             }
