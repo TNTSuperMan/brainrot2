@@ -140,6 +140,15 @@ pub unsafe fn run_opt<const FLUSH: bool>(program: &mut UnsafeProgram, tape: &mut
 
                 *tape.get_mut(*p2) = *c2;
             }
+            Bytecode::MulAddMulAdd { src, dst1, dst2_rel, val1, val2 } => {
+                let v = tape.get(*src);
+                let v1 = tape.get(*dst1).wrapping_add(v.wrapping_mul(*val1));
+                *tape.get_mut(*dst1) = v1;
+                
+                let dst2 = src.wrapping_add(*dst2_rel as i16);
+                let v2 = tape.get(dst2).wrapping_add(v.wrapping_mul(*val2));
+                *tape.get_mut(dst2) = v2;
+            }
         }
 
         program.next();

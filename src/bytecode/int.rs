@@ -162,6 +162,11 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(
                 mem[p1] = mem[p1].wrapping_add(*c1);
                 mem[p2] = *c2;
             }
+            Bytecode::MulAddMulAdd { src, dst1, dst2_rel, val1, val2 } => {
+                mem[dst1] = mem[dst1].wrapping_add(mem[src].wrapping_mul(*val1));
+                let dst2 = src.wrapping_add(*dst2_rel as i16);
+                mem[&dst2] = mem[&dst2].wrapping_add(mem[src].wrapping_mul(*val2));
+            }
         }
 
         pc += 1;

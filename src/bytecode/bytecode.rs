@@ -34,6 +34,13 @@ pub enum Bytecode {
     SetCSetC(i16, u8, i16, u8),
     AddAdd(i16, u8, i16, u8),
     AddSetC(i16, u8, i16, u8),
+    MulAddMulAdd {
+        src: i16,
+        dst1: i16,
+        dst2_rel: i8,
+        val1: u8,
+        val2: u8,
+    },
 }
 
 impl Display for Bytecode {
@@ -69,6 +76,7 @@ impl Display for Bytecode {
             Self::SetCSetC(p1, c1, p2, c2) => write!(f, "${p1} = {c1}, ${p2} = {c2}"),
             Self::AddAdd(p1, c1, p2, c2) => write!(f, "${p1} += {c1}, ${p2} += {c2}"),
             Self::AddSetC(p1, c1, p2, c2) => write!(f, "${p1} += {c1}, ${p2} = {c2}"),
+            Self::MulAddMulAdd { src, dst1, dst2_rel, val1, val2 } => write!(f, "${dst1} += ${src} * {val1}, ${} += ${src} * {val2}", src + (*dst2_rel as i16)),
         }
     }
 }

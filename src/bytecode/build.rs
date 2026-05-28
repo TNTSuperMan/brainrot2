@@ -109,6 +109,21 @@ fn cfgops_to_bytecodes(insts: &[CFGOp]) -> Result<Vec<Bytecode>, TryFromIntError
                     continue;
                 }
             }
+
+            (Bytecode::MulAddL(p11, p12, s1, val1), Bytecode::MulAddL(p21, p22, s2, val2)) => {
+                if p11 == p12 && p21 == p22 && s1 == s2 {
+                    if let Ok(dst2_rel) = p21.wrapping_sub(s1).try_into() {
+                        codes.push(Bytecode::MulAddMulAdd {
+                            src: s1,
+                            dst1: p11,
+                            dst2_rel,
+                            val1, val2
+                        });
+                        i += 2;
+                        continue;
+                    }
+                }
+            }
             _ => {}
         }
         codes.push(try_into_bytecode(&insts[i])?);
