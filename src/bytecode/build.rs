@@ -128,6 +128,12 @@ fn cfgops_to_bytecodes(insts: &[CFGOp]) -> Result<Vec<Bytecode>, TryFromIntError
                     }
                 }
             }
+
+            (Bytecode::Out(p1), Bytecode::Out(p2)) => {
+                codes.push(Bytecode::OutOut(p1, p2));
+                i += 2;
+                continue;
+            }
             _ => {}
         }
         codes.push(try_into_bytecode(&insts[i])?);

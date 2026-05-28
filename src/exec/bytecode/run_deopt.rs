@@ -152,6 +152,12 @@ pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafePro
                 let v2 = tape.get(dst2)?.wrapping_add(v.wrapping_mul(*val2));
                 *tape.get_mut(dst2)? = v2;
             }
+            Bytecode::OutOut(p1, p2) => {
+                let _ = stdout.write(&[tape.get(*p1)?, tape.get(*p2)?]);
+                if FLUSH {
+                    let _ = stdout.flush();
+                }
+            }
         }
 
         program.next();

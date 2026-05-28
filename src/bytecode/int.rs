@@ -170,6 +170,11 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(
                 let dst2 = src.wrapping_add(*dst2_rel as i16);
                 mem[&dst2] = mem[&dst2].wrapping_add(mem[src].wrapping_mul(*val2));
             }
+            Bytecode::OutOut(p1, p2) => {
+                if !DEBUG {
+                    let _ = stdout.write(&[mem[p1], mem[p2]]);
+                }
+            }
         }
 
         pc += 1;
