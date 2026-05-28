@@ -55,7 +55,7 @@ pub fn exec_ir_with_poll<const FLUSH: bool>(
                     return Ok(Some(p_ret));
                 }
                 if tape.get(*pointer)? == 0 {
-                    pc = *addr;
+                    pc = *addr as usize;
                     continue;
                 }
             }
@@ -64,7 +64,7 @@ pub fn exec_ir_with_poll<const FLUSH: bool>(
                     return Ok(Some(p_ret));
                 }
                 if tape.get(*pointer)? != 0 {
-                    pc = *addr;
+                    pc = *addr as usize;
                     continue;
                 }
             }
@@ -74,7 +74,7 @@ pub fn exec_ir_with_poll<const FLUSH: bool>(
                 }
                 tape.offset(*step);
                 if tape.get(*pointer)? != 0 {
-                    pc = *addr;
+                    pc = *addr as usize;
                     continue;
                 }
             }

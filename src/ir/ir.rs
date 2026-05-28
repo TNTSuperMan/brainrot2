@@ -23,8 +23,8 @@ pub enum IROp {
     MulAdd(i16, u8), // [pointer] = [pointer] + [opcode.0] * opcode.1
     In,
     Out,
-    JumpZero(usize),
-    JumpNotZero(usize),
-    JumpNotZeroWithOffset(i16, usize),
+    JumpZero(u32),
+    JumpNotZero(u32),
+    JumpNotZeroWithOffset(i16, u32),
     FindZero(i16),
 }

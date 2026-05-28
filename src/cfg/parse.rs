@@ -90,7 +90,7 @@ impl CFG {
                         insts: node_insts,
                         edge: CFGEdge::BranchWithIRAt {
                             pointer: ir.pointer,
-                            zero: addr,
+                            zero: addr as usize,
                             nonzero: i + 1,
                             ir_at: i,
                         },
@@ -98,10 +98,10 @@ impl CFG {
                         offset: None,
                         alive: true,
                     });
-                    if addr < i {
-                        split_node(&mut nodes, addr);
+                    if (addr as usize) < i {
+                        split_node(&mut nodes, addr as usize);
                     } else {
-                        points.insert(addr);
+                        points.insert(addr as usize);
                     }
                     node_insts = vec![];
                 }
@@ -111,17 +111,17 @@ impl CFG {
                         edge: CFGEdge::BranchWithIRAt {
                             pointer: ir.pointer,
                             zero: i + 1,
-                            nonzero: addr,
+                            nonzero: addr as usize,
                             ir_at: i,
                         },
                         predecessor: vec![],
                         offset: None,
                         alive: true,
                     });
-                    if addr < i {
-                        split_node(&mut nodes, addr);
+                    if (addr as usize) < i {
+                        split_node(&mut nodes, addr as usize);
                     } else {
-                        points.insert(addr);
+                        points.insert(addr as usize);
                     }
                     node_insts = vec![];
                 }
@@ -131,17 +131,17 @@ impl CFG {
                         edge: CFGEdge::BranchWithIRAt {
                             pointer: ir.pointer,
                             zero: i + 1,
-                            nonzero: addr,
+                            nonzero: addr as usize,
                             ir_at: i,
                         },
                         predecessor: vec![],
                         offset: Some(offset),
                         alive: true,
                     });
-                    if addr < i {
-                        split_node(&mut nodes, addr);
+                    if (addr as usize) < i {
+                        split_node(&mut nodes, addr as usize);
                     } else {
-                        points.insert(addr);
+                        points.insert(addr as usize);
                     }
                     node_insts = vec![];
                 }

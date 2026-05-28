@@ -1,4 +1,4 @@
-use std::{fmt::Debug, sync::Arc};
+use std::{fmt::Debug, num::TryFromIntError, sync::Arc};
 
 use crate::{
     exec::{bytecode::run, ir::exec_ir_with_poll, tape::{OutOfRangeError, Tape}, thread_poll::BytecodeComputePoller}, ir::{error::SyntaxError, ir::IR}, timeline
@@ -12,6 +12,7 @@ mod thread_poll;
 pub enum BrainrotError {
     SyntaxError(SyntaxError),
     OutOfRangeError(OutOfRangeError),
+    TryFromIntError(TryFromIntError),
 }
 impl Debug for BrainrotError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -19,16 +20,14 @@ impl Debug for BrainrotError {
             Self::SyntaxError(SyntaxError::UnmatchedOpeningBracket) => write!(f, "SyntaxError: Unmatched opening bracket"),
             Self::SyntaxError(SyntaxError::UnmatchedClosingBracket) => write!(f, "SyntaxError: Unmatched closing bracket"),
             Self::OutOfRangeError(err) => write!(f, "{err:?}"),
+            Self::TryFromIntError(err) => write!(f, "{err:?}"),
         }
     }
 }
 
 pub fn exec<const FLUSH: bool>(code: &str) -> Result<(), BrainrotError> {
     timeline!("parsing ir");
-    let (ir, mul_offset) = match IR::parse(code) {
-        Ok(ir) => ir,
-        Err(err) => return Err(BrainrotError::SyntaxError(err)),
-    };
+    let (ir, mul_offset) = IR::parse(code)?;
     timeline!("ir parsed");
 
     let ir_arc = Arc::new(ir);
