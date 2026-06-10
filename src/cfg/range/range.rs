@@ -31,7 +31,7 @@ impl From<RangeInclusive<i16>> for OffsetRange {
     }
 }
 impl OffsetRange {
-    pub fn contains(&self, offset: i16) -> bool {
-        self.start <= offset && (offset as i32) <= (self.end as i32)
+    pub fn contains(&self, offset: i32) -> bool {
+        (self.start as i32) <= offset && offset <= (self.end as i32)
     }
 }
