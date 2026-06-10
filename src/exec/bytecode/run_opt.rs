@@ -112,7 +112,7 @@ pub unsafe fn run_opt<const FLUSH: bool>(program: &mut UnsafeProgram, tape: &mut
                 tape.offset(*o1);
             }
             Bytecode::OffsetWithRangeCheck(o1, range) => {
-                rangecheck!(tape.get_offset() + o1, range);
+                rangecheck!(tape.get_offset() + *o1 as i32, range);
                 tape.offset(*o1);
             }
             Bytecode::RangeCheck(range) => {

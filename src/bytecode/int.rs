@@ -127,7 +127,7 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(
             }
             Bytecode::OffsetWithRangeCheck(o1, range) => {
                 mem.offset += *o1 as isize;
-                if opt && !range.contains(mem.offset as i16) {
+                if opt && !range.contains(mem.offset as i32) {
                     log!("deopt {pc}");
                     opt = false;
                 } else if !opt {
@@ -136,7 +136,7 @@ pub fn debug_exec_bytecode<const DEBUG: bool>(
                 }
             }
             Bytecode::RangeCheck(range) => {
-                if opt && !range.contains(mem.offset as i16) {
+                if opt && !range.contains(mem.offset as i32) {
                     log!("deopt {pc}");
                     opt = false;
                 } else if !opt {

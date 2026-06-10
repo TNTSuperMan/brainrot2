@@ -4,7 +4,7 @@ use crate::TAPE_LENGTH;
 
 pub struct OutOfRangeError {
     index: i16,
-    offset: i16,
+    offset: i32,
     kind: String,
 }
 impl Debug for OutOfRangeError {
@@ -16,33 +16,33 @@ impl Debug for OutOfRangeError {
 
 pub struct Tape {
     tape: [u8; TAPE_LENGTH],
-    offset: i16,
+    offset: i32,
 }
 
 impl Tape {
     pub fn new(mul_offset: u8) -> Self {
         Self {
             tape: [0; TAPE_LENGTH],
-            offset: mul_offset as i16,
+            offset: mul_offset as i32,
         }
     }
     pub fn get(&self, index: i16) -> Result<u8, OutOfRangeError> {
-        match self.tape.get((index + self.offset) as usize) {
+        match self.tape.get((index as i32 + self.offset) as usize) {
             Some(cell) => Ok(*cell),
             None => Err(OutOfRangeError { index, offset: self.offset, kind: String::from("reading") }),
         }
     }
     pub fn get_mut(&mut self, index: i16) -> Result<&mut u8, OutOfRangeError> {
-        match self.tape.get_mut((index + self.offset) as usize) {
+        match self.tape.get_mut((index as i32 + self.offset) as usize) {
             Some(cell) => Ok(cell),
             None => Err(OutOfRangeError { index, offset: self.offset, kind: String::from("writing") }),
         }
     }
-    pub fn get_offset(&self) -> i16 {
+    pub fn get_offset(&self) -> i32 {
         self.offset
     }
     pub fn offset(&mut self, size: i16) {
-        self.offset += size;
+        self.offset += size as i32;
     }
 }
 
@@ -52,7 +52,7 @@ pub struct UnsafeTape<'a> {
     root: *const u8,
     curr: *mut u8,
     _marker: PhantomData<&'a mut [u8]>,
-    inner_offset: &'a mut i16,
+    inner_offset: &'a mut i32,
 }
 
 impl<'a> UnsafeTape<'a> {
@@ -100,8 +100,8 @@ impl<'a> UnsafeTape<'a> {
         }
         unsafe { &mut *ptr }
     }
-    pub fn get_offset(&self) -> i16 {
-        unsafe { self.curr.offset_from(self.root) as i16 }
+    pub fn get_offset(&self) -> i32 {
+        unsafe { self.curr.offset_from(self.root) as i32 }
     }
     pub unsafe fn offset(&mut self, size: i16) {
         self.curr = unsafe { self.curr.offset(size as isize) };
