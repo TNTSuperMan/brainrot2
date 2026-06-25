@@ -1,7 +1,7 @@
 use std::{collections::HashMap, env::args, fs, process::ExitCode};
 
 use crate::{
-    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode},
+    bytecode::{build::build_bytecode, bytecode::Bytecode, int::debug_exec_bytecode, toc},
     cfg::{cfg::CFG, dot::cfg_to_dot, range::OffsetRange},
     exec::exec,
     ir::ir::IR,
@@ -112,6 +112,10 @@ fn main() -> ExitCode {
                         return ExitCode::FAILURE;
                     }
                 }
+            }
+            "out_c" => {
+                let ((bytecodes, _), _, mul_offset) = gen_bytecode(&code);
+                println!("{}", toc::bc_to_c(&bytecodes, mul_offset));
             }
             _ => {
                 eprintln!("unknown kind");

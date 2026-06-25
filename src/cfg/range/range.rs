@@ -17,6 +17,14 @@ pub struct OffsetRange {
     start: i16,
     end: u16,
 }
+impl OffsetRange {
+    pub fn start(&self) -> i16 {
+        self.start
+    }
+    pub fn end(&self) -> u16 {
+        self.end
+    }
+}
 impl Debug for OffsetRange {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}..={}", self.start, self.end)
