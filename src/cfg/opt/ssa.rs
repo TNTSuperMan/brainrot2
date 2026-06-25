@@ -23,10 +23,9 @@ impl SSAExpr {
     fn vals(&self) -> Vec<&SSAVal> {
         match self {
             Self::Val(v) => vec![v],
-            Self::Add(a, b) |
-            Self::Sub(a, b) |
-            Self::Mul(a, b) |
-            Self::MulAdd(a, b, _) => vec![a, b],
+            Self::Add(a, b) | Self::Sub(a, b) | Self::Mul(a, b) | Self::MulAdd(a, b, _) => {
+                vec![a, b]
+            }
         }
     }
 }
@@ -75,13 +74,16 @@ fn mk_ssa(insts: &[CFGOp]) -> Option<HashMap<i16, Vec<SSAExpr>>> {
 impl CFG {
     pub fn ssa_opt(&mut self) {
         for b in &mut self.0 {
-            if !b.alive { continue }
+            if !b.alive {
+                continue;
+            }
             let mut ssa = match mk_ssa(&b.insts) {
                 Some(ssa) => ssa,
                 None => continue,
             };
 
-            let mut dfs_stack: Vec<SSAVersion> = ssa.iter().map(|(k, v)| SSAVersion(*k, v.len())).collect();
+            let mut dfs_stack: Vec<SSAVersion> =
+                ssa.iter().map(|(k, v)| SSAVersion(*k, v.len())).collect();
             let mut visited = HashSet::new();
 
             while let Some(ver) = dfs_stack.pop() {

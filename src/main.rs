@@ -95,24 +95,20 @@ fn main() -> ExitCode {
                 let (_, offset_ranges, ..) = gen_bytecode(&code);
                 println!("{:?}", offset_ranges);
             }
-            "run" => {
-                match exec::<false>(&code) {
-                    Ok(()) => {},
-                    Err(e) => {
-                        eprintln!("{e:?}");
-                        return ExitCode::FAILURE;
-                    }
+            "run" => match exec::<false>(&code) {
+                Ok(()) => {}
+                Err(e) => {
+                    eprintln!("{e:?}");
+                    return ExitCode::FAILURE;
                 }
-            }
-            "run_flush" => {
-                match exec::<true>(&code) {
-                    Ok(()) => {},
-                    Err(e) => {
-                        eprintln!("{e:?}");
-                        return ExitCode::FAILURE;
-                    }
+            },
+            "run_flush" => match exec::<true>(&code) {
+                Ok(()) => {}
+                Err(e) => {
+                    eprintln!("{e:?}");
+                    return ExitCode::FAILURE;
                 }
-            }
+            },
             "out_c" => {
                 let ((bytecodes, _), _, mul_offset) = gen_bytecode(&code);
                 println!("{}", toc::bc_to_c(&bytecodes, mul_offset));

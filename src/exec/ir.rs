@@ -1,7 +1,12 @@
 use std::io::{Read, Write, stdin, stdout};
 
 use crate::{
-    bytecode::bytecode::Bytecode, exec::{tape::{OutOfRangeError, Tape}, thread_poll::BytecodeComputePoller}, ir::ir::{IR, IROp}
+    bytecode::bytecode::Bytecode,
+    exec::{
+        tape::{OutOfRangeError, Tape},
+        thread_poll::BytecodeComputePoller,
+    },
+    ir::ir::{IR, IROp},
 };
 
 pub fn exec_ir_with_poll<const FLUSH: bool>(
@@ -22,7 +27,7 @@ pub fn exec_ir_with_poll<const FLUSH: bool>(
             Some(ir) => ir,
             None => return Ok(None),
         };
-        
+
         match opcode {
             IROp::Add(value) => {
                 let current = tape.get(*pointer)?;
@@ -78,14 +83,12 @@ pub fn exec_ir_with_poll<const FLUSH: bool>(
                     continue;
                 }
             }
-            IROp::FindZero(delta) => {
-                loop {
-                    if tape.get(*pointer)? == 0 {
-                        break;
-                    }
-                    tape.offset(*delta);
+            IROp::FindZero(delta) => loop {
+                if tape.get(*pointer)? == 0 {
+                    break;
                 }
-            }
+                tape.offset(*delta);
+            },
         }
         pc += 1;
     }

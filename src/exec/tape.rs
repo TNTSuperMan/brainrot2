@@ -9,7 +9,11 @@ pub struct OutOfRangeError {
 }
 impl Debug for OutOfRangeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let OutOfRangeError { index, offset, kind } = self;
+        let OutOfRangeError {
+            index,
+            offset,
+            kind,
+        } = self;
         write!(f, "Out of range: {kind} ${index}(offset: {offset})")
     }
 }
@@ -29,13 +33,21 @@ impl Tape {
     pub fn get(&self, index: i16) -> Result<u8, OutOfRangeError> {
         match self.tape.get((index as i32 + self.offset) as usize) {
             Some(cell) => Ok(*cell),
-            None => Err(OutOfRangeError { index, offset: self.offset, kind: String::from("reading") }),
+            None => Err(OutOfRangeError {
+                index,
+                offset: self.offset,
+                kind: String::from("reading"),
+            }),
         }
     }
     pub fn get_mut(&mut self, index: i16) -> Result<&mut u8, OutOfRangeError> {
         match self.tape.get_mut((index as i32 + self.offset) as usize) {
             Some(cell) => Ok(cell),
-            None => Err(OutOfRangeError { index, offset: self.offset, kind: String::from("writing") }),
+            None => Err(OutOfRangeError {
+                index,
+                offset: self.offset,
+                kind: String::from("writing"),
+            }),
         }
     }
     pub fn get_offset(&self) -> i32 {
@@ -86,7 +98,10 @@ impl<'a> UnsafeTape<'a> {
         let ptr = unsafe { self.curr.offset(index as isize) };
         if cfg!(feature = "debug") {
             if !TAPE_RANGE.contains(&self.ptr(ptr)) {
-                panic!("[UNSAFE!!]: OUT OF RANGE AT UNSAFE CODE, ptr: {}", self.ptr(ptr));
+                panic!(
+                    "[UNSAFE!!]: OUT OF RANGE AT UNSAFE CODE, ptr: {}",
+                    self.ptr(ptr)
+                );
             }
         }
         unsafe { *ptr }
@@ -95,7 +110,10 @@ impl<'a> UnsafeTape<'a> {
         let ptr = unsafe { self.curr.offset(index as isize) };
         if cfg!(feature = "debug") {
             if !TAPE_RANGE.contains(&self.ptr(ptr)) {
-                panic!("[UNSAFE!!]: OUT OF RANGE AT UNSAFE CODE, ptr: {}", self.ptr(ptr));
+                panic!(
+                    "[UNSAFE!!]: OUT OF RANGE AT UNSAFE CODE, ptr: {}",
+                    self.ptr(ptr)
+                );
             }
         }
         unsafe { &mut *ptr }

@@ -1,9 +1,12 @@
 use std::{cmp::max, ops::Range};
 
-use crate::{exec::BrainrotError, ir::{
-    error::SyntaxError,
-    ir::{IR, IROp},
-}};
+use crate::{
+    exec::BrainrotError,
+    ir::{
+        error::SyntaxError,
+        ir::{IR, IROp},
+    },
+};
 
 #[derive(PartialEq, Eq)]
 enum SimpleOp {
@@ -64,9 +67,9 @@ impl IR {
                     });
                 }
                 ']' => {
-                    let start_at = loop_stack
-                        .pop()
-                        .ok_or(BrainrotError::SyntaxError(SyntaxError::UnmatchedClosingBracket))?;
+                    let start_at = loop_stack.pop().ok_or(BrainrotError::SyntaxError(
+                        SyntaxError::UnmatchedClosingBracket,
+                    ))?;
                     let start_ptr = insts[start_at].pointer;
                     let end_ptr = pointer;
                     let children = &insts[(start_at + 1)..];
@@ -85,11 +88,18 @@ impl IR {
                                 pointer,
                                 opcode: IROp::JumpNotZeroWithOffset(
                                     end_ptr - start_ptr,
-                                    (start_at + 1).try_into().map_err(|e| BrainrotError::TryFromIntError(e))?,
+                                    (start_at + 1)
+                                        .try_into()
+                                        .map_err(|e| BrainrotError::TryFromIntError(e))?,
                                 ),
                                 loc,
                             });
-                            insts[start_at].opcode = IROp::JumpZero(insts.len().try_into().map_err(|e| BrainrotError::TryFromIntError(e))?);
+                            insts[start_at].opcode = IROp::JumpZero(
+                                insts
+                                    .len()
+                                    .try_into()
+                                    .map_err(|e| BrainrotError::TryFromIntError(e))?,
+                            );
                         }
                     } else {
                         if children.len() == 0 {
@@ -147,7 +157,12 @@ impl IR {
                                         loc: loc.clone(),
                                     });
                                     if muls.iter().any(|(op, ..)| *op == SimpleOp::Set) {
-                                        insts[start_at].opcode = IROp::JumpZero(insts.len().try_into().map_err(|e| BrainrotError::TryFromIntError(e))?);
+                                        insts[start_at].opcode = IROp::JumpZero(
+                                            insts
+                                                .len()
+                                                .try_into()
+                                                .map_err(|e| BrainrotError::TryFromIntError(e))?,
+                                        );
                                         split = true;
                                     } else {
                                         let offset =
@@ -162,10 +177,19 @@ impl IR {
 
                         insts.push(IR {
                             pointer,
-                            opcode: IROp::JumpNotZero((start_at + 1).try_into().map_err(|e| BrainrotError::TryFromIntError(e))?),
+                            opcode: IROp::JumpNotZero(
+                                (start_at + 1)
+                                    .try_into()
+                                    .map_err(|e| BrainrotError::TryFromIntError(e))?,
+                            ),
                             loc,
                         });
-                        insts[start_at].opcode = IROp::JumpZero(insts.len().try_into().map_err(|e| BrainrotError::TryFromIntError(e))?);
+                        insts[start_at].opcode = IROp::JumpZero(
+                            insts
+                                .len()
+                                .try_into()
+                                .map_err(|e| BrainrotError::TryFromIntError(e))?,
+                        );
                     }
                 }
                 _ => {}
@@ -173,7 +197,9 @@ impl IR {
         }
 
         if loop_stack.len() != 0 {
-            return Err(BrainrotError::SyntaxError(SyntaxError::UnmatchedOpeningBracket));
+            return Err(BrainrotError::SyntaxError(
+                SyntaxError::UnmatchedOpeningBracket,
+            ));
         }
 
         Ok((insts, mul_offset))

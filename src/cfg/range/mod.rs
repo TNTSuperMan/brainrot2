@@ -4,8 +4,9 @@ use std::{
     ops::RangeInclusive,
 };
 
-use crate::{
-    cfg::{cfg::{CFG, CFGEdge}, range::range::extend_range},
+use crate::cfg::{
+    cfg::{CFG, CFGEdge},
+    range::range::extend_range,
 };
 
 mod block;
@@ -41,12 +42,13 @@ impl CFG {
         // オフセット確定ポイント到達まで後続ブロックを処理
         if !block.has_offset() {
             for succ in block.edge.successor() {
-                let succ_range =
-                    self.compute_access_range_cached(succ, cache, visited);
+                let succ_range = self.compute_access_range_cached(succ, cache, visited);
                 if let Some(succ_range) = succ_range {
                     range = if let Some(current_range) = range {
-                        Some(min(*current_range.start(), *succ_range.start())
-                            ..=max(*current_range.end(), *succ_range.end()))
+                        Some(
+                            min(*current_range.start(), *succ_range.start())
+                                ..=max(*current_range.end(), *succ_range.end()),
+                        )
                     } else {
                         Some(succ_range)
                     };
@@ -68,11 +70,8 @@ impl CFG {
         let block = &self.0[block_i];
 
         // エッジのポインタから範囲を初期化
-        if let CFGEdge::Branch {
-            pointer, ..
-        } | CFGEdge::BranchWithIRAt {
-            pointer, ..
-        } = &block.edge
+        if let CFGEdge::Branch { pointer, .. } | CFGEdge::BranchWithIRAt { pointer, .. } =
+            &block.edge
         {
             range = extend_range(&range, *pointer);
         }
@@ -83,8 +82,10 @@ impl CFG {
             let succ_range = self.compute_access_range_cached(succ, cache, &mut visited);
             if let Some(succ_range) = succ_range {
                 range = if let Some(current_range) = range {
-                    Some(min(*current_range.start(), *succ_range.start())
-                        ..=max(*current_range.end(), *succ_range.end()))
+                    Some(
+                        min(*current_range.start(), *succ_range.start())
+                            ..=max(*current_range.end(), *succ_range.end()),
+                    )
                 } else {
                     Some(succ_range)
                 };
@@ -98,8 +99,7 @@ impl CFG {
         let mut map = HashMap::new();
         let mut visited = HashSet::new();
         // グローバルキャッシュで重複計算を排除
-        let mut access_range_cache: HashMap<usize, Option<RangeInclusive<i16>>> =
-            HashMap::new();
+        let mut access_range_cache: HashMap<usize, Option<RangeInclusive<i16>>> = HashMap::new();
 
         let mut dfs_stack = vec![0];
         while let Some(b) = dfs_stack.pop() {
@@ -112,14 +112,18 @@ impl CFG {
             if b == 0 {
                 // ブロック0は特別な処理
                 let mut visit_set = HashSet::new();
-                if let Some(r) = self.compute_access_range_cached(0, &mut access_range_cache, &mut visit_set) {
+                if let Some(r) =
+                    self.compute_access_range_cached(0, &mut access_range_cache, &mut visit_set)
+                {
                     map.insert(0, OffsetRange::from(r));
                 }
             } else if block.offset.is_some()
                 || matches!(block.edge, CFGEdge::FindZeroAndJump { .. })
             {
                 // オフセット確定ポイント
-                if let Some(r) = self.compute_access_range_from_edge_cached(b, &mut access_range_cache) {
+                if let Some(r) =
+                    self.compute_access_range_from_edge_cached(b, &mut access_range_cache)
+                {
                     map.insert(b, OffsetRange::from(r));
                 }
             }

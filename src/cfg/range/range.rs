@@ -1,4 +1,8 @@
-use std::{cmp::{max, min}, fmt::Debug, ops::RangeInclusive};
+use std::{
+    cmp::{max, min},
+    fmt::Debug,
+    ops::RangeInclusive,
+};
 
 use crate::TAPE_LENGTH;
 

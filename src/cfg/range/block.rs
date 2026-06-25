@@ -1,4 +1,7 @@
-use crate::cfg::{cfg::{CFGBlock, CFGEdge}, range::range::{AccessRange, extend_range}};
+use crate::cfg::{
+    cfg::{CFGBlock, CFGEdge},
+    range::range::{AccessRange, extend_range},
+};
 
 impl CFGBlock {
     pub fn extend_access_range(&self, range: &mut Option<AccessRange>) {
@@ -13,11 +16,8 @@ impl CFGBlock {
         if self.has_offset() {
             return;
         }
-        if let CFGEdge::Branch {
-            pointer, ..
-        } | CFGEdge::BranchWithIRAt {
-            pointer, ..
-        } = &self.edge
+        if let CFGEdge::Branch { pointer, .. } | CFGEdge::BranchWithIRAt { pointer, .. } =
+            &self.edge
         {
             *range = extend_range(range, *pointer);
         }

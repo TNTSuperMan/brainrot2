@@ -1,12 +1,19 @@
 use std::{fmt::Debug, num::TryFromIntError, sync::Arc};
 
 use crate::{
-    exec::{bytecode::run, ir::exec_ir_with_poll, tape::{OutOfRangeError, Tape}, thread_poll::BytecodeComputePoller}, ir::{error::SyntaxError, ir::IR}, timeline
+    exec::{
+        bytecode::run,
+        ir::exec_ir_with_poll,
+        tape::{OutOfRangeError, Tape},
+        thread_poll::BytecodeComputePoller,
+    },
+    ir::{error::SyntaxError, ir::IR},
+    timeline,
 };
 
-mod tape;
 mod bytecode;
 mod ir;
+mod tape;
 mod thread_poll;
 
 pub enum BrainrotError {
@@ -17,8 +24,12 @@ pub enum BrainrotError {
 impl Debug for BrainrotError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::SyntaxError(SyntaxError::UnmatchedOpeningBracket) => write!(f, "SyntaxError: Unmatched opening bracket"),
-            Self::SyntaxError(SyntaxError::UnmatchedClosingBracket) => write!(f, "SyntaxError: Unmatched closing bracket"),
+            Self::SyntaxError(SyntaxError::UnmatchedOpeningBracket) => {
+                write!(f, "SyntaxError: Unmatched opening bracket")
+            }
+            Self::SyntaxError(SyntaxError::UnmatchedClosingBracket) => {
+                write!(f, "SyntaxError: Unmatched closing bracket")
+            }
             Self::OutOfRangeError(err) => write!(f, "{err:?}"),
             Self::TryFromIntError(err) => write!(f, "{err:?}"),
         }
@@ -46,17 +57,13 @@ pub fn exec<const FLUSH: bool>(code: &str) -> Result<(), BrainrotError> {
                     timeline!("program ended");
                     Ok(())
                 }
-                Err(err) => {
-                    Err(BrainrotError::OutOfRangeError(err))
-                }
+                Err(err) => Err(BrainrotError::OutOfRangeError(err)),
             }
         }
         Ok(None) => {
             timeline!("program ended");
             Ok(())
         }
-        Err(err) => {
-            Err(BrainrotError::OutOfRangeError(err))
-        }
+        Err(err) => Err(BrainrotError::OutOfRangeError(err)),
     }
 }

@@ -15,8 +15,12 @@ impl Bytecode {
             Self::MulC(p1, p2, c3) => format!("tape[{}] = tape[{}] * {};", p1, p2, c3),
             Self::MulL(p1, p2, p3) => format!("tape[{}] = tape[{}] * tape[{}];", p1, p2, p3),
 
-            Self::MulAddC(p1, c2, p3, c4) => format!("tape[{}] = {} + tape[{}] * {};", p1, c2, p3, c4),
-            Self::MulAddL(p1, p2, p3, c4) => format!("tape[{}] = tape[{}] + tape[{}] * {};", p1, p2, p3, c4),
+            Self::MulAddC(p1, c2, p3, c4) => {
+                format!("tape[{}] = {} + tape[{}] * {};", p1, c2, p3, c4)
+            }
+            Self::MulAddL(p1, p2, p3, c4) => {
+                format!("tape[{}] = tape[{}] + tape[{}] * {};", p1, p2, p3, c4)
+            }
 
             Self::In(p1) => format!("tape[{}] = getchar();", p1),
 
@@ -26,23 +30,25 @@ impl Bytecode {
             Self::JumpIfZero(p1, a2) => format!("if (!tape[{}]) goto n{};", p1, a2 + i),
             Self::JumpIfNotZero(p1, a2) => format!("if (tape[{}]) goto n{};", p1, a2 + i),
             Self::Offset(o1) => format!("tape += {};", o1),
-            Self::OffsetWithRangeCheck(o1, range) => format!("tape += {}; rangecheck({}, {});", o1, range.start(), range.end()),
+            Self::OffsetWithRangeCheck(o1, range) => format!(
+                "tape += {}; rangecheck({}, {});",
+                o1,
+                range.start(),
+                range.end()
+            ),
             Self::RangeCheck(range) => format!("rangecheck({}, {});", range.start(), range.end()),
             Self::FindZero(ptr, delta) => format!("while (tape[{}]) {{ tape += {}; }}", ptr, delta),
             Self::End => "return 0;".to_string(),
 
-            Self::SetCSetC(p1, c1, p2, c2) => format!(
-                "tape[{}] = {}; tape[{}] = {};",
-                p1, c1, p2, c2
-            ),
-            Self::AddAdd(p1, c1, p2, c2) => format!(
-                "tape[{}] += {}; tape[{}] += {};",
-                p1, c1, p2, c2
-            ),
-            Self::AddSetC(p1, c1, p2, c2) => format!(
-                "tape[{}] += {}; tape[{}] = {};",
-                p1, c1, p2, c2
-            ),
+            Self::SetCSetC(p1, c1, p2, c2) => {
+                format!("tape[{}] = {}; tape[{}] = {};", p1, c1, p2, c2)
+            }
+            Self::AddAdd(p1, c1, p2, c2) => {
+                format!("tape[{}] += {}; tape[{}] += {};", p1, c1, p2, c2)
+            }
+            Self::AddSetC(p1, c1, p2, c2) => {
+                format!("tape[{}] += {}; tape[{}] = {};", p1, c1, p2, c2)
+            }
             Self::MulAddMulAdd {
                 src,
                 dst1,

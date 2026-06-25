@@ -79,7 +79,17 @@ impl Display for Bytecode {
             Self::SetCSetC(p1, c1, p2, c2) => write!(f, "${p1} = {c1}, ${p2} = {c2}"),
             Self::AddAdd(p1, c1, p2, c2) => write!(f, "${p1} += {c1}, ${p2} += {c2}"),
             Self::AddSetC(p1, c1, p2, c2) => write!(f, "${p1} += {c1}, ${p2} = {c2}"),
-            Self::MulAddMulAdd { src, dst1, dst2_rel, val1, val2 } => write!(f, "${dst1} += ${src} * {val1}, ${} += ${src} * {val2}", src + (*dst2_rel as i16)),
+            Self::MulAddMulAdd {
+                src,
+                dst1,
+                dst2_rel,
+                val1,
+                val2,
+            } => write!(
+                f,
+                "${dst1} += ${src} * {val1}, ${} += ${src} * {val2}",
+                src + (*dst2_rel as i16)
+            ),
             Self::OutOut(p1, p2) => write!(f, "stdout < ${p1} ${p2}"),
         }
     }

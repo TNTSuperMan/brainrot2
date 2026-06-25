@@ -121,7 +121,8 @@ fn cfgops_to_bytecodes(insts: &[CFGOp]) -> Result<Vec<Bytecode>, TryFromIntError
                             src: s1,
                             dst1: p11,
                             dst2_rel,
-                            val1, val2
+                            val1,
+                            val2,
                         });
                         i += 2;
                         continue;

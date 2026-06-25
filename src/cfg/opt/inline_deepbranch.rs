@@ -1,4 +1,7 @@
-use crate::cfg::{cfg::{CFG, CFGEdge}, opt::cellstate::CellState};
+use crate::cfg::{
+    cfg::{CFG, CFGEdge},
+    opt::cellstate::CellState,
+};
 
 impl CFG {
     fn internal_deep_one(&mut self, block_i: usize, from: usize) -> Option<usize> {
@@ -6,11 +9,22 @@ impl CFG {
             return None;
         }
 
-        if let CFGEdge::Branch { pointer, zero, nonzero, .. } | CFGEdge::BranchWithIRAt { pointer, zero, nonzero, .. } = self.0[block_i].edge {
+        if let CFGEdge::Branch {
+            pointer,
+            zero,
+            nonzero,
+            ..
+        }
+        | CFGEdge::BranchWithIRAt {
+            pointer,
+            zero,
+            nonzero,
+            ..
+        } = self.0[block_i].edge
+        {
             match self.internal_get_cellstate(block_i, from, pointer, 0) {
                 CellState::Const(0) => Some(zero),
-                CellState::Const(_) |
-                CellState::NonZero => Some(nonzero),
+                CellState::Const(_) | CellState::NonZero => Some(nonzero),
                 CellState::Unknown => None,
             }
         } else {
@@ -20,8 +34,8 @@ impl CFG {
     fn internal_inline_deepbrach(&mut self, block_i: usize) {
         let mut branch = self.0[block_i].edge.clone();
         let (zero, nonzero) = match &mut branch {
-            CFGEdge::Branch { zero, nonzero, .. } |
-            CFGEdge::BranchWithIRAt { zero, nonzero, .. } => (zero, nonzero),
+            CFGEdge::Branch { zero, nonzero, .. }
+            | CFGEdge::BranchWithIRAt { zero, nonzero, .. } => (zero, nonzero),
             _ => return,
         };
 
@@ -31,7 +45,7 @@ impl CFG {
         if let Some(n) = self.internal_deep_one(*nonzero, block_i) {
             *nonzero = n;
         }
-        
+
         self.update_edge(block_i, branch);
     }
     pub fn inline_deepbranch(&mut self) {

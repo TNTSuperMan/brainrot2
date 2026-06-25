@@ -1,8 +1,18 @@
 use std::io::{Read, Write, stdin, stdout};
 
-use crate::{bytecode::bytecode::Bytecode, exec::{bytecode::{InterpretResult, program::UnsafeProgram}, tape::{OutOfRangeError, Tape}}, timeline};
+use crate::{
+    bytecode::bytecode::Bytecode,
+    exec::{
+        bytecode::{InterpretResult, program::UnsafeProgram},
+        tape::{OutOfRangeError, Tape},
+    },
+    timeline,
+};
 
-pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafeProgram, tape: &mut Tape) -> Result<InterpretResult, OutOfRangeError> {
+pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(
+    program: &mut UnsafeProgram,
+    tape: &mut Tape,
+) -> Result<InterpretResult, OutOfRangeError> {
     let mut stdin = stdin().lock();
     let mut stdout = stdout().lock();
 
@@ -66,7 +76,9 @@ pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafePro
                 *tape.get_mut(*p1)? = v;
             }
             Bytecode::MulAddL(p1, p2, p3, factor) => {
-                let v = tape.get(*p2)?.wrapping_add(tape.get(*p3)?.wrapping_mul(*factor));
+                let v = tape
+                    .get(*p2)?
+                    .wrapping_add(tape.get(*p3)?.wrapping_mul(*factor));
                 *tape.get_mut(*p1)? = v;
             }
 
@@ -78,7 +90,7 @@ pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafePro
                     0
                 };
             }
-            
+
             Bytecode::Out(p1) => {
                 let _ = stdout.write(&[tape.get(*p1)?]);
                 if FLUSH {
@@ -125,7 +137,7 @@ pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafePro
             Bytecode::End => {
                 return Ok(InterpretResult::End);
             }
-            
+
             Bytecode::SetCSetC(p1, c1, p2, c2) => {
                 *tape.get_mut(*p1)? = *c1;
                 *tape.get_mut(*p2)? = *c2;
@@ -143,11 +155,17 @@ pub fn run_deopt<const FLUSH: bool, const USE_OPT: bool>(program: &mut UnsafePro
 
                 *tape.get_mut(*p2)? = *c2;
             }
-            Bytecode::MulAddMulAdd { src, dst1, dst2_rel, val1, val2 } => {
+            Bytecode::MulAddMulAdd {
+                src,
+                dst1,
+                dst2_rel,
+                val1,
+                val2,
+            } => {
                 let v = tape.get(*src)?;
                 let v1 = tape.get(*dst1)?.wrapping_add(v.wrapping_mul(*val1));
                 *tape.get_mut(*dst1)? = v1;
-                
+
                 let dst2 = src.wrapping_add(*dst2_rel as i16);
                 let v2 = tape.get(dst2)?.wrapping_add(v.wrapping_mul(*val2));
                 *tape.get_mut(dst2)? = v2;
